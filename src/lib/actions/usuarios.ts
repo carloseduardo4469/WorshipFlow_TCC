@@ -16,7 +16,10 @@ export async function atualizarPerfilAction(
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim();
   const instrumentoPrincipal = String(formData.get("instrumentoPrincipal") ?? "").trim();
-  const habilidades = String(formData.get("habilidades") ?? "").trim();
+  const habilidades = formData
+    .getAll("habilidades")
+    .map((habilidade) => String(habilidade).trim())
+    .filter(Boolean);
 
   if (!nome) return { error: "Informe seu nome." };
 
@@ -25,7 +28,7 @@ export async function atualizarPerfilAction(
     nome,
     telefone: telefone || null,
     instrumentoPrincipal: instrumentoPrincipal || null,
-    habilidades: habilidades || null,
+    habilidades: habilidades.length ? habilidades.join(",") : null,
   });
 
   revalidatePath("/dashboard/perfil");

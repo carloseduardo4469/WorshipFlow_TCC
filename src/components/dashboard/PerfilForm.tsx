@@ -2,10 +2,21 @@
 
 import { useActionState } from "react";
 import { atualizarPerfilAction } from "@/lib/actions/usuarios";
-import { Input } from "@/components/ui/Input";
+import { Input, CheckboxGroup } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import type { Usuario } from "@/types/domain";
+
+const OPCOES_HABILIDADES = [
+  { value: "violao", label: "Violão" },
+  { value: "guitarra", label: "Guitarra" },
+  { value: "bateria", label: "Bateria" },
+  { value: "teclado", label: "Teclado" },
+  { value: "trompete", label: "Trompete" },
+  { value: "baixo", label: "Baixo" },
+  { value: "voz-principal", label: "Voz principal" },
+  { value: "voz-secundaria", label: "Voz secundária" },
+];
 
 export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarPerfilAction, null);
@@ -20,11 +31,14 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
         defaultValue={usuario.instrumentoPrincipal ?? ""}
         placeholder="Ex: Violão, Vocal, Bateria"
       />
-      <Input
-        label="Outras habilidades"
+      <CheckboxGroup
+        label="Habilidades"
         name="habilidades"
-        defaultValue={usuario.habilidades ?? ""}
-        placeholder="Ex: Backing vocal, Direção"
+        options={OPCOES_HABILIDADES}
+        defaultSelected={(usuario.habilidades ?? "")
+          .split(",")
+          .map((habilidade) => habilidade.trim())
+          .filter(Boolean)}
       />
 
       {state?.error && <FormAlert>{state.error}</FormAlert>}
