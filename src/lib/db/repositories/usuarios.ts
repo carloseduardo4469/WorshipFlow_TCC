@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { localDb } from "@/lib/db/local/client";
+import { getLocalDb } from "@/lib/db/local/client";
 import { usuarios as usuariosTable } from "@/lib/db/local/schema";
 import type { Usuario, UpdateUsuario } from "@/types/domain";
 import type { Backend, UsuariosRepository } from "./types";
@@ -51,6 +51,9 @@ function toSupabasePayload(data: UpdateUsuario) {
 }
 
 function createLocalRepository(): UsuariosRepository {
+  // Lazy: só abre o SQLite de verdade quando o backend local está ativo.
+  const localDb = getLocalDb();
+
   return {
     async list(ministerioId) {
       const rows = ministerioId

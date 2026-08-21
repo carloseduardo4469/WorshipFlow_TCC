@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { localDb } from "@/lib/db/local/client";
+import { getLocalDb } from "@/lib/db/local/client";
 import { musicas as musicasTable } from "@/lib/db/local/schema";
 import type { Musica, NewMusica, UpdateMusica } from "@/types/domain";
 import type { Backend, MusicasRepository } from "./types";
@@ -42,6 +42,9 @@ function toSupabasePayload(data: Partial<NewMusica>) {
 }
 
 function createLocalRepository(): MusicasRepository {
+  // Lazy: só abre o SQLite de verdade quando o backend local está ativo.
+  const localDb = getLocalDb();
+
   return {
     async list(ministerioId) {
       const rows = ministerioId

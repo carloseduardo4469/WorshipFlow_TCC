@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { localDb } from "@/lib/db/local/client";
+import { getLocalDb } from "@/lib/db/local/client";
 import { ministerios as ministeriosTable } from "@/lib/db/local/schema";
 import type { Ministerio, NewMinisterio, UpdateMinisterio } from "@/types/domain";
 import type { Backend, MinisteriosRepository } from "./types";
@@ -27,6 +27,9 @@ function mapLocalRow(row: typeof ministeriosTable.$inferSelect): Ministerio {
 }
 
 function createLocalRepository(): MinisteriosRepository {
+  // Lazy: só abre o SQLite de verdade quando o backend local está ativo.
+  const localDb = getLocalDb();
+
   return {
     async list() {
       const rows = await localDb.select().from(ministeriosTable).orderBy(ministeriosTable.nome);

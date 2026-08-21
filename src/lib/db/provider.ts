@@ -47,6 +47,11 @@ export async function resolveBackend(): Promise<Backend> {
   if (mode === "supabase") return "supabase";
   if (mode === "local") return "local";
 
+  // Em serverless (Vercel) o filesystem é read-only: o fallback pro SQLite
+  // nunca pode acontecer lá, senão toda request quebra. Força Supabase —
+  // se o Supabase estiver mesmo fora do ar, o erro vem dele, e fica claro.
+  if (process.env.VERCEL === "1") return "supabase";
+
   const now = Date.now();
   if (cachedBackend && now - cachedAt < CACHE_MS) {
     return cachedBackend;

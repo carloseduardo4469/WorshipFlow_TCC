@@ -3,7 +3,7 @@
 //
 // Útil pra testar o app inteiro sem depender do Supabase estar acessível.
 
-import { localDb } from "../src/lib/db/local/client";
+import { getLocalDb } from "../src/lib/db/local/client";
 import {
   ministerios,
   musicas,
@@ -13,6 +13,8 @@ import {
 } from "../src/lib/db/local/schema";
 
 async function seed() {
+  const localDb = getLocalDb();
+
   console.log("Seed local: limpando tabelas...");
   await localDb.delete(repertorioMusicas);
   await localDb.delete(repertorios);

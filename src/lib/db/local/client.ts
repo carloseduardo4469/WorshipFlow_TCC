@@ -4,7 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 
 // Banco de arquivo único, fora do supabase, sem depender de rede/porta nenhuma.
@@ -87,6 +87,7 @@ create table if not exists escala_musicas (
 `;
 
 let _sqlite: Database.Database | null = null;
+let _localDb: BetterSQLite3Database<typeof schema> | null = null;
 
 function getSqliteHandle(): Database.Database {
   if (_sqlite) return _sqlite;
@@ -103,4 +104,15 @@ function getSqliteHandle(): Database.Database {
   return db;
 }
 
-export const localDb = drizzle(getSqliteHandle(), { schema });
+/**
+ * Conexão LAZY: o arquivo .data/local.db só é aberto/criado na primeira
+ * chamada — nunca no import do módulo. Essencial pra Vercel: o filesystem
+ * lá é read-only, e importar a cadeia de repositórios não pode tentar
+ * escrever em disco (o provider só escolhe "local" fora de serverless).
+ */
+export function getLocalDb(): BetterSQLite3Database<typeof schema> {
+  if (!_localDb) {
+    _localDb = drizzle(getSqliteHandle(), { schema });
+  }
+  return _localDb;
+}

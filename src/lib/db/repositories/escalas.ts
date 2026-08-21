@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { localDb } from "@/lib/db/local/client";
+import { getLocalDb } from "@/lib/db/local/client";
 import {
   escalaMusicas as escalaMusicasTable,
   escalas as escalasTable,
@@ -38,6 +38,9 @@ function toSupabasePayload(data: Partial<NewEscala>) {
 }
 
 function createLocalRepository(): EscalasRepository {
+  // Lazy: só abre o SQLite de verdade quando o backend local está ativo.
+  const localDb = getLocalDb();
+
   async function attachRelations(row: typeof escalasTable.$inferSelect): Promise<Escala> {
     const [usuarioLinks, musicaLinks] = await Promise.all([
       localDb.select().from(escalaUsuariosTable).where(eq(escalaUsuariosTable.escalaId, row.id)),

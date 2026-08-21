@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { localDb } from "@/lib/db/local/client";
+import { getLocalDb } from "@/lib/db/local/client";
 import {
   repertorioMusicas as repertorioMusicasTable,
   repertorios as repertoriosTable,
@@ -21,6 +21,9 @@ function mapSupabaseRow(row: any): Repertorio {
 }
 
 function createLocalRepository(): RepertoriosRepository {
+  // Lazy: só abre o SQLite de verdade quando o backend local está ativo.
+  const localDb = getLocalDb();
+
   async function attachMusicaIds(row: typeof repertoriosTable.$inferSelect): Promise<Repertorio> {
     const links = await localDb
       .select()
