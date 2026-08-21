@@ -29,6 +29,7 @@ export async function atualizarPerfilAction(
   });
 
   revalidatePath("/dashboard/perfil");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -51,5 +52,6 @@ export async function atualizarUsuarioAdminAction(
   });
 
   revalidatePath("/dashboard/usuarios");
+  revalidatePath("/dashboard");
   return { success: true };
 }

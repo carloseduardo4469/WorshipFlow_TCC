@@ -21,6 +21,7 @@ export async function criarMinisterioAction(
   await repos.ministerios.create({ nome, descricao: descricao || null, ativo: true });
 
   revalidatePath("/dashboard/ministerios");
+  revalidatePath("/dashboard");
   redirect("/dashboard/ministerios");
 }
 
@@ -40,6 +41,7 @@ export async function atualizarMinisterioAction(
   await repos.ministerios.update(id, { nome, descricao: descricao || null, ativo });
 
   revalidatePath("/dashboard/ministerios");
+  revalidatePath("/dashboard");
   redirect("/dashboard/ministerios");
 }
 
@@ -51,4 +53,5 @@ export async function removerMinisterioAction(formData: FormData) {
   await repos.ministerios.remove(id);
 
   revalidatePath("/dashboard/ministerios");
+  revalidatePath("/dashboard");
 }

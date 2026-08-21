@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRepositories } from "@/lib/db/repositories";
@@ -10,8 +11,10 @@ export interface CurrentUser {
   profile: Usuario;
 }
 
-/** Retorna o usuário logado + profile, ou null se não houver sessão. */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+// Memoizado por request com cache() do React: o layout E a página chamam
+// requireAuth()/getCurrentUser() na mesma request — sem memoização, cada
+// navegação faria duas chamadas ao Auth do Supabase e duas queries de profile.
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -43,7 +46,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (!profile) return null;
 
   return { authId: user.id, email: user.email ?? profile.email, profile };
-}
+});
 
 /** Garante sessão; redireciona pro login se não houver. Use em páginas server. */
 export async function requireAuth(): Promise<CurrentUser> {

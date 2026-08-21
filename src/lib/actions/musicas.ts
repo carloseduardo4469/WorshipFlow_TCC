@@ -34,6 +34,7 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   await repos.musicas.create(data);
 
   revalidatePath("/dashboard/musicas");
+  revalidatePath("/dashboard");
   redirect("/dashboard/musicas");
 }
 
@@ -50,6 +51,7 @@ export async function atualizarMusicaAction(
   await repos.musicas.update(id, data);
 
   revalidatePath("/dashboard/musicas");
+  revalidatePath("/dashboard");
   redirect("/dashboard/musicas");
 }
 
@@ -61,4 +63,5 @@ export async function removerMusicaAction(formData: FormData) {
   await repos.musicas.remove(id);
 
   revalidatePath("/dashboard/musicas");
+  revalidatePath("/dashboard");
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,6 +27,8 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
     return { error: "Email ou senha incorretos." };
   }
 
+  // Limpa qualquer cache de navegação que possa ter sobrado de outra sessão.
+  revalidatePath("/dashboard", "layout");
   redirect(next || "/dashboard");
 }
 
@@ -64,6 +67,10 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
 export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+
+  // Invalida o dashboard inteiro (rota + todas as filhas) no cliente e no
+  // servidor, pra nunca servir página em cache da sessão anterior.
+  revalidatePath("/dashboard", "layout");
   redirect("/login");
 }
 

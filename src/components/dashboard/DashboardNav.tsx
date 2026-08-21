@@ -28,6 +28,7 @@ function NavGroup({ items, pathname }: { items: { href: string; label: string }[
           <Link
             key={item.href}
             href={item.href}
+            prefetch
             className={`rounded-lg px-3 py-2 text-sm transition-colors ${
               active ? "bg-paper/10 text-paper" : "text-muted hover:bg-paper/5 hover:text-paper"
             }`}
