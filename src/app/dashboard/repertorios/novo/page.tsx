@@ -1,0 +1,17 @@
+import { requireAdmin } from "@/lib/auth/session";
+import { getRepositories } from "@/lib/db/repositories";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { RepertorioForm } from "@/components/dashboard/RepertorioForm";
+
+export default async function NovoRepertorioPage() {
+  await requireAdmin();
+  const repos = await getRepositories();
+  const [musicas, ministerios] = await Promise.all([repos.musicas.list(), repos.ministerios.list()]);
+
+  return (
+    <div>
+      <PageHeader title="Novo repertório" />
+      <RepertorioForm musicas={musicas} ministerios={ministerios} />
+    </div>
+  );
+}

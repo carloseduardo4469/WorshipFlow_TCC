@@ -1,0 +1,26 @@
+import { notFound } from "next/navigation";
+import { requireAdmin } from "@/lib/auth/session";
+import { getRepositories } from "@/lib/db/repositories";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EscalaForm } from "@/components/dashboard/EscalaForm";
+
+export default async function EditarEscalaPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
+  const { id } = await params;
+
+  const repos = await getRepositories();
+  const [escala, usuarios, musicas, ministerios] = await Promise.all([
+    repos.escalas.getById(Number(id)),
+    repos.usuarios.list(),
+    repos.musicas.list(),
+    repos.ministerios.list(),
+  ]);
+  if (!escala) notFound();
+
+  return (
+    <div>
+      <PageHeader title={`Editar: ${escala.titulo}`} />
+      <EscalaForm escala={escala} usuarios={usuarios} musicas={musicas} ministerios={ministerios} />
+    </div>
+  );
+}
