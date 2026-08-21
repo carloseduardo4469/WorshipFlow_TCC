@@ -25,14 +25,8 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
     <form action={formAction} className="flex max-w-lg flex-col gap-4">
       <Input label="Nome" name="nome" defaultValue={usuario.nome} required />
       <Input label="Telefone" name="telefone" defaultValue={usuario.telefone ?? ""} />
-      <Input
-        label="Instrumento principal"
-        name="instrumentoPrincipal"
-        defaultValue={usuario.instrumentoPrincipal ?? ""}
-        placeholder="Ex: Violão, Vocal, Bateria"
-      />
       <CheckboxGroup
-        label="Habilidades"
+        label="Instrumentos"
         name="habilidades"
         options={OPCOES_HABILIDADES}
         defaultSelected={(usuario.habilidades ?? "")

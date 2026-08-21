@@ -15,7 +15,6 @@ export async function atualizarPerfilAction(
 
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim();
-  const instrumentoPrincipal = String(formData.get("instrumentoPrincipal") ?? "").trim();
   const habilidades = formData
     .getAll("habilidades")
     .map((habilidade) => String(habilidade).trim())
@@ -27,7 +26,6 @@ export async function atualizarPerfilAction(
   await repos.usuarios.update(profile.id, {
     nome,
     telefone: telefone || null,
-    instrumentoPrincipal: instrumentoPrincipal || null,
     habilidades: habilidades.length ? habilidades.join(",") : null,
   });
 
