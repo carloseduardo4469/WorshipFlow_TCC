@@ -1,13 +1,16 @@
-"use client";
-
-import { useActionState } from "react";
-import { redefinirSenhaAction } from "@/lib/actions/auth";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { NovaSenhaForm } from "./NovaSenhaForm";
 
-export default function RedefinirSenhaPage() {
-  const [state, formAction, pending] = useActionState(redefinirSenhaAction, null);
+// Página server: valida se a sessão do link de recovery existe ANTES de
+// mostrar o formulário — sem isso o usuário só descobria que o link era
+// inválido depois de preencher tudo e tomar um erro genérico no submit.
+export default async function RedefinirSenhaPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink px-6 py-16">
@@ -15,30 +18,18 @@ export default function RedefinirSenhaPage() {
         <h1 className="mb-1 font-display text-2xl font-bold text-paper">Nova senha</h1>
         <p className="mb-6 text-sm text-muted">Escolha uma nova senha para sua conta.</p>
 
-        <form action={formAction} className="flex flex-col gap-4">
-          <Input
-            label="Nova senha"
-            name="senha"
-            type="password"
-            autoComplete="new-password"
-            minLength={8}
-            required
-          />
-          <Input
-            label="Confirmar nova senha"
-            name="confirmarSenha"
-            type="password"
-            autoComplete="new-password"
-            minLength={8}
-            required
-          />
-
-          {state?.error && <FormAlert>{state.error}</FormAlert>}
-
-          <Button type="submit" disabled={pending} className="mt-2 w-full">
-            {pending ? "Salvando..." : "Salvar nova senha"}
-          </Button>
-        </form>
+        {user ? (
+          <NovaSenhaForm />
+        ) : (
+          <div className="flex flex-col gap-6">
+            <FormAlert>
+              Este link de redefinição não é válido ou já expirou. Solicite um novo para continuar.
+            </FormAlert>
+            <Link href="/esqueci-senha" className="text-center text-sm text-amber hover:underline">
+              Solicitar novo link
+            </Link>
+          </div>
+        )}
       </div>
     </main>
   );

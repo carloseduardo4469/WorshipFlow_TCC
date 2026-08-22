@@ -13,10 +13,17 @@ async function getSiteUrl() {
   return origin ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
 
+/** Só aceita caminhos relativos internos ("/x"), bloqueando open redirect ("https://…", "//…"). */
+function safeNextPath(value: string, fallback = "/dashboard"): string {
+  const next = value.trim();
+  if (next.startsWith("/") && !next.startsWith("//")) return next;
+  return fallback;
+}
+
 export async function loginAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
-  const next = String(formData.get("next") ?? "/dashboard");
+  const next = safeNextPath(String(formData.get("next") ?? ""));
 
   if (!email || !senha) return { error: "Preencha email e senha." };
 
@@ -45,7 +52,7 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
   const supabase = await createClient();
   const siteUrl = await getSiteUrl();
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password: senha,
     options: {
@@ -59,6 +66,14 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
       return { error: "Já existe uma conta com esse email." };
     }
     return { error: "Não foi possível criar a conta. Tente novamente." };
+  }
+
+  // Projeto sem confirmação de email: o signUp já autentica o usuário. Nesse
+  // caso vamos direto pro dashboard — mandar pro /login faria o proxy rebater
+  // pro dashboard (usuário logado) sem mostrar mensagem nenhuma.
+  if (data.session) {
+    revalidatePath("/dashboard", "layout");
+    redirect("/dashboard");
   }
 
   redirect("/login?cadastro=confirme-email");
@@ -84,10 +99,15 @@ export async function esqueciSenhaAction(
   const supabase = await createClient();
   const siteUrl = await getSiteUrl();
 
-  // Não revelamos se o email existe ou não — sempre a mesma resposta.
-  await supabase.auth.resetPasswordForEmail(email, {
+  // Não revelamos se o email existe ou não — no caminho feliz a resposta é
+  // sempre a mesma. Erro aqui só acontece com email malformado ou rate limit.
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha`,
   });
+
+  if (error) {
+    return { error: "Não foi possível enviar o link. Confira o email informado e tente novamente em instantes." };
+  }
 
   redirect("/login?reset=email-enviado");
 }
@@ -105,13 +125,21 @@ export async function redefinirSenhaAction(
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: senha });
 
-  if (error) return { error: "Não foi possível redefinir a senha. O link pode ter expirado." };
+  if (error) {
+    return { error: "Não foi possível redefinir a senha. O link pode ter expirado — solicite um novo na página \"Esqueci minha senha\"." };
+  }
+
+  // Encerra a sessão criada pelo link de recovery. Sem isso o usuário segue
+  // logado e o proxy rebate o redirect pro /login de volta pro /dashboard —
+  // a mensagem "senha redefinida" nunca apareceria.
+  await supabase.auth.signOut();
+  revalidatePath("/dashboard", "layout");
 
   redirect("/login?reset=sucesso");
 }
 
 export async function loginComGoogleAction(formData: FormData) {
-  const next = String(formData.get("next") ?? "/dashboard");
+  const next = safeNextPath(String(formData.get("next") ?? ""));
   const supabase = await createClient();
   const siteUrl = await getSiteUrl();
 

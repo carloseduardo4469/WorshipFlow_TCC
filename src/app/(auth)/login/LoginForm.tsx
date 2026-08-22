@@ -15,6 +15,7 @@ const CADASTRO_MESSAGES: Record<string, string> = {
 const RESET_MESSAGES: Record<string, string> = {
   "email-enviado": "Se esse email existir, enviamos um link de redefinição.",
   sucesso: "Senha redefinida. Faça login com a nova senha.",
+  "link-expirado": "Esse link de redefinição já foi usado ou expirou. Solicite um novo.",
 };
 
 export function LoginForm() {

@@ -3,10 +3,18 @@ import { createClient } from "@/lib/supabase/server";
 
 // Pra onde o Supabase manda de volta depois do login com Google ou de
 // clicar no link de confirmação de email / reset de senha.
+
+/** Só aceita caminhos relativos internos ("/x"), bloqueando open redirect. */
+function safeNextPath(value: string | null, fallback = "/dashboard"): string {
+  const next = (value ?? "").trim();
+  if (next.startsWith("/") && !next.startsWith("//")) return next;
+  return fallback;
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = safeNextPath(searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();
@@ -14,6 +22,12 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+  }
+
+  // Link de recovery expirado/já usado: manda pra mensagem certa em vez do
+  // erro genérico de OAuth ("Não foi possível entrar com o Google").
+  if (next.startsWith("/redefinir-senha")) {
+    return NextResponse.redirect(`${origin}/login?reset=link-expirado`);
   }
 
   return NextResponse.redirect(`${origin}/login?error=callback`);
