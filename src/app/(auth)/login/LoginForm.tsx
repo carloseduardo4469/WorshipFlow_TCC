@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { loginAction, loginComGoogleAction } from "@/lib/actions/auth";
@@ -27,6 +27,24 @@ export function LoginForm() {
   const resetMsg = searchParams.get("reset");
   const oauthError = searchParams.get("error");
 
+  // O Supabase anexa o detalhe do erro de OAuth no fragment (#error=...),
+  // que nunca chega ao servidor. Logamos aqui pra facilitar o diagnóstico
+  // (ex.: "Unable to exchange external code" = client secret/redirect URI
+  // do provedor Google) e limpamos o fragment da URL.
+  useEffect(() => {
+    if (!window.location.hash) return;
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    if (hashParams.get("error")) {
+      console.error(
+        "[login] Erro retornado pelo Supabase Auth:",
+        hashParams.get("error"),
+        hashParams.get("error_code"),
+        hashParams.get("error_description")
+      );
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, []);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink px-6 py-16">
       <div className="w-full max-w-sm">
@@ -45,7 +63,10 @@ export function LoginForm() {
         )}
         {oauthError && (
           <div className="mb-4">
-            <FormAlert>Não foi possível entrar com o Google. Tente novamente.</FormAlert>
+            <FormAlert>
+              Não foi possível concluir o login com o Google. Tente novamente — se o erro
+              persistir, a configuração do provedor Google precisa ser revisada.
+            </FormAlert>
           </div>
         )}
 

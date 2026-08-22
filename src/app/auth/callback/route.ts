@@ -22,6 +22,9 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    // Sem esse log o erro é engolido e fica impossível diagnosticar OAuth
+    // pelos logs da Vercel (ex.: code já usado, PKCE verifier ausente).
+    console.error("[auth/callback] exchangeCodeForSession falhou:", error.message);
   }
 
   // Link de recovery expirado/já usado: manda pra mensagem certa em vez do
