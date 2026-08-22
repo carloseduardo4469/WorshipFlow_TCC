@@ -33,3 +33,231 @@ body {
 .eyebrow {
   @apply font-mono text-xs uppercase tracking-[0.25em] text-amber;
 }
+
+/* ==========================================================================
+   Telas de autenticação (login / cadastro / recuperação de senha)
+   Paleta dirigida por variáveis CSS — o toggle de tema só troca a classe
+   "light" no contêiner .auth-theme e toda a interface acompanha.
+   ========================================================================== */
+.auth-theme {
+  --af-bg: #05070f;
+  --af-grid: rgba(148, 163, 184, 0.07);
+  --af-card: #0a1122;
+  --af-panel: #0c1428;
+  --af-input: #101b33;
+  --af-border: rgba(148, 163, 184, 0.18);
+  --af-text: #f4f1e9;
+  --af-muted: #97a3bd;
+  --af-placeholder: #5d6a85;
+  --af-beam-opacity: 0.5;
+}
+
+.auth-theme.light {
+  --af-bg: #efece3;
+  --af-grid: rgba(18, 24, 27, 0.1);
+  --af-card: #ffffff;
+  --af-panel: #fbfaf6;
+  --af-input: #f1eee5;
+  --af-border: rgba(18, 24, 27, 0.16);
+  --af-text: #14181f;
+  --af-muted: #55617a;
+  --af-placeholder: #8a93a8;
+  --af-beam-opacity: 0.32;
+}
+
+.af-bg {
+  background-color: var(--af-bg);
+}
+
+/* Grade quadriculada sutil sobre o fundo e o painel vitrine */
+.af-gridlines {
+  background-image: linear-gradient(var(--af-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--af-grid) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+.af-panel {
+  background-color: var(--af-panel);
+}
+
+/* Painel vitrine: gradiente roxo → petróleo → navy (fixo nos dois temas) */
+.af-showcase {
+  background-image: linear-gradient(
+    155deg,
+    #34246e 0%,
+    #1d2b66 26%,
+    #10495b 58%,
+    #0a1128 100%
+  );
+}
+
+/* Feixes de luz verticais (dourado, ciano e violeta) do painel vitrine */
+.af-beam {
+  position: absolute;
+  top: -12%;
+  height: 124%;
+  border-radius: 9999px;
+  filter: blur(26px);
+  opacity: var(--af-beam-opacity);
+  pointer-events: none;
+}
+
+.af-text {
+  color: var(--af-text);
+}
+
+.af-muted {
+  color: var(--af-muted);
+}
+
+/* Label mono, caixa alta e bem espaçada (NOME, E-MAIL…) */
+.af-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--af-muted);
+}
+
+.af-required {
+  color: #f87171;
+  margin-left: 4px;
+}
+
+.af-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--af-muted);
+}
+
+.af-input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--af-border);
+  background-color: var(--af-input);
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  color: var(--af-text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.af-input::placeholder {
+  color: var(--af-placeholder);
+}
+
+.af-input:focus {
+  outline: none;
+  border-color: rgba(232, 163, 61, 0.65);
+  box-shadow: 0 0 0 3px rgba(232, 163, 61, 0.16);
+}
+
+/* Botão principal amarelo com brilho quente */
+.af-btn-primary {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.9rem 1.5rem;
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: #241b04;
+  background-image: linear-gradient(180deg, #f7d06b, #efbc41);
+  box-shadow: 0 18px 40px -12px rgba(240, 190, 70, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.af-btn-primary:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.af-btn-primary:active {
+  transform: translateY(0);
+}
+
+.af-btn-primary:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  transform: none;
+}
+
+/* Botão pill vazado (Esqueci minha senha, Criar cadastro…) */
+.af-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid var(--af-border);
+  padding: 0.72rem 1.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--af-text);
+  background: rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease, background 0.2s ease,
+    transform 0.25s ease;
+}
+
+.auth-theme.light .af-btn-pill {
+  background: rgba(18, 24, 27, 0.03);
+}
+
+.af-btn-pill:hover {
+  border-color: rgba(232, 163, 61, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Botão largura total com texto sublinhado (Cadastre-se / Entrar) */
+.af-btn-underline {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid var(--af-border);
+  padding: 0.85rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--af-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.af-btn-underline:hover {
+  border-color: rgba(232, 163, 61, 0.55);
+  color: #f2c14e;
+}
+
+/* Toggle de tema fixo no canto superior direito */
+.af-theme-toggle {
+  position: fixed;
+  top: 1.1rem;
+  right: 1.1rem;
+  z-index: 50;
+  display: inline-flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--af-border);
+  background: rgba(10, 17, 34, 0.35);
+  backdrop-filter: blur(8px);
+  color: var(--af-text);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-theme.light .af-theme-toggle {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.af-theme-toggle:hover {
+  transform: scale(1.06);
+  border-color: rgba(232, 163, 61, 0.6);
+}

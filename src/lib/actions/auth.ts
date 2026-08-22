@@ -43,11 +43,16 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
-  const confirmarSenha = String(formData.get("confirmarSenha") ?? "");
+  // Telefone no formato (11) 98552-0784 → DDD + número, com 11 dígitos.
+  const telefone = String(formData.get("telefone") ?? "").replace(/\D/g, "");
 
-  if (!nome || !email || !senha) return { error: "Preencha todos os campos." };
+  if (!nome || !email || !senha || !telefone) {
+    return { error: "Preencha todos os campos." };
+  }
   if (senha.length < 8) return { error: "A senha precisa ter pelo menos 8 caracteres." };
-  if (senha !== confirmarSenha) return { error: "As senhas não coincidem." };
+  if (telefone.length !== 11) {
+    return { error: "Telefone inválido — informe DDD + número, com 11 dígitos." };
+  }
 
   const supabase = await createClient();
   const siteUrl = await getSiteUrl();
@@ -56,7 +61,7 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
     email,
     password: senha,
     options: {
-      data: { nome },
+      data: { nome, telefone },
       emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   });
