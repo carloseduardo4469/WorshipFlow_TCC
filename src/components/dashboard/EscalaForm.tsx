@@ -181,7 +181,7 @@ export function EscalaForm({
 
       {state?.error && <FormAlert>{state.error}</FormAlert>}
 
-      <div className="flex gap-3">
+      <div className="db-form-actions flex gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando..." : "Salvar"}
         </Button>

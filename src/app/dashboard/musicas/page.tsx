@@ -14,7 +14,7 @@ export default async function MusicasPage() {
 
   return (
     <div className="mx-auto max-w-[1240px]">
-      <div className="mb-7 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
+      <div className="db-page-toolbar">
         <PageHeader title="Músicas" description="Repertório musical do ministério." />
         {isAdmin && (
           <Link href="/dashboard/musicas/novo" className="db-cta">
@@ -45,7 +45,7 @@ export default async function MusicasPage() {
             <td className="px-4 py-3.5 text-muted">{m.bpm ?? "—"}</td>
             <td className="px-4 py-3.5 text-right">
               {isAdmin && (
-                <div className="flex justify-end gap-3">
+                <div className="db-row-actions">
                   <Link href={`/dashboard/musicas/${m.id}`} className="db-btn-sm">
                     Editar
                   </Link>

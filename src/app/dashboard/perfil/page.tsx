@@ -6,7 +6,7 @@ export default async function PerfilPage() {
   const { profile, email } = await requireAuth();
 
   return (
-    <div className="mx-auto max-w-[760px] lg:mx-0">
+    <div className="db-profile-page mx-auto max-w-[760px]">
       <PageHeader title="Meu perfil" description={email} />
       <PerfilForm usuario={profile} />
     </div>

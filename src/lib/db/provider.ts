@@ -12,8 +12,10 @@ import type { Backend } from "./repositories/types";
  * requisição em dev.
  */
 
-const CACHE_MS = 60_000;
-const HEALTHCHECK_TIMEOUT_MS = 2_500;
+// Evita fazer uma verificação de rede em toda navegação. Em caso de queda,
+// o fallback local acontece rápido em vez de prender a página por segundos.
+const CACHE_MS = 5 * 60_000;
+const HEALTHCHECK_TIMEOUT_MS = 1_000;
 
 let cachedBackend: Backend | null = null;
 let cachedAt = 0;

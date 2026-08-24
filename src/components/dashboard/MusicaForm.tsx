@@ -72,7 +72,7 @@ export function MusicaForm({
 
       {state?.error && <FormAlert>{state.error}</FormAlert>}
 
-      <div className="mt-2 flex gap-3">
+      <div className="db-form-actions mt-2 flex gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando..." : "Salvar"}
         </Button>

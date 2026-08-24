@@ -15,13 +15,19 @@ function readMusicaForm(formData: FormData) {
   const linkCifra = String(formData.get("linkCifra") ?? "").trim();
   const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
+  const bpm = bpmRaw ? Number(bpmRaw) : null;
+  const linkValido = !linkCifra || (() => {
+    try { const url = new URL(linkCifra); return url.protocol === "https:" || url.protocol === "http:"; } catch { return false; }
+  })();
+
   return {
     titulo,
     artista: artista || null,
     tonalidade: tonalidade || null,
-    bpm: bpmRaw ? Number(bpmRaw) : null,
+    bpm,
     linkCifra: linkCifra || null,
     ministerioId: ministerioIdRaw ? Number(ministerioIdRaw) : null,
+    linkValido,
   };
 }
 
@@ -29,9 +35,12 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   await requireAdmin();
   const data = readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
+  if (data.bpm !== null && (!Number.isInteger(data.bpm) || data.bpm < 1 || data.bpm > 400)) return { error: "Informe um BPM entre 1 e 400." };
+  if (!data.linkValido) return { error: "Informe um link válido começando com http:// ou https://." };
 
   const repos = await getRepositories();
-  await repos.musicas.create(data);
+  const { linkValido: _linkValido, ...musica } = data;
+  await repos.musicas.create(musica);
 
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");
@@ -46,9 +55,12 @@ export async function atualizarMusicaAction(
   const id = Number(formData.get("id"));
   const data = readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
+  if (data.bpm !== null && (!Number.isInteger(data.bpm) || data.bpm < 1 || data.bpm > 400)) return { error: "Informe um BPM entre 1 e 400." };
+  if (!data.linkValido) return { error: "Informe um link válido começando com http:// ou https://." };
 
   const repos = await getRepositories();
-  await repos.musicas.update(id, data);
+  const { linkValido: _linkValido, ...musica } = data;
+  await repos.musicas.update(id, musica);
 
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");

@@ -31,7 +31,7 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
   }
 
   return (
-    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
+    <form action={formAction} className="db-panel db-profile-form flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       <div className="flex items-center gap-4">
         {preview ? (
           <img src={preview} alt="Prévia da foto de perfil" className="h-16 w-16 rounded-full object-cover ring-2 ring-cyan-300/45" />
@@ -67,7 +67,7 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
       {state?.error && <FormAlert>{state.error}</FormAlert>}
       {state?.success && <FormAlert kind="success">Perfil atualizado.</FormAlert>}
 
-      <div className="mt-2">
+      <div className="db-form-actions mt-2">
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando..." : "Salvar alterações"}
         </Button>
