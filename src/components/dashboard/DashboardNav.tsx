@@ -8,16 +8,11 @@ import { usePathname } from "next/navigation";
 import { CalendarDays, Church, ClipboardList, History, Home, Menu, Music2, UserRound, UsersRound, X, type LucideIcon } from "lucide-react";
 import logo from "@/app/icon.png";
 import type { PerfilUsuario } from "@/types/domain";
+import { DashboardThemeToggle } from "./DashboardThemeToggle";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
-const memberItems: NavItem[] = [
-  { href: "/dashboard", label: "Início", icon: Home }, { href: "/dashboard/perfil", label: "Perfil", icon: UserRound },
-  { href: "/dashboard/usuarios", label: "Equipe", icon: UsersRound }, { href: "/dashboard/musicas", label: "Músicas", icon: Music2 },
-  { href: "/dashboard/escalas", label: "Escalas", icon: CalendarDays }, { href: "/dashboard/repertorios", label: "Histórico", icon: History },
-];
-const adminItems: NavItem[] = [
-  { href: "/dashboard/usuarios", label: "Registros de usuários", icon: UsersRound }, { href: "/dashboard/escalas", label: "Registro de escalas", icon: ClipboardList }, { href: "/dashboard/ministerios", label: "Ministérios", icon: Church },
-];
+const memberItems: NavItem[] = [{ href: "/dashboard", label: "Início", icon: Home }, { href: "/dashboard/perfil", label: "Perfil", icon: UserRound }, { href: "/dashboard/usuarios", label: "Equipe", icon: UsersRound }, { href: "/dashboard/musicas", label: "Músicas", icon: Music2 }, { href: "/dashboard/escalas", label: "Escalas", icon: CalendarDays }, { href: "/dashboard/repertorios", label: "Histórico", icon: History }];
+const adminItems: NavItem[] = [{ href: "/dashboard/usuarios", label: "Registros de usuários", icon: UsersRound }, { href: "/dashboard/escalas", label: "Registro de escalas", icon: ClipboardList }, { href: "/dashboard/ministerios", label: "Ministérios", icon: Church }];
 const mobileItems = [memberItems[0], memberItems[2], memberItems[3], memberItems[4], memberItems[1]];
 const activePath = (pathname: string, href: string) => href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
@@ -27,9 +22,5 @@ function NavigationContent({ perfil, onClick }: { perfil: PerfilUsuario; onClick
 
 export function DashboardNav({ perfil }: { perfil: PerfilUsuario }) {
   const [open, setOpen] = useState(false); const pathname = usePathname();
-  return <><aside className="fixed inset-y-0 left-0 z-40 hidden w-[278px] border-r border-white/10 bg-[#071525]/95 px-3 py-5 lg:block"><Brand /><NavigationContent perfil={perfil} /></aside>
-    <div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#07101e]/90 px-4 backdrop-blur lg:hidden"><Brand /><button aria-label="Abrir menu" onClick={() => setOpen(true)} className="db-icon-button h-10 w-10"><Menu size={20} /></button></div>
-    <AnimatePresence>{open && <><motion.button aria-label="Fechar menu" className="fixed inset-0 z-50 bg-black/55 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} /><motion.aside className="fixed inset-y-0 left-0 z-[51] w-[min(82vw,320px)] overflow-y-auto border-r border-white/10 bg-[#071525] px-3 py-5 lg:hidden" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 28, stiffness: 280 }}><div className="flex items-center justify-between"><Brand /><button aria-label="Fechar menu" onClick={() => setOpen(false)} className="db-icon-button h-9 w-9"><X size={18} /></button></div><NavigationContent perfil={perfil} onClick={() => setOpen(false)} /></motion.aside></>}</AnimatePresence>
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[70px] grid-cols-5 border-t border-white/10 bg-[#07101e]/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">{mobileItems.map(({ href, label, icon: Icon }) => { const active = activePath(pathname, href); return <Link key={href} href={href} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active ? "text-[#f5d76e]" : "text-[#aeb8ca]"}`}><Icon size={19} strokeWidth={active ? 2.3 : 1.8} /><span>{label}</span></Link>; })}</nav>
-  </>;
+  return <><aside className="fixed inset-y-0 left-0 z-40 hidden w-[278px] border-r border-white/10 bg-[#071525]/95 px-3 py-5 lg:block"><Brand /><NavigationContent perfil={perfil} /></aside><div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#07101e]/90 px-4 backdrop-blur lg:hidden"><Brand /><div className="flex items-center gap-2"><DashboardThemeToggle compact /><button type="button" aria-label="Abrir menu" onClick={() => setOpen(true)} className="db-icon-button h-10 w-10"><Menu size={20} /></button></div></div><AnimatePresence>{open && <><motion.button type="button" aria-label="Fechar menu" className="fixed inset-0 z-50 bg-black/55 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} /><motion.aside className="fixed inset-y-0 left-0 z-[51] w-[min(82vw,320px)] overflow-y-auto border-r border-white/10 bg-[#071525] px-3 py-5 lg:hidden" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 28, stiffness: 280 }}><div className="flex items-center justify-between"><Brand /><button type="button" aria-label="Fechar menu" onClick={() => setOpen(false)} className="db-icon-button h-9 w-9"><X size={18} /></button></div><NavigationContent perfil={perfil} onClick={() => setOpen(false)} /></motion.aside></>}</AnimatePresence><nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-40 grid h-[70px] grid-cols-5 border-t border-white/10 bg-[#07101e]/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">{mobileItems.map(({ href, label, icon: Icon }) => { const active = activePath(pathname, href); return <Link key={href} href={href} className={`flex min-h-11 flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active ? "text-[#f5d76e]" : "text-[#aeb8ca]"}`}><Icon size={19} strokeWidth={active ? 2.3 : 1.8} /><span>{label}</span></Link>; })}</nav></>;
 }
