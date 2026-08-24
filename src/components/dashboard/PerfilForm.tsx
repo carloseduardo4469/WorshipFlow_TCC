@@ -55,7 +55,6 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
       </div>
       <Input label="Nome" name="nome" defaultValue={usuario.nome} required />
       <Input label="Telefone" name="telefone" defaultValue={usuario.telefone ?? ""} />
-      <Input label="Instrumento principal" name="instrumentoPrincipal" defaultValue={usuario.instrumentoPrincipal ?? ""} placeholder="Ex.: Violão" />
       <CheckboxGroup
         label="Instrumentos"
         name="habilidades"

@@ -15,7 +15,6 @@ export async function atualizarPerfilAction(
 
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim();
-  const instrumentoPrincipal = String(formData.get("instrumentoPrincipal") ?? "").trim();
   const fotoPerfil = formData.get("fotoPerfil");
   const habilidades = formData
     .getAll("habilidades")
@@ -44,7 +43,9 @@ export async function atualizarPerfilAction(
   await repos.usuarios.update(profile.id, {
     nome,
     telefone: telefone || null,
-    instrumentoPrincipal: instrumentoPrincipal || null,
+    // A interface trabalha apenas com a seleção de instrumentos. Mantemos
+    // o primeiro item também no campo legado para compatibilidade dos dados.
+    instrumentoPrincipal: habilidades[0] ?? null,
     habilidades: habilidades.length ? habilidades.join(",") : null,
     ...(fotoPerfilUrl ? { fotoPerfilUrl } : {}),
   });
