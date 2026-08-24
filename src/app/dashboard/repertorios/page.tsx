@@ -1,9 +1,9 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
-import { Button } from "@/components/ui/Button";
 import { removerRepertorioAction } from "@/lib/actions/repertorios";
 
 export default async function RepertoriosPage() {
@@ -14,11 +14,12 @@ export default async function RepertoriosPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-7 flex items-center justify-between gap-4">
         <PageHeader title="Repertórios" description="Conjuntos de músicas organizados por ocasião." />
         {isAdmin && (
-          <Link href="/dashboard/repertorios/novo">
-            <Button>Novo repertório</Button>
+          <Link href="/dashboard/repertorios/novo" className="db-cta">
+            <Plus size={16} />
+            Novo repertório
           </Link>
         )}
       </div>
@@ -30,20 +31,17 @@ export default async function RepertoriosPage() {
       >
         {repertorios.map((r) => (
           <tr key={r.id}>
-            <td className="px-4 py-3 text-paper">{r.nome}</td>
-            <td className="px-4 py-3 text-muted">{r.musicaIds.length} música(s)</td>
-            <td className="px-4 py-3 text-right">
+            <td className="px-4 py-3.5 text-paper font-medium">{r.nome}</td>
+            <td className="px-4 py-3.5 text-muted">{r.musicaIds.length} música(s)</td>
+            <td className="px-4 py-3.5 text-right">
               {isAdmin && (
                 <div className="flex justify-end gap-3">
-                  <Link
-                    href={`/dashboard/repertorios/${r.id}`}
-                    className="text-xs text-amber hover:underline"
-                  >
+                  <Link href={`/dashboard/repertorios/${r.id}`} className="db-btn-sm">
                     Editar
                   </Link>
                   <form action={removerRepertorioAction}>
                     <input type="hidden" name="id" value={r.id} />
-                    <button type="submit" className="text-xs text-red-400 hover:underline">
+                    <button type="submit" className="text-xs font-semibold text-red-400 hover:text-red-300">
                       Excluir
                     </button>
                   </form>

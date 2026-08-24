@@ -11,20 +11,20 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-lg border border-paper/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      className="db-card flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <input type="hidden" name="id" value={usuario.id} />
 
       <div className="min-w-0">
-        <p className="truncate text-sm text-paper">{usuario.nome}</p>
+        <p className="truncate font-medium text-paper">{usuario.nome}</p>
         <p className="truncate text-xs text-muted">{usuario.email}</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <select
           name="perfil"
           defaultValue={usuario.perfil}
-          className="rounded-md border border-paper/20 bg-ink px-2 py-1.5 text-xs text-paper focus:border-amber focus:outline-none"
+          className="db-select w-28"
         >
           <option value="MEMBRO">Membro</option>
           <option value="ADMIN">Admin</option>
@@ -33,7 +33,7 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
         <select
           name="statusMinisterio"
           defaultValue={usuario.statusMinisterio}
-          className="rounded-md border border-paper/20 bg-ink px-2 py-1.5 text-xs text-paper focus:border-amber focus:outline-none"
+          className="db-select w-28"
         >
           <option value="ATIVO">Ativo</option>
           <option value="INATIVO">Inativo</option>
@@ -42,7 +42,7 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
         <select
           name="ministerioId"
           defaultValue={usuario.ministerioId ?? ""}
-          className="rounded-md border border-paper/20 bg-ink px-2 py-1.5 text-xs text-paper focus:border-amber focus:outline-none"
+          className="db-select w-40"
         >
           <option value="">Sem ministério</option>
           {ministerios.map((m) => (
@@ -52,11 +52,7 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
           ))}
         </select>
 
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-amber px-3 py-1.5 text-xs font-medium text-ink hover:bg-amber/90 disabled:opacity-50"
-        >
+        <button type="submit" disabled={pending} className="db-btn-sm">
           {pending ? "..." : "Salvar"}
         </button>
       </div>

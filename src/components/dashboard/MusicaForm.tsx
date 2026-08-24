@@ -20,7 +20,7 @@ export function MusicaForm({
   const router = useRouter();
 
   return (
-    <form action={formAction} className="flex max-w-lg flex-col gap-4">
+    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 sm:p-8">
       {musica && <input type="hidden" name="id" value={musica.id} />}
 
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} required />
@@ -52,14 +52,14 @@ export function MusicaForm({
       />
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="ministerioId" className="text-sm font-medium text-paper/80">
+        <label htmlFor="ministerioId" className="db-label">
           Ministério
         </label>
         <select
           id="ministerioId"
           name="ministerioId"
           defaultValue={musica?.ministerioId ?? ""}
-          className="rounded-lg border border-paper/20 bg-ink px-4 py-2.5 text-paper focus:border-amber focus:outline-none"
+          className="db-select"
         >
           <option value="">Nenhum</option>
           {ministerios.map((m) => (

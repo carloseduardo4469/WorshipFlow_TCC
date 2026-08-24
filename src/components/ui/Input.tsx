@@ -5,13 +5,13 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & { label: string; error
 export function Input({ label, error, id, className = "", ...rest }: InputProps) {
   const inputId = id ?? rest.name;
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="text-sm font-medium text-paper/80">
+    <div className="flex flex-col gap-2">
+      <label htmlFor={inputId} className="db-label">
         {label}
       </label>
       <input
         id={inputId}
-        className={`rounded-lg border border-paper/20 bg-ink px-4 py-2.5 text-paper placeholder:text-muted focus:border-amber focus:outline-none ${className}`}
+        className={`db-input ${className}`}
         {...rest}
       />
       {error && <span className="text-xs text-red-400">{error}</span>}
@@ -30,9 +30,9 @@ type CheckboxGroupProps = {
 
 export function CheckboxGroup({ label, name, options, defaultSelected = [] }: CheckboxGroupProps) {
   return (
-    <fieldset className="flex flex-col gap-1.5">
-      <legend className="text-sm font-medium text-paper/80">{label}</legend>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-paper/20 bg-ink px-4 py-3">
+    <fieldset className="flex flex-col gap-2">
+      <legend className="db-label">{label}</legend>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-[color:rgba(148,163,184,0.16)] bg-[color:#0e1730] px-4 py-3">
         {options.map((option) => (
           <label key={option.value} className="flex cursor-pointer items-center gap-2 text-sm text-paper">
             <input

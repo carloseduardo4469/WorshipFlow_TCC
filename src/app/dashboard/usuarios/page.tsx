@@ -16,9 +16,7 @@ export default async function UsuariosPage() {
       />
 
       {usuarios.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-paper/15 px-6 py-12 text-center text-sm text-muted">
-          Ninguém se cadastrou ainda.
-        </div>
+        <div className="db-empty">Ninguém se cadastrou ainda.</div>
       ) : (
         <div className="flex flex-col gap-3">
           {usuarios.map((u) => (

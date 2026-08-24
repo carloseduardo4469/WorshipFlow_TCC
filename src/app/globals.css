@@ -261,3 +261,258 @@ body {
   transform: scale(1.06);
   border-color: rgba(232, 163, 61, 0.6);
 }
+
+/* ==========================================================================
+   Área autenticada (dashboard y pantallas de gestión)
+   Reutiliza la paleta navy oscuro de las pantallas de acceso para que toda
+   la aplicación se sienta del mismo "sistema": paneles, tipografía serif
+   para títulos, CTA en ámbar y etiquetas mono espaciadas.
+   ========================================================================== */
+.db-bg {
+  background-color: #0a1122;
+}
+
+/* Retícula sutil derivada del fondo de las pantallas de acceso */
+.db-grid {
+  background-image: linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Panel/card base del dashboard */
+.db-panel {
+  background-color: #0e1730;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px -30px rgba(2, 6, 23, 0.8);
+}
+
+.db-card {
+  background-color: #0c1428;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+}
+
+/* Etiqueta mono, mayúscula y espaciada (ESTADÍSTICA, ACCIÓN…) */
+.db-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #97a3bd;
+}
+
+.db-title {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+/* Enlace/botón pill ámbar (CTA) */
+.db-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.72rem 1.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #241b04;
+  background-image: linear-gradient(180deg, #f7d06b, #efbc41);
+  box-shadow: 0 14px 32px -10px rgba(240, 190, 70, 0.45);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.db-cta:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* Botón ghost pill para acciones secundarias / cancelar */
+.db-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 0.68rem 1.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f4f1e9;
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.25s ease;
+}
+
+.db-ghost:hover {
+  border-color: rgba(232, 163, 61, 0.55);
+  transform: translateY(-1px);
+}
+
+/* Botão ámbar compacto (ações de linha / salvar inline) */
+.db-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #241b04;
+  background-color: #efbc41;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.db-btn-sm:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.db-btn-sm:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Input del dashboard: fondo oscuro, foco ámbar */
+.db-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background-color: #0e1730;
+  padding: 0.72rem 0.9rem;
+  font-size: 0.9rem;
+  color: #f4f1e9;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.db-input::placeholder {
+  color: #5d6a85;
+}
+
+.db-input:focus {
+  outline: none;
+  border-color: rgba(232, 163, 61, 0.6);
+  box-shadow: 0 0 0 3px rgba(232, 163, 61, 0.14);
+}
+
+/* Select oscuro consistente con .db-input */
+.db-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background-color: #0e1730;
+  padding: 0.66rem 0.9rem;
+  font-size: 0.85rem;
+  color: #f4f1e9;
+  transition: border-color 0.2s ease;
+}
+
+.db-select:focus {
+  outline: none;
+  border-color: rgba(232, 163, 61, 0.6);
+}
+
+/* Tabla del dashboard con cabecera mono en mayúsculas */
+.db-table {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.db-table thead th {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #97a3bd;
+  white-space: nowrap;
+}
+
+.db-table tbody tr + tr {
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Acento ámbar suave al pasar por una fila */
+.db-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.db-table tbody tr:hover {
+  background: rgba(232, 163, 61, 0.04);
+}
+
+/* Badge de estado pill */
+.db-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.db-badge::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Variantes cromáticas para estado de escala */
+.db-badge-muted {
+  color: #97a3bd;
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.db-badge-teal {
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.12);
+}
+
+.db-badge-amber {
+  color: #f2c14e;
+  background: rgba(242, 193, 78, 0.12);
+}
+
+.db-badge-red {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.db-badge-green {
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.12);
+}
+
+/* Checkbox con accent ámbar */
+.db-checkbox {
+  accent-color: #e8a33d;
+}
+
+/* Mensaje de estado vacío */
+.db-empty {
+  border: 1.5px dashed rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 2.8rem 1rem;
+  text-align: center;
+  color: #8a94ad;
+}
+
+/* Divisor vertical/delgado con acento */
+.db-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+/* Paquete de texto secundario del panel */
+.db-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a94ad;
+}

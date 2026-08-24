@@ -10,17 +10,13 @@ export function DataTable({
   isEmpty: boolean;
 }) {
   if (isEmpty) {
-    return (
-      <div className="rounded-xl border border-dashed border-paper/15 px-6 py-12 text-center text-sm text-muted">
-        {emptyMessage}
-      </div>
-    );
+    return <div className="db-empty">{emptyMessage}</div>;
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-paper/10">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-paper/5 text-xs uppercase tracking-wide text-muted">
+    <div className="db-card overflow-hidden p-6">
+      <table className="w-full text-left text-sm db-table">
+        <thead className="bg-[color:#101a38] text-xs uppercase tracking-wide text-muted">
           <tr>
             {headers.map((h) => (
               <th key={h} className="px-4 py-3 font-medium">
@@ -29,7 +25,7 @@ export function DataTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-paper/10">{children}</tbody>
+        <tbody className="divide-y divide-[color:rgba(148,163,184,0.1)]">{children}</tbody>
       </table>
     </div>
   );

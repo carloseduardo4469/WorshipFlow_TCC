@@ -22,21 +22,21 @@ export function RepertorioForm({
   const router = useRouter();
 
   return (
-    <form action={formAction} className="flex max-w-lg flex-col gap-4">
+    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 sm:p-8">
       {repertorio && <input type="hidden" name="id" value={repertorio.id} />}
 
       <Input label="Nome" name="nome" defaultValue={repertorio?.nome} required />
       <Input label="Descrição" name="descricao" defaultValue={repertorio?.descricao ?? ""} />
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="ministerioId" className="text-sm font-medium text-paper/80">
+        <label htmlFor="ministerioId" className="db-label">
           Ministério
         </label>
         <select
           id="ministerioId"
           name="ministerioId"
           defaultValue={repertorio?.ministerioId ?? ""}
-          className="rounded-lg border border-paper/20 bg-ink px-4 py-2.5 text-paper focus:border-amber focus:outline-none"
+          className="db-select"
         >
           <option value="">Nenhum</option>
           {ministerios.map((m) => (
@@ -48,8 +48,8 @@ export function RepertorioForm({
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium text-paper/80">Músicas</legend>
-        <div className="max-h-64 overflow-y-auto rounded-lg border border-paper/20 p-3">
+        <legend className="db-label mb-1">Músicas</legend>
+        <div className="db-card max-h-64 space-y-1 overflow-y-auto p-3">
           {musicas.length === 0 && <p className="text-sm text-muted">Nenhuma música cadastrada.</p>}
           {musicas.map((m) => (
             <label key={m.id} className="flex items-center gap-2 py-1 text-sm text-paper/80">
@@ -58,6 +58,7 @@ export function RepertorioForm({
                 name="musicaIds"
                 value={m.id}
                 defaultChecked={repertorio?.musicaIds.includes(m.id)}
+                className="h-4 w-4 db-checkbox"
               />
               {m.titulo} {m.artista && <span className="text-muted">— {m.artista}</span>}
             </label>

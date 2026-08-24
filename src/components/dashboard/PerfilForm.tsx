@@ -22,7 +22,7 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarPerfilAction, null);
 
   return (
-    <form action={formAction} className="flex max-w-lg flex-col gap-4">
+    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 sm:p-8">
       <Input label="Nome" name="nome" defaultValue={usuario.nome} required />
       <Input label="Telefone" name="telefone" defaultValue={usuario.telefone ?? ""} />
       <CheckboxGroup

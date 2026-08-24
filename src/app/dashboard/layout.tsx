@@ -5,9 +5,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { profile } = await requireAuth();
 
   return (
-    <div className="flex bg-ink">
+    <div className="db-bg relative flex min-h-screen">
+      <div aria-hidden className="db-grid pointer-events-none fixed inset-0" />
       <DashboardNav perfil={profile.perfil} nome={profile.nome} />
-      <main className="min-h-screen flex-1 px-8 py-8">{children}</main>
+      <main className="relative z-10 min-h-screen flex-1 px-8 py-8 sm:px-12 sm:py-10">
+        {children}
+      </main>
     </div>
   );
 }

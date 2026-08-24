@@ -14,7 +14,7 @@ export function MinisterioForm({ ministerio }: { ministerio?: Ministerio }) {
   const router = useRouter();
 
   return (
-    <form action={formAction} className="flex max-w-lg flex-col gap-4">
+    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 sm:p-8">
       {ministerio && <input type="hidden" name="id" value={ministerio.id} />}
 
       <Input label="Nome" name="nome" defaultValue={ministerio?.nome} required />
@@ -22,7 +22,7 @@ export function MinisterioForm({ ministerio }: { ministerio?: Ministerio }) {
 
       {ministerio && (
         <label className="flex items-center gap-2 text-sm text-paper/80">
-          <input type="checkbox" name="ativo" defaultChecked={ministerio.ativo} />
+          <input type="checkbox" name="ativo" defaultChecked={ministerio.ativo} className="h-4 w-4 db-checkbox" />
           Ministério ativo
         </label>
       )}

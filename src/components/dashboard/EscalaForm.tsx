@@ -55,7 +55,7 @@ export function EscalaForm({
   }
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-6">
+    <form action={formAction} className="db-panel flex max-w-2xl flex-col gap-6 p-6 sm:p-8">
       {escala && <input type="hidden" name="id" value={escala.id} />}
 
       <div className="flex flex-col gap-4">
@@ -71,14 +71,14 @@ export function EscalaForm({
           />
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="status" className="text-sm font-medium text-paper/80">
-              Status
+            <label htmlFor="status" className="db-label">
+              Estado
             </label>
             <select
               id="status"
               name="status"
               defaultValue={escala?.status ?? "RASCUNHO"}
-              className="rounded-lg border border-paper/20 bg-ink px-4 py-2.5 text-paper focus:border-amber focus:outline-none"
+              className="db-select"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -89,14 +89,14 @@ export function EscalaForm({
           </div>
 
           <div className="flex flex-1 flex-col gap-1.5">
-            <label htmlFor="ministerioId" className="text-sm font-medium text-paper/80">
+            <label htmlFor="ministerioId" className="db-label">
               Ministério
             </label>
             <select
               id="ministerioId"
               name="ministerioId"
               defaultValue={escala?.ministerioId ?? ""}
-              className="rounded-lg border border-paper/20 bg-ink px-4 py-2.5 text-paper focus:border-amber focus:outline-none"
+              className="db-select"
             >
               <option value="">Nenhum</option>
               {ministerios.map((m) => (
@@ -112,8 +112,8 @@ export function EscalaForm({
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium text-paper/80">Equipe escalada</legend>
-        <div className="max-h-72 overflow-y-auto rounded-lg border border-paper/20 p-3">
+        <legend className="db-label mb-1">Equipe escalada</legend>
+        <div className="db-card max-h-72 space-y-1 overflow-y-auto p-3">
           {usuarios.length === 0 && <p className="text-sm text-muted">Nenhum membro cadastrado.</p>}
           {usuarios.map((u) => {
             const checked = usuarioIds.has(u.id);
@@ -126,6 +126,7 @@ export function EscalaForm({
                     value={u.id}
                     checked={checked}
                     onChange={() => toggleUsuario(u.id)}
+                    className="h-4 w-4 db-checkbox"
                   />
                   {u.nome}
                 </label>
@@ -135,7 +136,7 @@ export function EscalaForm({
                     name={`funcao_${u.id}`}
                     defaultValue={funcaoAtual(u.id)}
                     placeholder="Função (ex: Vocal, Baixo)"
-                    className="w-48 rounded-md border border-paper/20 bg-ink px-2 py-1 text-xs text-paper placeholder:text-muted focus:border-amber focus:outline-none"
+                    className="db-input w-48 px-2 py-1 text-xs"
                   />
                 )}
               </div>
@@ -145,8 +146,8 @@ export function EscalaForm({
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium text-paper/80">Músicas</legend>
-        <div className="max-h-72 overflow-y-auto rounded-lg border border-paper/20 p-3">
+        <legend className="db-label mb-1">Músicas</legend>
+        <div className="db-card max-h-72 space-y-1 overflow-y-auto p-3">
           {musicas.length === 0 && <p className="text-sm text-muted">Nenhuma música cadastrada.</p>}
           {musicas.map((m) => {
             const checked = musicaIds.has(m.id);
@@ -159,6 +160,7 @@ export function EscalaForm({
                     value={m.id}
                     checked={checked}
                     onChange={() => toggleMusica(m.id)}
+                    className="h-4 w-4 db-checkbox"
                   />
                   {m.titulo}
                 </label>
@@ -168,7 +170,7 @@ export function EscalaForm({
                     name={`tonalidade_${m.id}`}
                     defaultValue={tonalidadeAtual(m.id) || m.tonalidade || ""}
                     placeholder="Tom (ex: G)"
-                    className="w-28 rounded-md border border-paper/20 bg-ink px-2 py-1 text-xs text-paper placeholder:text-muted focus:border-amber focus:outline-none"
+                    className="db-input w-28 px-2 py-1 text-xs"
                   />
                 )}
               </div>
