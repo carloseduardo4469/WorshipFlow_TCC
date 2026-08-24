@@ -661,11 +661,12 @@ html[data-dashboard-theme="light"] .db-member-modal .text-paper { color:#172d48 
 .db-form-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; }
 .db-page-toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; }.db-page-toolbar .db-page-header { flex:1; margin-bottom:0; }.db-page-toolbar .db-cta { flex:none; }
 .db-row-actions { display:flex; align-items:center; justify-content:flex-end; gap:.75rem; white-space:nowrap; }
+.db-music-panel { position:relative; }.db-music-panel-actions { display:flex; justify-content:flex-end; margin:0 0 1rem; }
 .db-loading-page { display:flex; min-height:60vh; flex-direction:column; gap:1.1rem; padding-top:1rem; }
 .db-loading-line,.db-loading-title,.db-loading-card { border-radius:18px; background:linear-gradient(100deg,rgba(111,173,201,.1) 20%,rgba(104,223,242,.2) 45%,rgba(111,173,201,.1) 70%); background-size:200% 100%; animation:db-shimmer 1.2s ease-in-out infinite; }
 .db-loading-line { height:.75rem; }.db-loading-title { width:min(100%,36rem); height:4.5rem; }.db-loading-card-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin-top:1rem; }.db-loading-card { height:9rem; }
 @keyframes db-shimmer { to { background-position:-200% 0; } }
-@media (max-width:639px) { .db-profile-page { min-height:auto; }.db-form-actions { flex-direction:column; align-items:stretch; }.db-form-actions > * { width:100%; }.db-page-toolbar { align-items:stretch; flex-direction:column; }.db-page-toolbar .db-cta { width:100%; }.db-row-actions { justify-content:flex-start; }.db-loading-card-grid { grid-template-columns:1fr; } }
+@media (max-width:639px) { .db-profile-page { min-height:auto; }.db-form-actions { flex-direction:column; align-items:stretch; }.db-form-actions > * { width:100%; }.db-page-toolbar { align-items:stretch; flex-direction:column; }.db-page-toolbar .db-cta { width:100%; }.db-row-actions { justify-content:flex-start; }.db-music-panel-actions .db-cta { width:100%; }.db-loading-card-grid { grid-template-columns:1fr; } }
 
 @media (min-width:1024px) {
   .db-profile-nudge { right:1.75rem !important; max-width:calc(100vw - 3.5rem); }

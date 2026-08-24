@@ -52,7 +52,6 @@ export async function atualizarPerfilAction(
 
   revalidatePath("/dashboard/perfil");
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 

@@ -11,9 +11,11 @@ import type { Ministerio, Musica } from "@/types/domain";
 export function MusicaForm({
   musica,
   ministerios,
+  onCancel,
 }: {
   musica?: Musica;
   ministerios: Ministerio[];
+  onCancel?: () => void;
 }) {
   const action = musica ? atualizarMusicaAction : criarMusicaAction;
   const [state, formAction, pending] = useActionState(action, null);
@@ -76,7 +78,7 @@ export function MusicaForm({
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando..." : "Salvar"}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => router.back()}>
+        <Button type="button" variant="ghost" onClick={() => onCancel ? onCancel() : router.back()}>
           Cancelar
         </Button>
       </div>
