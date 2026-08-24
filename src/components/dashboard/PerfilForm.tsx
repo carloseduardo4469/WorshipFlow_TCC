@@ -13,7 +13,6 @@ const OPCOES_HABILIDADES = [
   { value: "guitarra", label: "Guitarra" },
   { value: "bateria", label: "Bateria" },
   { value: "teclado", label: "Teclado" },
-  { value: "trompete", label: "Trompete" },
   { value: "baixo", label: "Baixo" },
   { value: "voz-principal", label: "Voz principal" },
   { value: "voz-secundaria", label: "Voz secundária" },

@@ -653,6 +653,9 @@ html[data-dashboard-theme="light"] .db-hero .text-\[\#fff0ad\] { color:#fff0a9 !
 .db-mini-stat-value { color:#fff4b4; }
 html[data-dashboard-theme="light"] .db-hero .db-mini-stat-label { color:#e2f3ff !important; }
 html[data-dashboard-theme="light"] .db-hero .db-mini-stat-value { color:#ffffff !important; }
+.db-member-modal { border:1px solid rgba(86,222,244,.42); border-radius:24px; background:linear-gradient(135deg,rgba(12,39,63,.98),rgba(24,21,69,.98)); box-shadow:0 32px 90px -30px #000,0 0 44px -24px rgba(55,215,235,.86); }
+html[data-dashboard-theme="light"] .db-member-modal { border-color:rgba(36,130,181,.35); background:linear-gradient(135deg,#fff,#e8f7ff); box-shadow:0 28px 80px -35px rgba(18,64,110,.58); }
+html[data-dashboard-theme="light"] .db-member-modal .text-paper { color:#172d48 !important; }
 
 @media (min-width:1024px) {
   .db-profile-nudge { right:1.75rem !important; max-width:calc(100vw - 3.5rem); }
