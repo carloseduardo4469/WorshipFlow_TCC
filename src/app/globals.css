@@ -530,6 +530,10 @@ body {
 .db-hero { border: 1px solid rgba(235, 240, 247, .75); border-radius: 31px; min-height: 420px; background: linear-gradient(105deg, #08202a 0%, #071524 48%, #151033 100%); box-shadow: 0 26px 70px -40px #000; }
 .db-hero-light { position:absolute; width:270px; height:530px; border-radius:999px; filter:blur(70px); opacity:.42; pointer-events:none; }.db-hero-light-left { left:18%; top:-34%; background:#0a9fb7; }.db-hero-light-right { right:-5%; bottom:-50%; background:#652fa6; }
 .db-profile-nudge { border:1px solid rgba(55,210,234,.45); border-radius:18px; padding:.95rem 1rem; background:linear-gradient(110deg,rgba(18,64,84,.92),rgba(14,35,67,.9)); box-shadow:0 15px 35px -22px #3fc8e8; }
+.db-nudge-title { color: #fff3b7; }
+.db-nudge-copy { color: #c3cedb; }
+.db-file-input { color: #c9d4e1; }
+.db-file-input::file-selector-button { margin-right: .75rem; border: 1px solid rgba(83,217,235,.45); border-radius: .65rem; background: rgba(83,217,235,.12); padding: .45rem .7rem; color: #eafcff; font-weight: 700; cursor: pointer; }
 .db-overview, .db-section-panel { border:1px solid rgba(145,169,197,.28); border-radius:22px; background:#0b1b30; box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 22px 45px -36px black; transition:transform .2s ease,border-color .2s ease; }.db-overview { min-height:164px; padding:1.5rem 1.2rem; overflow:hidden; position:relative; }.db-overview:hover,.db-section-panel:hover { transform:translateY(-2px); border-color:rgba(77,215,235,.5); }.db-overview::after { content:""; position:absolute; top:-75px; right:-40px; width:160px; height:200px; background:#17b8d1; filter:blur(50px); opacity:.15; }.db-overview-purple::after { background:#9170df; opacity:.19; }.db-overview-blue::after { background:#2177b8; opacity:.15; }.db-section-panel { padding:1.5rem; min-height:220px; }
 @media (max-width:1023px) { .db-hero { border-radius:24px; min-height:auto; } }
 @media (max-width:639px) { .db-page-header { margin-bottom: 1.25rem; padding-top: .6rem; }.db-panel { padding: 1.25rem !important; }.db-cta { min-height: 42px; }.db-data-table { margin-inline: -0.15rem; } }
@@ -576,6 +580,27 @@ html[data-dashboard-theme="light"] aside, html[data-dashboard-theme="light"] hea
 html[data-dashboard-theme="light"] .db-nav-link-active { color: #594000; background: linear-gradient(90deg, rgba(255, 206, 72, .5), rgba(160, 225, 255, .25)); }
 html[data-dashboard-theme="light"] .db-hero { background: linear-gradient(115deg, #093d59 0%, #263272 53%, #703e8a 100%); }
 html[data-dashboard-theme="light"] .db-data-table { background: rgba(255,255,255,.82); }
+html[data-dashboard-theme="light"] .db-file-input { color: #263b57; }
+html[data-dashboard-theme="light"] .db-file-input::file-selector-button { border-color: rgba(21, 114, 156, .42); background: rgba(87, 211, 244, .18); color: #123955; }
+html[data-dashboard-theme="light"] .db-panel .text-paper,
+html[data-dashboard-theme="light"] .db-card .text-paper,
+html[data-dashboard-theme="light"] .db-section-panel .text-paper,
+html[data-dashboard-theme="light"] .db-overview .text-paper { color: #17233a !important; }
+html[data-dashboard-theme="light"] .db-panel .text-paper\/80,
+html[data-dashboard-theme="light"] .db-card .text-paper\/80 { color: #263b57 !important; }
+html[data-dashboard-theme="light"] .db-checkbox-group { border-color: rgba(44, 104, 151, .28); background: rgba(255,255,255,.66); }
+html[data-dashboard-theme="light"] .db-nudge-title { color: #fff3b7; }
+html[data-dashboard-theme="light"] .db-nudge-copy { color: #d9e5f1; }
+html[data-dashboard-theme="light"] header [class*="text-["],
+html[data-dashboard-theme="light"] aside [class*="text-["],
+html[data-dashboard-theme="light"] nav.fixed [class*="text-["] { color: #1d3552; }
+html[data-dashboard-theme="light"] header .text-\[\#f4d25e\],
+html[data-dashboard-theme="light"] aside .text-\[\#f5d76e\],
+html[data-dashboard-theme="light"] nav.fixed .text-\[\#f5d76e\] { color: #8a5900; }
+
+@media (min-width: 1024px) {
+  .db-profile-nudge::before { content:""; position:absolute; top:-9px; right:54px; width:17px; height:17px; transform:rotate(45deg); border-left:1px solid rgba(55,210,234,.45); border-top:1px solid rgba(55,210,234,.45); background:#124054; }
+}
 
 @media (max-width: 639px) {
   form.db-panel > .flex.gap-3, form.db-panel > .mt-2.flex.gap-3 { flex-direction: column; }

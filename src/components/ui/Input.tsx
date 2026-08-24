@@ -32,7 +32,7 @@ export function CheckboxGroup({ label, name, options, defaultSelected = [] }: Ch
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="db-label">{label}</legend>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-[color:rgba(148,163,184,0.16)] bg-[color:#0e1730] px-4 py-3">
+      <div className="db-checkbox-group grid grid-cols-1 gap-x-4 gap-y-2 rounded-xl border border-[color:rgba(148,163,184,0.16)] bg-[color:#0e1730] px-4 py-3 sm:grid-cols-2">
         {options.map((option) => (
           <label key={option.value} className="flex cursor-pointer items-center gap-2 text-sm text-paper">
             <input

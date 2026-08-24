@@ -15,6 +15,8 @@ export async function atualizarPerfilAction(
 
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim();
+  const instrumentoPrincipal = String(formData.get("instrumentoPrincipal") ?? "").trim();
+  const fotoPerfil = formData.get("fotoPerfil");
   const habilidades = formData
     .getAll("habilidades")
     .map((habilidade) => String(habilidade).trim())
@@ -22,15 +24,34 @@ export async function atualizarPerfilAction(
 
   if (!nome) return { error: "Informe seu nome." };
 
+  let fotoPerfilUrl: string | undefined;
+  if (fotoPerfil instanceof File && fotoPerfil.size > 0) {
+    const tiposPermitidos = ["image/jpeg", "image/png", "image/webp"];
+    const tamanhoMaximo = 1 * 1024 * 1024;
+
+    if (!tiposPermitidos.includes(fotoPerfil.type)) {
+      return { error: "Use uma imagem JPG, PNG ou WebP." };
+    }
+    if (fotoPerfil.size > tamanhoMaximo) {
+      return { error: "A foto deve ter no máximo 1 MB." };
+    }
+
+    const bytes = Buffer.from(await fotoPerfil.arrayBuffer());
+    fotoPerfilUrl = `data:${fotoPerfil.type};base64,${bytes.toString("base64")}`;
+  }
+
   const repos = await getRepositories();
   await repos.usuarios.update(profile.id, {
     nome,
     telefone: telefone || null,
+    instrumentoPrincipal: instrumentoPrincipal || null,
     habilidades: habilidades.length ? habilidades.join(",") : null,
+    ...(fotoPerfilUrl ? { fotoPerfilUrl } : {}),
   });
 
   revalidatePath("/dashboard/perfil");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
