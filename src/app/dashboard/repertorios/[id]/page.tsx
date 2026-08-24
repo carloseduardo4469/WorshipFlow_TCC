@@ -21,7 +21,7 @@ export default async function EditarRepertorioPage({
   if (!repertorio) notFound();
 
   return (
-    <div>
+    <div className="mx-auto max-w-[760px]">
       <PageHeader title={`Editar: ${repertorio.nome}`} />
       <RepertorioForm repertorio={repertorio} musicas={musicas} ministerios={ministerios} />
     </div>

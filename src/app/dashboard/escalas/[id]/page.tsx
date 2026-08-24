@@ -18,7 +18,7 @@ export default async function EditarEscalaPage({ params }: { params: Promise<{ i
   if (!escala) notFound();
 
   return (
-    <div>
+    <div className="mx-auto max-w-[860px]">
       <PageHeader title={`Editar: ${escala.titulo}`} />
       <EscalaForm escala={escala} usuarios={usuarios} musicas={musicas} ministerios={ministerios} />
     </div>

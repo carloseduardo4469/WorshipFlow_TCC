@@ -17,7 +17,7 @@ export default async function EditarMinisterioPage({
   if (!ministerio) notFound();
 
   return (
-    <div>
+    <div className="mx-auto max-w-[760px]">
       <PageHeader title={`Editar: ${ministerio.nome}`} />
       <MinisterioForm ministerio={ministerio} />
     </div>

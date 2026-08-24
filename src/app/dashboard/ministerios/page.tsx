@@ -12,8 +12,8 @@ export default async function MinisteriosPage() {
   const ministerios = await repos.ministerios.list();
 
   return (
-    <div>
-      <div className="mb-7 flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-[1240px]">
+      <div className="mb-7 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
         <PageHeader title="Ministérios" description="Grupos de louvor da igreja." />
         <Link href="/dashboard/ministerios/novo" className="db-cta">
           <Plus size={16} />

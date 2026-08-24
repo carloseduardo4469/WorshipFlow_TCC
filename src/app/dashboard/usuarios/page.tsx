@@ -9,7 +9,7 @@ export default async function UsuariosPage() {
   const [usuarios, ministerios] = await Promise.all([repos.usuarios.list(), repos.ministerios.list()]);
 
   return (
-    <div>
+    <div className="mx-auto max-w-[1240px]">
       <PageHeader
         title="Equipe"
         description="Perfis são criados automaticamente quando alguém se cadastra. Aqui você define papel, status e ministério."

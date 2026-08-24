@@ -26,20 +26,20 @@ export function MusicaForm({
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} required />
       <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} />
 
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row">
         <Input
           label="Tonalidade"
           name="tonalidade"
           defaultValue={musica?.tonalidade ?? ""}
           placeholder="Ex: G, Am, D"
-          className="w-32"
+          className="w-full sm:w-32"
         />
         <Input
           label="BPM"
           name="bpm"
           type="number"
           defaultValue={musica?.bpm ?? ""}
-          className="w-32"
+          className="w-full sm:w-32"
         />
       </div>
 

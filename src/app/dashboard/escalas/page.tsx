@@ -25,8 +25,8 @@ export default async function EscalasPage() {
   const nomesPorId = new Map(usuarios.map((u) => [u.id, u.nome]));
 
   return (
-    <div>
-      <div className="mb-7 flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-[1240px]">
+      <div className="mb-7 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
         <PageHeader title="Escalas" description="Programação de equipes por cultos e compromissos." />
         {isAdmin && (
           <Link href="/dashboard/escalas/novo" className="db-cta">

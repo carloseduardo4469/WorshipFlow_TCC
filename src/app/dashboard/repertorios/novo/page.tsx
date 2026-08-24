@@ -9,7 +9,7 @@ export default async function NovoRepertorioPage() {
   const [musicas, ministerios] = await Promise.all([repos.musicas.list(), repos.ministerios.list()]);
 
   return (
-    <div>
+    <div className="mx-auto max-w-[760px]">
       <PageHeader title="Novo repertório" />
       <RepertorioForm musicas={musicas} ministerios={ministerios} />
     </div>

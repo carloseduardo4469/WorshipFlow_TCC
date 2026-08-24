@@ -10,13 +10,13 @@ export function DataTable({
   isEmpty: boolean;
 }) {
   if (isEmpty) {
-    return <div className="db-empty">{emptyMessage}</div>;
+    return <div className="db-empty db-empty-modern">{emptyMessage}</div>;
   }
 
   return (
-    <div className="db-card overflow-hidden p-6">
-      <table className="w-full text-left text-sm db-table">
-        <thead className="bg-[color:#101a38] text-xs uppercase tracking-wide text-muted">
+    <div className="db-card db-data-table overflow-x-auto p-2 sm:p-3">
+      <table className="w-full min-w-[620px] text-left text-sm db-table">
+        <thead className="bg-white/[0.035] text-xs uppercase tracking-wide text-muted">
           <tr>
             {headers.map((h) => (
               <th key={h} className="px-4 py-3 font-medium">

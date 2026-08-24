@@ -13,8 +13,8 @@ export default async function MusicasPage() {
   const isAdmin = profile.perfil === "ADMIN";
 
   return (
-    <div>
-      <div className="mb-7 flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-[1240px]">
+      <div className="mb-7 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
         <PageHeader title="Músicas" description="Repertório musical do ministério." />
         {isAdmin && (
           <Link href="/dashboard/musicas/novo" className="db-cta">

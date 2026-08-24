@@ -13,7 +13,7 @@ export default async function NovaEscalaPage() {
   ]);
 
   return (
-    <div>
+    <div className="mx-auto max-w-[860px]">
       <PageHeader title="Nova escala" />
       <EscalaForm usuarios={usuarios} musicas={musicas} ministerios={ministerios} />
     </div>

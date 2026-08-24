@@ -61,13 +61,13 @@ export function EscalaForm({
       <div className="flex flex-col gap-4">
         <Input label="Título" name="titulo" defaultValue={escala?.titulo} required />
 
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
           <Input
             label="Data"
             name="dataEscala"
             type="date"
             defaultValue={escala?.dataEscala ?? ""}
-            className="w-48"
+            className="w-full sm:w-48"
           />
 
           <div className="flex flex-col gap-1.5">
