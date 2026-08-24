@@ -1,83 +1,35 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import {
-  CalendarDays,
-  Church,
-  Home,
-  ListMusic,
-  Music,
-  User,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { CalendarDays, Church, ClipboardList, History, Home, Menu, Music2, UserRound, UsersRound, X, type LucideIcon } from "lucide-react";
+import logo from "@/app/icon.png";
 import type { PerfilUsuario } from "@/types/domain";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
-
-const USER_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Início", icon: Home },
-  { href: "/dashboard/escalas", label: "Escalas", icon: CalendarDays },
-  { href: "/dashboard/musicas", label: "Músicas", icon: Music },
-  { href: "/dashboard/repertorios", label: "Repertórios", icon: ListMusic },
-  { href: "/dashboard/perfil", label: "Meu perfil", icon: User },
+const memberItems: NavItem[] = [
+  { href: "/dashboard", label: "Início", icon: Home }, { href: "/dashboard/perfil", label: "Perfil", icon: UserRound },
+  { href: "/dashboard/usuarios", label: "Equipe", icon: UsersRound }, { href: "/dashboard/musicas", label: "Músicas", icon: Music2 },
+  { href: "/dashboard/escalas", label: "Escalas", icon: CalendarDays }, { href: "/dashboard/repertorios", label: "Histórico", icon: History },
 ];
-
-const ADMIN_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard/ministerios", label: "Ministérios", icon: Church },
-  { href: "/dashboard/usuarios", label: "Equipe", icon: Users },
+const adminItems: NavItem[] = [
+  { href: "/dashboard/usuarios", label: "Registros de usuários", icon: UsersRound }, { href: "/dashboard/escalas", label: "Registro de escalas", icon: ClipboardList }, { href: "/dashboard/ministerios", label: "Ministérios", icon: Church },
 ];
+const mobileItems = [memberItems[0], memberItems[2], memberItems[3], memberItems[4], memberItems[1]];
+const activePath = (pathname: string, href: string) => href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
-function NavGroup({ items, pathname }: { items: NavItem[]; pathname: string }) {
-  return (
-    <>
-      {items.map((item) => {
-        const Icon = item.icon;
-        const active = pathname === item.href;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            prefetch
-            className={`group relative flex items-center gap-3 rounded-full px-3.5 py-2 text-sm transition-all ${
-              active
-                ? "bg-amber/10 font-semibold text-amber"
-                : "text-[color:rgba(244,241,233,0.55)] hover:bg-white/5 hover:text-paper"
-            }`}
-          >
-            {active && (
-              <span className="absolute left-0 h-5 w-[3px] -translate-x-2 rounded-full bg-amber" />
-            )}
-            <Icon size={16} className={active ? "text-amber" : "text-muted"} />
-            {item.label}
-          </Link>
-        );
-      })}
-    </>
-  );
-}
+function Brand() { return <Link href="/dashboard" className="flex items-center gap-3 px-1"><div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-1 ring-cyan-300/20"><Image src={logo} alt="WorshipFlow" fill sizes="48px" className="object-cover" priority /></div><div><p className="db-title whitespace-nowrap text-[25px] leading-none text-[#f4f3ef]">WorshipFlow</p><p className="db-label mt-1.5 !text-[8px] !tracking-[0.28em] text-[#d0d4dd]">Ministério de louvor</p></div></Link>; }
+function NavLinks({ items, pathname, onClick }: { items: NavItem[]; pathname: string; onClick?: () => void }) { return <div className="flex flex-col gap-1.5">{items.map(({ href, label, icon: Icon }) => <Link key={`${href}-${label}`} href={href} onClick={onClick} className={`db-nav-link ${activePath(pathname, href) ? "db-nav-link-active" : ""}`}><Icon size={19} strokeWidth={1.8} /><span>{label}</span></Link>)}</div>; }
+function NavigationContent({ perfil, onClick }: { perfil: PerfilUsuario; onClick?: () => void }) { const pathname = usePathname(); return <nav className="mt-9"><p className="db-label mb-3 px-3 !text-[9px] text-[#aeb8ca]">Membro</p><NavLinks items={memberItems} pathname={pathname} onClick={onClick} />{perfil === "ADMIN" && <><p className="db-label mb-3 mt-9 px-3 !text-[9px] text-[#aeb8ca]">Administrador</p><NavLinks items={adminItems} pathname={pathname} onClick={onClick} /></>}</nav>; }
 
 export function DashboardNav({ perfil }: { perfil: PerfilUsuario }) {
-  const pathname = usePathname();
-  const isAdmin = perfil === "ADMIN";
-
-  return (
-    <aside className="sticky top-16 h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-[color:rgba(148,163,184,0.12)] px-4 py-7">
-      <p className="af-label mb-5 px-3 text-[#97a3bd]">Menu</p>
-
-      <nav className="flex flex-col gap-1.5">
-        <NavGroup items={USER_NAV_ITEMS} pathname={pathname} />
-
-        {isAdmin && (
-          <>
-            <div className="my-3 px-3 text-[10px] uppercase tracking-[0.2em] text-[color:rgba(151,163,189,0.6)]">
-              Administração
-            </div>
-            <NavGroup items={ADMIN_NAV_ITEMS} pathname={pathname} />
-          </>
-        )}
-      </nav>
-    </aside>
-  );
+  const [open, setOpen] = useState(false); const pathname = usePathname();
+  return <><aside className="fixed inset-y-0 left-0 z-40 hidden w-[278px] border-r border-white/10 bg-[#071525]/95 px-3 py-5 lg:block"><Brand /><NavigationContent perfil={perfil} /></aside>
+    <div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#07101e]/90 px-4 backdrop-blur lg:hidden"><Brand /><button aria-label="Abrir menu" onClick={() => setOpen(true)} className="db-icon-button h-10 w-10"><Menu size={20} /></button></div>
+    <AnimatePresence>{open && <><motion.button aria-label="Fechar menu" className="fixed inset-0 z-50 bg-black/55 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} /><motion.aside className="fixed inset-y-0 left-0 z-[51] w-[min(82vw,320px)] overflow-y-auto border-r border-white/10 bg-[#071525] px-3 py-5 lg:hidden" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 28, stiffness: 280 }}><div className="flex items-center justify-between"><Brand /><button aria-label="Fechar menu" onClick={() => setOpen(false)} className="db-icon-button h-9 w-9"><X size={18} /></button></div><NavigationContent perfil={perfil} onClick={() => setOpen(false)} /></motion.aside></>}</AnimatePresence>
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[70px] grid-cols-5 border-t border-white/10 bg-[#07101e]/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">{mobileItems.map(({ href, label, icon: Icon }) => { const active = activePath(pathname, href); return <Link key={href} href={href} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active ? "text-[#f5d76e]" : "text-[#aeb8ca]"}`}><Icon size={19} strokeWidth={active ? 2.3 : 1.8} /><span>{label}</span></Link>; })}</nav>
+  </>;
 }
