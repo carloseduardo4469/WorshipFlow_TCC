@@ -16,7 +16,7 @@ export default async function EditarMusicaPage({ params }: { params: Promise<{ i
   if (!musica) notFound();
 
   return (
-    <div className="mx-auto max-w-[760px]">
+    <div className="mx-auto max-w-[760px] lg:mx-0">
       <PageHeader title={`Editar: ${musica.titulo}`} />
       <MusicaForm musica={musica} ministerios={ministerios} />
     </div>

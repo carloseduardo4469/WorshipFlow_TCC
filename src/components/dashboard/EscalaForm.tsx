@@ -55,7 +55,7 @@ export function EscalaForm({
   }
 
   return (
-    <form action={formAction} className="db-panel flex max-w-2xl flex-col gap-6 p-6 sm:p-8">
+    <form action={formAction} className="db-panel flex max-w-2xl flex-col gap-6 p-6 text-left sm:p-8">
       {escala && <input type="hidden" name="id" value={escala.id} />}
 
       <div className="flex flex-col gap-4">

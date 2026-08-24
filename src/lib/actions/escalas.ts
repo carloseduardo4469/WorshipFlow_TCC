@@ -72,8 +72,9 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   await repos.escalas.setMusicas(escala.id, data.musicaIds);
 
   revalidatePath("/dashboard/escalas");
+  revalidatePath("/dashboard/admin/escalas");
   revalidatePath("/dashboard");
-  redirect("/dashboard/escalas");
+  redirect("/dashboard/admin/escalas");
 }
 
 export async function atualizarEscalaAction(
@@ -99,8 +100,9 @@ export async function atualizarEscalaAction(
   await repos.escalas.setMusicas(id, data.musicaIds);
 
   revalidatePath("/dashboard/escalas");
+  revalidatePath("/dashboard/admin/escalas");
   revalidatePath("/dashboard");
-  redirect("/dashboard/escalas");
+  redirect("/dashboard/admin/escalas");
 }
 
 export async function removerEscalaAction(formData: FormData) {
@@ -111,5 +113,6 @@ export async function removerEscalaAction(formData: FormData) {
   await repos.escalas.remove(id);
 
   revalidatePath("/dashboard/escalas");
+  revalidatePath("/dashboard/admin/escalas");
   revalidatePath("/dashboard");
 }

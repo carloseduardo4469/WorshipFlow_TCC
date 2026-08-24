@@ -22,7 +22,7 @@ export function RepertorioForm({
   const router = useRouter();
 
   return (
-    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 sm:p-8">
+    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       {repertorio && <input type="hidden" name="id" value={repertorio.id} />}
 
       <Input label="Nome" name="nome" defaultValue={repertorio?.nome} required />

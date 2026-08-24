@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useActionState, useState } from "react";
+import { Upload } from "lucide-react";
 import { atualizarPerfilAction } from "@/lib/actions/usuarios";
 import { Input, CheckboxGroup } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -21,10 +22,12 @@ const OPCOES_HABILIDADES = [
 export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarPerfilAction, null);
   const [preview, setPreview] = useState(usuario.fotoPerfilUrl);
+  const [fileName, setFileName] = useState("");
 
   function updatePreview(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+    setFileName(file.name);
     setPreview(URL.createObjectURL(file));
   }
 
@@ -40,7 +43,13 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
         )}
         <div className="min-w-0">
           <label htmlFor="fotoPerfil" className="db-label">Foto de perfil</label>
-          <input id="fotoPerfil" name="fotoPerfil" type="file" accept="image/jpeg,image/png,image/webp" onChange={updatePreview} className="db-file-input mt-2 block w-full text-sm" />
+          <div className="mt-2 flex min-w-0 items-center gap-3">
+            <input id="fotoPerfil" name="fotoPerfil" type="file" accept="image/jpeg,image/png,image/webp" onChange={updatePreview} className="sr-only" />
+            <label htmlFor="fotoPerfil" className="db-file-button shrink-0">
+              <Upload size={15} /> Escolher arquivo
+            </label>
+            <span className="db-file-name truncate">{fileName || "Nenhum arquivo escolhido"}</span>
+          </div>
           <p className="db-hint mt-1">JPG, PNG ou WebP, com até 1 MB.</p>
         </div>
       </div>

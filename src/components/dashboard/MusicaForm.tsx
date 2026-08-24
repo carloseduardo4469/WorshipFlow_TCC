@@ -20,7 +20,7 @@ export function MusicaForm({
   const router = useRouter();
 
   return (
-    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 sm:p-8">
+    <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       {musica && <input type="hidden" name="id" value={musica.id} />}
 
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} required />

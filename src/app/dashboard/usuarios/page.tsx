@@ -1,29 +1,29 @@
-import { requireAdmin } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { UsuarioRow } from "@/components/dashboard/UsuarioRow";
+import { DataTable } from "@/components/ui/DataTable";
 
-export default async function UsuariosPage() {
-  await requireAdmin();
+export default async function EquipePage() {
+  await requireAuth();
   const repos = await getRepositories();
-  const [usuarios, ministerios] = await Promise.all([repos.usuarios.list(), repos.ministerios.list()]);
+  const usuarios = await repos.usuarios.list();
 
   return (
     <div className="mx-auto max-w-[1240px]">
       <PageHeader
         title="Equipe"
-        description="Perfis são criados automaticamente quando alguém se cadastra. Aqui você define papel, status e ministério."
+        description="Conheça as pessoas que fazem parte do ministério de louvor."
       />
 
-      {usuarios.length === 0 ? (
-        <div className="db-empty">Ninguém se cadastrou ainda.</div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {usuarios.map((u) => (
-            <UsuarioRow key={u.id} usuario={u} ministerios={ministerios} />
-          ))}
-        </div>
-      )}
+      <DataTable headers={["Nome", "Instrumento", "Status"]} isEmpty={usuarios.length === 0} emptyMessage="Ninguém se cadastrou ainda.">
+        {usuarios.map((usuario) => (
+          <tr key={usuario.id}>
+            <td className="px-4 py-3.5 text-paper font-medium">{usuario.nome}</td>
+            <td className="px-4 py-3.5 text-muted">{usuario.instrumentoPrincipal ?? "Não informado"}</td>
+            <td className="px-4 py-3.5"><span className={usuario.statusMinisterio === "ATIVO" ? "db-badge db-badge-green" : "db-badge db-badge-muted"}>{usuario.statusMinisterio === "ATIVO" ? "Ativo" : "Inativo"}</span></td>
+          </tr>
+        ))}
+      </DataTable>
     </div>
   );
 }

@@ -74,6 +74,8 @@ export async function atualizarUsuarioAdminAction(
   });
 
   revalidatePath("/dashboard/usuarios");
+  revalidatePath("/dashboard/equipe");
+  revalidatePath("/dashboard/admin/usuarios");
   revalidatePath("/dashboard");
   return { success: true };
 }

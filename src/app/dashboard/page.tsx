@@ -11,7 +11,7 @@ export default async function DashboardHomePage() {
   const activeSchedules = escalas.filter((item) => item.status !== "CANCELADA"); const team = usuarios.filter((item) => item.statusMinisterio === "ATIVO");
   const completeProfile = Boolean(profile.instrumentoPrincipal);
   const overview = [
-    { label: "Membros ativos", value: `${team.length} ${team.length === 1 ? "cadastro" : "cadastros"}`, text: "Equipe disponível para escalas e ensaios.", href: "/dashboard/usuarios", tint: "cyan" },
+    { label: "Membros ativos", value: `${team.length} ${team.length === 1 ? "cadastro" : "cadastros"}`, text: "Equipe disponível para escalas e ensaios.", href: "/dashboard/equipe", tint: "cyan" },
     { label: "Músicas", value: `${musicas.length} ${musicas.length === 1 ? "item" : "itens"}`, text: "Repertório pronto para culto e ensaio.", href: "/dashboard/musicas", tint: "blue" },
     { label: "Escalas", value: `${activeSchedules.length} ${activeSchedules.length === 1 ? "escala" : "escalas"}`, text: "Planejamento consolidado da operação.", href: "/dashboard/escalas", tint: "purple" },
     { label: "Favoritos", value: `${repertorios.length} ${repertorios.length === 1 ? "louvor" : "louvores"}`, text: "Repertório pessoal salvo para consulta rápida.", href: "/dashboard/repertorios", tint: "cyan" },

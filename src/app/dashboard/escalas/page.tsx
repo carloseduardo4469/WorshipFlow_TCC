@@ -17,10 +17,10 @@ function formatDate(iso: string | null) {
 }
 
 export default async function EscalasPage() {
-  const { profile } = await requireAuth();
+  await requireAuth();
   const repos = await getRepositories();
   const [escalas, usuarios] = await Promise.all([repos.escalas.list(), repos.usuarios.list()]);
-  const isAdmin = profile.perfil === "ADMIN";
+  const isAdmin = false;
 
   const nomesPorId = new Map(usuarios.map((u) => [u.id, u.nome]));
 

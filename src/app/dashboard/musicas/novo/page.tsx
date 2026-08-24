@@ -9,7 +9,7 @@ export default async function NovaMusicaPage() {
   const ministerios = await repos.ministerios.list();
 
   return (
-    <div className="mx-auto max-w-[760px]">
+    <div className="mx-auto max-w-[760px] lg:mx-0">
       <PageHeader title="Nova música" />
       <MusicaForm ministerios={ministerios} />
     </div>
