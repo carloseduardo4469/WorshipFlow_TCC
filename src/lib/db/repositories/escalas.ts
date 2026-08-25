@@ -187,7 +187,7 @@ function createSupabaseRepository(supabase: SupabaseClient): EscalasRepository {
 
 export function createEscalasRepository(
   backend: Backend,
-  supabase: SupabaseClient
+  supabase: SupabaseClient | null
 ): EscalasRepository {
-  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase);
+  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase!);
 }

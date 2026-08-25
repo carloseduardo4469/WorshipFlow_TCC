@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { invalidateDataCache } from "@/lib/db/cache";
 import type { FuncaoUsuario, StatusEscala, TonalidadeMusica } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
@@ -71,6 +72,7 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   await repos.escalas.setUsuarios(escala.id, data.usuarioIds);
   await repos.escalas.setMusicas(escala.id, data.musicaIds);
 
+  invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
   revalidatePath("/dashboard/admin/escalas");
   revalidatePath("/dashboard");
@@ -99,6 +101,7 @@ export async function atualizarEscalaAction(
   await repos.escalas.setUsuarios(id, data.usuarioIds);
   await repos.escalas.setMusicas(id, data.musicaIds);
 
+  invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
   revalidatePath("/dashboard/admin/escalas");
   revalidatePath("/dashboard");
@@ -112,6 +115,7 @@ export async function removerEscalaAction(formData: FormData) {
   const repos = await getRepositories();
   await repos.escalas.remove(id);
 
+  invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
   revalidatePath("/dashboard/admin/escalas");
   revalidatePath("/dashboard");

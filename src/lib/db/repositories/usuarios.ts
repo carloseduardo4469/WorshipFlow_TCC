@@ -141,7 +141,7 @@ function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository 
 
 export function createUsuariosRepository(
   backend: Backend,
-  supabase: SupabaseClient
+  supabase: SupabaseClient | null
 ): UsuariosRepository {
-  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase);
+  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase!);
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { cachedData } from "@/lib/db/cache";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { removerRepertorioAction } from "@/lib/actions/repertorios";
@@ -9,7 +10,7 @@ import { removerRepertorioAction } from "@/lib/actions/repertorios";
 export default async function RepertoriosPage() {
   const { profile } = await requireAuth();
   const repos = await getRepositories();
-  const repertorios = await repos.repertorios.list();
+  const repertorios = await cachedData("repertorios:list", () => repos.repertorios.list());
   const isAdmin = profile.perfil === "ADMIN";
 
   return (

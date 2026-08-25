@@ -2,15 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   // Cache de navegação no cliente (Client Router Cache): páginas dinâmicas já
-  // visitadas ficam em memória por 60s, e links pré-buscados (prefetch) por
-  // 5min — voltar pra uma página vista recentemente NÃO dispara novo render
-  // no servidor. Toda mutation passa por revalidatePath nas Server Actions,
-  // que invalida esse cache na hora, então dado alterado aparece na próxima
-  // visita à página.
+  // visitadas ficam em memória por 10min, e links pré-buscados (prefetch) por
+  // 30min — trocar de tela NÃO re-renderiza a página nem re-consulta o banco.
+  // Toda mutation passa por revalidatePath nas Server Actions, que invalida
+  // esse cache na hora, então o dado alterado aparece na próxima visita.
   experimental: {
     staleTimes: {
-      dynamic: 60,
-      static: 300,
+      dynamic: 600,
+      static: 1800,
     },
   },
   // Turbopack é o bundler padrão do Next.js 16 (não há pacote npm separado

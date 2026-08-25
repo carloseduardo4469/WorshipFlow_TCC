@@ -147,7 +147,7 @@ function createSupabaseRepository(supabase: SupabaseClient): RepertoriosReposito
 
 export function createRepertoriosRepository(
   backend: Backend,
-  supabase: SupabaseClient
+  supabase: SupabaseClient | null
 ): RepertoriosRepository {
-  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase);
+  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase!);
 }

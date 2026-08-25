@@ -20,7 +20,7 @@ import type { Repositories } from "./types";
  */
 export async function getRepositories(): Promise<Repositories> {
   const backend = await resolveBackend();
-  const supabase = await createSupabaseServerClient();
+  const supabase = backend === "supabase" ? await createSupabaseServerClient() : null;
 
   return {
     backend,

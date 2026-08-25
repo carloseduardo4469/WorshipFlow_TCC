@@ -7,6 +7,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { appConfig } from "@/content/app-config";
+import { PwaRegister } from "@/components/PwaRegister";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -36,6 +37,16 @@ const mono = Space_Mono({
 export const metadata: Metadata = {
   title: appConfig.name,
   description: appConfig.description,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: appConfig.name,
+  },
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -46,7 +57,10 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${display.variable} ${serif.variable} ${body.variable} ${mono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }

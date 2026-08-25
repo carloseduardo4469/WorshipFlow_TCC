@@ -2,12 +2,18 @@ import Link from "next/link";
 import { ArrowUpRight, CalendarDays, Check, ListMusic } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { cachedData } from "@/lib/db/cache";
 
 function monthLabel() { return new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date()); }
 
 export default async function DashboardHomePage() {
   const { profile } = await requireAuth(); const repos = await getRepositories();
-  const [escalas, musicas, repertorios, usuarios] = await Promise.all([repos.escalas.list(), repos.musicas.list(), repos.repertorios.list(), repos.usuarios.list()]);
+  const [escalas, musicas, repertorios, usuarios] = await Promise.all([
+    cachedData("escalas:list", () => repos.escalas.list()),
+    cachedData("musicas:list", () => repos.musicas.list()),
+    cachedData("repertorios:list", () => repos.repertorios.list()),
+    cachedData("usuarios:list", () => repos.usuarios.list()),
+  ]);
   const activeSchedules = escalas.filter((item) => item.status !== "CANCELADA"); const team = usuarios.filter((item) => item.statusMinisterio === "ATIVO");
   const completeProfile = Boolean(profile.habilidades);
   const overview = [

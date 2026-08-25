@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { invalidateDataCache } from "@/lib/db/cache";
 
 export type ActionState = { error?: string } | null;
 
@@ -42,6 +43,7 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   const { linkValido: _linkValido, ...musica } = data;
   await repos.musicas.create(musica);
 
+  invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");
   redirect("/dashboard/musicas");
@@ -62,6 +64,7 @@ export async function atualizarMusicaAction(
   const { linkValido: _linkValido, ...musica } = data;
   await repos.musicas.update(id, musica);
 
+  invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");
   redirect("/dashboard/musicas");
@@ -74,6 +77,7 @@ export async function removerMusicaAction(formData: FormData) {
   const repos = await getRepositories();
   await repos.musicas.remove(id);
 
+  invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");
 }

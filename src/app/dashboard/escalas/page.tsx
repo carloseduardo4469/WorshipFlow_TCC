@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { cachedData } from "@/lib/db/cache";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -19,7 +20,10 @@ function formatDate(iso: string | null) {
 export default async function EscalasPage() {
   await requireAuth();
   const repos = await getRepositories();
-  const [escalas, usuarios] = await Promise.all([repos.escalas.list(), repos.usuarios.list()]);
+  const [escalas, usuarios] = await Promise.all([
+    cachedData("escalas:list", () => repos.escalas.list()),
+    cachedData("usuarios:list", () => repos.usuarios.list()),
+  ]);
   const isAdmin = false;
 
   const nomesPorId = new Map(usuarios.map((u) => [u.id, u.nome]));

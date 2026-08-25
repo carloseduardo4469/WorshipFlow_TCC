@@ -127,7 +127,7 @@ function createSupabaseRepository(supabase: SupabaseClient): MusicasRepository {
 
 export function createMusicasRepository(
   backend: Backend,
-  supabase: SupabaseClient
+  supabase: SupabaseClient | null
 ): MusicasRepository {
-  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase);
+  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase!);
 }

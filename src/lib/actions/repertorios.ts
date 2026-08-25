@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { invalidateDataCache } from "@/lib/db/cache";
 
 export type ActionState = { error?: string } | null;
 
@@ -31,6 +32,7 @@ export async function criarRepertorioAction(
   });
   await repos.repertorios.setMusicas(repertorio.id, musicaIds);
 
+  invalidateDataCache("repertorios");
   revalidatePath("/dashboard/repertorios");
   revalidatePath("/dashboard");
   redirect("/dashboard/repertorios");
@@ -57,6 +59,7 @@ export async function atualizarRepertorioAction(
   });
   await repos.repertorios.setMusicas(id, musicaIds);
 
+  invalidateDataCache("repertorios");
   revalidatePath("/dashboard/repertorios");
   revalidatePath("/dashboard");
   redirect("/dashboard/repertorios");
@@ -69,6 +72,7 @@ export async function removerRepertorioAction(formData: FormData) {
   const repos = await getRepositories();
   await repos.repertorios.remove(id);
 
+  invalidateDataCache("repertorios");
   revalidatePath("/dashboard/repertorios");
   revalidatePath("/dashboard");
 }

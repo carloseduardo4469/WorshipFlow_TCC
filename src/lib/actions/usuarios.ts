@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { invalidateDataCache } from "@/lib/db/cache";
 import type { PerfilUsuario, StatusMinisterio } from "@/types/domain";
 
 export type ActionState = { error?: string; success?: boolean } | null;
@@ -50,6 +51,7 @@ export async function atualizarPerfilAction(
     ...(fotoPerfilUrl ? { fotoPerfilUrl } : {}),
   });
 
+  invalidateDataCache("usuarios");
   revalidatePath("/dashboard/perfil");
   revalidatePath("/dashboard");
   return { success: true };
@@ -73,6 +75,7 @@ export async function atualizarUsuarioAdminAction(
     ministerioId: ministerioIdRaw ? Number(ministerioIdRaw) : null,
   });
 
+  invalidateDataCache("usuarios");
   revalidatePath("/dashboard/usuarios");
   revalidatePath("/dashboard/equipe");
   revalidatePath("/dashboard/admin/usuarios");

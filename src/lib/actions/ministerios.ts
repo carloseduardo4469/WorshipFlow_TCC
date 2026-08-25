@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
+import { invalidateDataCache } from "@/lib/db/cache";
 
 export type ActionState = { error?: string } | null;
 
@@ -20,6 +21,7 @@ export async function criarMinisterioAction(
   const repos = await getRepositories();
   await repos.ministerios.create({ nome, descricao: descricao || null, ativo: true });
 
+  invalidateDataCache("ministerios");
   revalidatePath("/dashboard/ministerios");
   revalidatePath("/dashboard");
   redirect("/dashboard/ministerios");
@@ -40,6 +42,7 @@ export async function atualizarMinisterioAction(
   const repos = await getRepositories();
   await repos.ministerios.update(id, { nome, descricao: descricao || null, ativo });
 
+  invalidateDataCache("ministerios");
   revalidatePath("/dashboard/ministerios");
   revalidatePath("/dashboard");
   redirect("/dashboard/ministerios");
@@ -52,6 +55,7 @@ export async function removerMinisterioAction(formData: FormData) {
   const repos = await getRepositories();
   await repos.ministerios.remove(id);
 
+  invalidateDataCache("ministerios");
   revalidatePath("/dashboard/ministerios");
   revalidatePath("/dashboard");
 }

@@ -102,7 +102,7 @@ function createSupabaseRepository(supabase: SupabaseClient): MinisteriosReposito
 
 export function createMinisteriosRepository(
   backend: Backend,
-  supabase: SupabaseClient
+  supabase: SupabaseClient | null
 ): MinisteriosRepository {
-  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase);
+  return backend === "local" ? createLocalRepository() : createSupabaseRepository(supabase!);
 }
