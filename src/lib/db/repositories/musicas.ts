@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import { musicas as musicasTable } from "@/lib/db/local/schema";
@@ -46,6 +46,13 @@ function createLocalRepository(): MusicasRepository {
   const localDb = getLocalDb();
 
   return {
+    async count(ministerioId) {
+      const query = localDb.select({ count: count() }).from(musicasTable);
+      const rows = ministerioId
+        ? await query.where(eq(musicasTable.ministerioId, ministerioId))
+        : await query;
+      return rows[0]?.count ?? 0;
+    },
     async list(ministerioId) {
       const rows = ministerioId
         ? await localDb.select().from(musicasTable).where(eq(musicasTable.ministerioId, ministerioId))
@@ -87,6 +94,13 @@ function createLocalRepository(): MusicasRepository {
 
 function createSupabaseRepository(supabase: SupabaseClient): MusicasRepository {
   return {
+    async count(ministerioId) {
+      let query = supabase.from("musicas").select("id", { count: "exact", head: true });
+      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+      const { count: total, error } = await query;
+      if (error) throw error;
+      return total ?? 0;
+    },
     async list(ministerioId) {
       let query = supabase.from("musicas").select("*").order("titulo");
       if (ministerioId) query = query.eq("ministerio_id", ministerioId);

@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import { usuarios as usuariosTable } from "@/lib/db/local/schema";
@@ -55,6 +55,14 @@ function createLocalRepository(): UsuariosRepository {
   const localDb = getLocalDb();
 
   return {
+    async count(ministerioId, statusMinisterio) {
+      const filters = [];
+      if (ministerioId) filters.push(eq(usuariosTable.ministerioId, ministerioId));
+      if (statusMinisterio) filters.push(eq(usuariosTable.statusMinisterio, statusMinisterio));
+      const query = localDb.select({ count: count() }).from(usuariosTable);
+      const rows = filters.length ? await query.where(and(...filters)) : await query;
+      return rows[0]?.count ?? 0;
+    },
     async list(ministerioId) {
       const rows = ministerioId
         ? await localDb.select().from(usuariosTable).where(eq(usuariosTable.ministerioId, ministerioId))
@@ -93,6 +101,14 @@ function createLocalRepository(): UsuariosRepository {
 
 function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository {
   return {
+    async count(ministerioId, statusMinisterio) {
+      let query = supabase.from("profiles").select("id", { count: "exact", head: true });
+      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+      if (statusMinisterio) query = query.eq("status_ministerio", statusMinisterio);
+      const { count: total, error } = await query;
+      if (error) throw error;
+      return total ?? 0;
+    },
     async list(ministerioId) {
       let query = supabase.from("profiles").select("*").order("nome");
       if (ministerioId) query = query.eq("ministerio_id", ministerioId);

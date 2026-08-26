@@ -16,6 +16,7 @@ import "server-only";
 const DATA_CACHE_TTL_MS = 30_000;
 
 const store = new Map<string, { value: unknown; expiresAt: number }>();
+const pending = new Map<string, Promise<unknown>>();
 
 /** Lê do cache ou executa a função e armazena o resultado por TTL. */
 export function cachedData<T>(
@@ -28,10 +29,18 @@ export function cachedData<T>(
     return Promise.resolve(hit.value as T);
   }
 
-  return Promise.resolve().then(fn).then((value) => {
-    store.set(key, { value, expiresAt: Date.now() + ttlMs });
-    return value;
-  });
+  const running = pending.get(key);
+  if (running) return running as Promise<T>;
+
+  const request = Promise.resolve()
+    .then(fn)
+    .then((value) => {
+      store.set(key, { value, expiresAt: Date.now() + ttlMs });
+      return value;
+    })
+    .finally(() => pending.delete(key));
+  pending.set(key, request);
+  return request;
 }
 
 /** Remove todas as chaves de uma tag de domínio — use após mutações. */

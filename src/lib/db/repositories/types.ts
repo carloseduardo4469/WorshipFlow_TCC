@@ -27,6 +27,7 @@ export interface MinisteriosRepository {
 
 export interface MusicasRepository {
   list(ministerioId?: number): Promise<Musica[]>;
+  count(ministerioId?: number): Promise<number>;
   getById(id: number): Promise<Musica | null>;
   create(data: NewMusica): Promise<Musica>;
   update(id: number, data: UpdateMusica): Promise<Musica>;
@@ -35,6 +36,7 @@ export interface MusicasRepository {
 
 export interface RepertoriosRepository {
   list(ministerioId?: number): Promise<Repertorio[]>;
+  count(ministerioId?: number): Promise<number>;
   getById(id: number): Promise<Repertorio | null>;
   create(data: NewRepertorio): Promise<Repertorio>;
   update(id: number, data: UpdateRepertorio): Promise<Repertorio>;
@@ -44,6 +46,7 @@ export interface RepertoriosRepository {
 
 export interface UsuariosRepository {
   list(ministerioId?: number): Promise<Usuario[]>;
+  count(ministerioId?: number, statusMinisterio?: Usuario["statusMinisterio"]): Promise<number>;
   getById(id: string): Promise<Usuario | null>;
   getByEmail(email: string): Promise<Usuario | null>;
   update(id: string, data: UpdateUsuario): Promise<Usuario>;
@@ -54,6 +57,7 @@ export interface UsuariosRepository {
 
 export interface EscalasRepository {
   list(ministerioId?: number): Promise<Escala[]>;
+  count(ministerioId?: number, statuses?: Escala["status"][]): Promise<number>;
   getById(id: number): Promise<Escala | null>;
   create(data: NewEscala): Promise<Escala>;
   update(id: number, data: UpdateEscala): Promise<Escala>;

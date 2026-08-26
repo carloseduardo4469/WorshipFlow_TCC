@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import {
@@ -62,6 +62,14 @@ function createLocalRepository(): EscalasRepository {
   }
 
   return {
+    async count(ministerioId, statuses) {
+      const filters = [];
+      if (ministerioId) filters.push(eq(escalasTable.ministerioId, ministerioId));
+      if (statuses?.length) filters.push(inArray(escalasTable.status, statuses));
+      const query = localDb.select({ count: count() }).from(escalasTable);
+      const rows = filters.length ? await query.where(and(...filters)) : await query;
+      return rows[0]?.count ?? 0;
+    },
     async list(ministerioId) {
       const rows = ministerioId
         ? await localDb.select().from(escalasTable).where(eq(escalasTable.ministerioId, ministerioId))
@@ -112,6 +120,14 @@ function createSupabaseRepository(supabase: SupabaseClient): EscalasRepository {
   const selectWithRelations = "*, escala_usuarios(usuario_id), escala_musicas(musica_id)";
 
   return {
+    async count(ministerioId, statuses) {
+      let query = supabase.from("escalas").select("id", { count: "exact", head: true });
+      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+      if (statuses?.length) query = query.in("status", statuses);
+      const { count: total, error } = await query;
+      if (error) throw error;
+      return total ?? 0;
+    },
     async list(ministerioId) {
       let query = supabase
         .from("escalas")
