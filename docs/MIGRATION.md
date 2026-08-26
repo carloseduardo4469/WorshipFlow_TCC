@@ -85,11 +85,19 @@ DB_MODE=local     # força SQLite local sempre (útil sem internet)
 
 ### Testando
 
+No Windows, execute `setup.bat` na primeira vez. Ele usa o Node.js portátil
+incluído no projeto e instala as dependências com `npm ci`.
+
+Em cada novo terminal, execute `node-portable\\nodevars.bat` para carregar o
+ambiente e depois use `npm.cmd`:
+
 ```bash
-npm install
-npm run db:seed:local   # popula o SQLite local
-npm run dev
+npm.cmd run db:seed:local   # popula o SQLite local
+npm.cmd run dev
 ```
+
+O projeto exige Node.js 24.x e npm 11.19.0 ou superior. O binário incluído é
+para Windows x64.
 
 Sem `.env` do Supabase preenchido, cai automaticamente pro SQLite local —
 dá pra navegar o app inteiro (auth via Supabase real continua exigindo as
