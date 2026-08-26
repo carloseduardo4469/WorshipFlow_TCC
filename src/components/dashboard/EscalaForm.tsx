@@ -20,11 +20,13 @@ export function EscalaForm({
   usuarios,
   musicas,
   ministerios,
+  onCancel,
 }: {
   escala?: Escala;
   usuarios: Usuario[];
   musicas: Musica[];
   ministerios: Ministerio[];
+  onCancel?: () => void;
 }) {
   const action = escala ? atualizarEscalaAction : criarEscalaAction;
   const [state, formAction, pending] = useActionState(action, null);
@@ -185,7 +187,7 @@ export function EscalaForm({
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando..." : "Salvar"}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => router.back()}>
+        <Button type="button" variant="ghost" onClick={() => onCancel ? onCancel() : router.back()}>
           Cancelar
         </Button>
       </div>
