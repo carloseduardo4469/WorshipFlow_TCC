@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useActionState, useState } from "react";
 import { Upload } from "lucide-react";
-import { atualizarPerfilAction } from "@/lib/actions/usuarios";
+import { atualizarPerfilAction, excluirMinhaContaAction } from "@/lib/actions/usuarios";
 import { Input, CheckboxGroup } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
@@ -20,6 +20,7 @@ const OPCOES_HABILIDADES = [
 
 export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarPerfilAction, null);
+  const [deleteState, deleteAction, deletePending] = useActionState(excluirMinhaContaAction, null);
   const [preview, setPreview] = useState(usuario.fotoPerfilUrl);
   const [fileName, setFileName] = useState("");
 
@@ -31,7 +32,8 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
   }
 
   return (
-    <form action={formAction} className="db-panel db-profile-form flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
+    <>
+      <form action={formAction} className="db-panel db-profile-form flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       <div className="flex items-center gap-4">
         {preview ? (
           <img src={preview} alt="Prévia da foto de perfil" className="h-16 w-16 rounded-full object-cover ring-2 ring-cyan-300/45" />
@@ -72,6 +74,18 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
           {pending ? "Salvando..." : "Salvar alterações"}
         </Button>
       </div>
-    </form>
+      </form>
+      <form action={deleteAction} className="db-panel mt-5 flex max-w-lg flex-col gap-4 border border-red-300/20 p-6 text-left sm:p-8">
+      <div>
+        <h2 className="font-semibold text-paper">Excluir conta</h2>
+        <p className="db-hint mt-1">Essa ação é permanente e remove seu acesso ao WorshipFlow.</p>
+      </div>
+      <Input label='Digite "excluirminhaconta" para confirmar' name="confirmacao" autoComplete="off" required />
+      {deleteState?.error && <FormAlert>{deleteState.error}</FormAlert>}
+      <Button type="submit" disabled={deletePending} className="!bg-red-500/80 hover:!bg-red-500">
+        {deletePending ? "Excluindo..." : "Excluir minha conta"}
+      </Button>
+      </form>
+    </>
   );
 }

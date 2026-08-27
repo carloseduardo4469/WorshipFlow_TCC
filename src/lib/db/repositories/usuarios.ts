@@ -16,6 +16,7 @@ function mapSupabaseRow(row: any): Usuario {
     instrumentoPrincipal: row.instrumento_principal ?? null,
     habilidades: row.habilidades ?? null,
     statusMinisterio: row.status_ministerio,
+    isSuspended: Boolean(row.is_suspended),
     perfil: row.perfil,
     fotoPerfilUrl: row.foto_perfil_url ?? null,
     ministerioId: row.ministerio_id ?? null,
@@ -32,6 +33,7 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
     instrumentoPrincipal: row.instrumentoPrincipal ?? null,
     habilidades: row.habilidades ?? null,
     statusMinisterio: row.statusMinisterio as Usuario["statusMinisterio"],
+    isSuspended: Boolean(row.isSuspended),
     perfil: row.perfil as Usuario["perfil"],
     fotoPerfilUrl: row.fotoPerfilUrl ?? null,
     ministerioId: row.ministerioId ?? null,
@@ -40,11 +42,12 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
 }
 
 function toSupabasePayload(data: UpdateUsuario) {
-  const { instrumentoPrincipal, statusMinisterio, fotoPerfilUrl, ministerioId, ...rest } = data;
+  const { instrumentoPrincipal, statusMinisterio, isSuspended, fotoPerfilUrl, ministerioId, ...rest } = data;
   return {
     ...rest,
     ...(instrumentoPrincipal !== undefined ? { instrumento_principal: instrumentoPrincipal } : {}),
     ...(statusMinisterio !== undefined ? { status_ministerio: statusMinisterio } : {}),
+    ...(isSuspended !== undefined ? { is_suspended: isSuspended } : {}),
     ...(fotoPerfilUrl !== undefined ? { foto_perfil_url: fotoPerfilUrl } : {}),
     ...(ministerioId !== undefined ? { ministerio_id: ministerioId } : {}),
   };

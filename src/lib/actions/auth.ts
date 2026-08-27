@@ -151,6 +151,7 @@ export async function loginComGoogleAction(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
+      queryParams: { prompt: "select_account" },
       redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });

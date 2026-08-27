@@ -21,6 +21,7 @@ export const usuarios = sqliteTable("usuarios", {
   instrumentoPrincipal: text("instrumento_principal"),
   habilidades: text("habilidades"),
   statusMinisterio: text("status_ministerio").notNull().default("ATIVO"),
+  isSuspended: integer("is_suspended", { mode: "boolean" }).notNull().default(false),
   perfil: text("perfil").notNull().default("MEMBRO"),
   fotoPerfilUrl: text("foto_perfil_url"),
   ministerioId: integer("ministerio_id").references(() => ministerios.id, {
