@@ -37,6 +37,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       instrumentoPrincipal: null,
       habilidades: null,
       statusMinisterio: "ATIVO",
+      isSuspended: false,
       perfil: "MEMBRO",
       fotoPerfilUrl: null,
       ministerioId: null,
