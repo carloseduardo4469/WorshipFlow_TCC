@@ -31,4 +31,4 @@ Thumbs.db
 .idea/
 
 docs/migrations.md
-src/lib/db/schema.sql
+src\lib\db\schema.sql

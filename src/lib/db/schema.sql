@@ -27,12 +27,17 @@ create table if not exists public.profiles (
   habilidades varchar(300),
   status_ministerio varchar(30) not null default 'ATIVO'
     check (status_ministerio in ('ATIVO', 'INATIVO')),
+  is_suspended boolean not null default false,
   perfil varchar(30) not null default 'MEMBRO'
     check (perfil in ('ADMIN', 'MEMBRO')),
   foto_perfil_url text,
   ministerio_id bigint references public.ministerios(id) on delete set null,
   created_at timestamptz not null default now()
 );
+
+-- Compatibilidade com instalações que já tinham a tabela profiles criada.
+alter table public.profiles
+  add column if not exists is_suspended boolean not null default false;
 
 create table if not exists public.musicas (
   id bigint generated always as identity primary key,
@@ -100,6 +105,7 @@ create table if not exists public.usuario_musicas_favoritas (
 create index if not exists idx_musicas_ministerio_id on public.musicas(ministerio_id);
 create index if not exists idx_profiles_ministerio_id on public.profiles(ministerio_id);
 create index if not exists idx_profiles_status on public.profiles(status_ministerio);
+create index if not exists idx_profiles_suspended on public.profiles(is_suspended);
 create index if not exists idx_escalas_ministerio_id on public.escalas(ministerio_id);
 create index if not exists idx_escalas_status_data on public.escalas(status, data_escala);
 create index if not exists idx_repertorios_ministerio_id on public.repertorios(ministerio_id);
@@ -154,6 +160,28 @@ returns boolean as $$
     where id = auth.uid() and perfil = 'ADMIN'
   );
 $$ language sql security definer stable set search_path = public;
+
+-- Permite executar este schema novamente sem conflito com policies existentes.
+drop policy if exists "profiles_select" on public.profiles;
+drop policy if exists "profiles_update_self_or_admin" on public.profiles;
+drop policy if exists "profiles_insert_admin" on public.profiles;
+drop policy if exists "profiles_delete_admin" on public.profiles;
+drop policy if exists "ministerios_select" on public.ministerios;
+drop policy if exists "ministerios_write" on public.ministerios;
+drop policy if exists "musicas_select" on public.musicas;
+drop policy if exists "musicas_write" on public.musicas;
+drop policy if exists "repertorios_select" on public.repertorios;
+drop policy if exists "repertorios_write" on public.repertorios;
+drop policy if exists "repertorio_musicas_select" on public.repertorio_musicas;
+drop policy if exists "repertorio_musicas_write" on public.repertorio_musicas;
+drop policy if exists "escalas_select" on public.escalas;
+drop policy if exists "escalas_write" on public.escalas;
+drop policy if exists "escala_usuarios_select" on public.escala_usuarios;
+drop policy if exists "escala_usuarios_write" on public.escala_usuarios;
+drop policy if exists "escala_musicas_select" on public.escala_musicas;
+drop policy if exists "escala_musicas_write" on public.escala_musicas;
+drop policy if exists "favoritas_select" on public.usuario_musicas_favoritas;
+drop policy if exists "favoritas_write_self" on public.usuario_musicas_favoritas;
 
 -- profiles: todo autenticado lê; cada um edita o próprio; ADMIN edita/cria/apaga qualquer um
 create policy "profiles_select" on public.profiles

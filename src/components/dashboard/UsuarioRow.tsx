@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { atualizarUsuarioAdminAction } from "@/lib/actions/usuarios";
 import { FormAlert } from "@/components/ui/FormAlert";
 import type { Ministerio, Usuario } from "@/types/domain";
 
 export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministerios: Ministerio[] }) {
   const [state, formAction, pending] = useActionState(atualizarUsuarioAdminAction, null);
+  const [isSuspended, setIsSuspended] = useState(usuario.isSuspended);
 
   return (
     <form
@@ -30,15 +31,20 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
           <option value="ADMIN">Admin</option>
         </select>
 
-        <label className="flex items-center gap-2 text-xs text-muted">
+        <label className="group flex cursor-pointer items-center gap-2 text-xs font-semibold text-muted transition-colors hover:text-paper">
           <input
             type="checkbox"
             name="isSuspended"
             value="true"
-            defaultChecked={usuario.isSuspended}
-            className="h-4 w-4 accent-amber-300"
+            checked={isSuspended}
+            onChange={(event) => setIsSuspended(event.target.checked)}
+            aria-label={`Suspender conta de ${usuario.nome}`}
+            className="peer sr-only"
           />
-          Suspensa
+          <span className="relative h-5 w-9 rounded-full border border-white/15 bg-white/10 transition-colors peer-checked:border-amber-300/60 peer-checked:bg-amber-300/25 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-300/60">
+            <span className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-muted transition-transform peer-checked:translate-x-4 peer-checked:bg-amber-200" />
+          </span>
+          <span>{isSuspended ? "Suspensa" : "Ativa"}</span>
         </label>
 
         <select
