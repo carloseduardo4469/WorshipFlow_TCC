@@ -39,13 +39,20 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  const { pathname } = request.nextUrl;
+
+  // Páginas públicas não precisam validar sessão no Auth. Além de reduzir
+  // chamadas desnecessárias, isso evita atingir o limite de requisições ao
+  // recarregar a tela de login.
+  if (isPublicPath(pathname) || pathname === "/") {
+    return response;
+  }
+
   // getUser() (não getSession()) valida o token com o servidor Auth —
   // é o jeito seguro de checar sessão em middleware.
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
 
   if (!user && !isPublicPath(pathname) && pathname !== "/") {
     const redirectUrl = new URL("/login", request.url);

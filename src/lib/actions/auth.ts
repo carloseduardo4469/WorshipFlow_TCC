@@ -31,6 +31,9 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
   const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
 
   if (error) {
+    if (error.status === 429) {
+      return { error: "Muitas tentativas de login. Aguarde alguns minutos e tente novamente." };
+    }
     return { error: "Email ou senha incorretos." };
   }
 
