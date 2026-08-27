@@ -52,6 +52,11 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireAuth(): Promise<CurrentUser> {
   const current = await getCurrentUser();
   if (!current) redirect("/login");
+  if (current.profile.isSuspended) {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    redirect("/login?error=suspended");
+  }
   return current;
 }
 

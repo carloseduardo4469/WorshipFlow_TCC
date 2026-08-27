@@ -25,6 +25,7 @@ export interface Usuario {
   instrumentoPrincipal: string | null;
   habilidades: string | null;
   statusMinisterio: StatusMinisterio;
+  isSuspended: boolean;
   perfil: PerfilUsuario;
   fotoPerfilUrl: string | null;
   ministerioId: number | null;
@@ -39,6 +40,7 @@ export type UpdateUsuario = Partial<
     | "instrumentoPrincipal"
     | "habilidades"
     | "statusMinisterio"
+    | "isSuspended"
     | "perfil"
     | "fotoPerfilUrl"
     | "ministerioId"

@@ -30,6 +30,17 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
           <option value="ADMIN">Admin</option>
         </select>
 
+        <label className="flex items-center gap-2 text-xs text-muted">
+          <input
+            type="checkbox"
+            name="isSuspended"
+            value="true"
+            defaultChecked={usuario.isSuspended}
+            className="h-4 w-4 accent-amber-300"
+          />
+          Suspensa
+        </label>
+
         <select
           name="statusMinisterio"
           defaultValue={usuario.statusMinisterio}

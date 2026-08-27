@@ -30,6 +30,7 @@ create table if not exists usuarios (
   instrumento_principal text,
   habilidades text,
   status_ministerio text not null default 'ATIVO',
+  is_suspended integer not null default 0,
   perfil text not null default 'MEMBRO',
   foto_perfil_url text,
   ministerio_id integer references ministerios(id) on delete set null,
@@ -99,6 +100,10 @@ function getSqliteHandle(): Database.Database {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   db.exec(BOOTSTRAP_SQL);
+  const usuarioColumns = db.prepare("pragma table_info(usuarios)").all() as Array<{ name: string }>;
+  if (!usuarioColumns.some((column) => column.name === "is_suspended")) {
+    db.exec("alter table usuarios add column is_suspended integer not null default 0");
+  }
 
   _sqlite = db;
   return db;

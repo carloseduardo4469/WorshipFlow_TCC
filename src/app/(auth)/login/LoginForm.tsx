@@ -27,6 +27,10 @@ const RESET_MESSAGES: Record<string, string> = {
   "link-expirado": "Esse link de redefinição já foi usado ou expirou. Solicite um novo.",
 };
 
+const ACCOUNT_MESSAGES: Record<string, string> = {
+  deleted: "Sua conta foi excluída.",
+};
+
 export function LoginForm() {
   const [state, formAction, pending] = useActionState(loginAction, null);
   const searchParams = useSearchParams();
@@ -35,6 +39,7 @@ export function LoginForm() {
   const cadastroMsg = searchParams.get("cadastro");
   const resetMsg = searchParams.get("reset");
   const oauthError = searchParams.get("error");
+  const accountMsg = searchParams.get("account");
 
   // O Supabase anexa o detalhe do erro de OAuth no fragment (#error=...),
   // que nunca chega ao servidor. Logamos aqui pra facilitar o diagnóstico
@@ -98,7 +103,17 @@ export function LoginForm() {
               <FormAlert kind="success">{RESET_MESSAGES[resetMsg]}</FormAlert>
             </div>
           )}
-          {oauthError && (
+          {accountMsg && ACCOUNT_MESSAGES[accountMsg] && (
+            <div className="mb-5">
+              <FormAlert kind="success">{ACCOUNT_MESSAGES[accountMsg]}</FormAlert>
+            </div>
+          )}
+          {oauthError === "suspended" && (
+            <div className="mb-5">
+              <FormAlert>Sua conta está suspensa. Procure um administrador.</FormAlert>
+            </div>
+          )}
+          {oauthError && oauthError !== "suspended" && (
             <div className="mb-5">
               <FormAlert>
                 Não foi possível concluir o login com o Google. Tente novamente — se o erro
