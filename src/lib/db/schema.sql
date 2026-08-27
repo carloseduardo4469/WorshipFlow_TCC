@@ -118,7 +118,7 @@ create index if not exists idx_repertorios_ministerio_id on public.repertorios(m
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, nome, email)
+  insert into public.profiles (id, nome, email, telefone)
   values (
     new.id,
     coalesce(
@@ -127,7 +127,8 @@ begin
       new.raw_user_meta_data->>'name',
       split_part(new.email, '@', 1)
     ),
-    new.email
+    new.email,
+    nullif(new.raw_user_meta_data->>'telefone', '')
   )
   on conflict (id) do nothing;
   return new;

@@ -33,7 +33,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       id: user.id,
       nome: user.user_metadata?.nome ?? user.email?.split("@")[0] ?? "Usuário",
       email: user.email ?? "",
-      telefone: null,
+      telefone: user.user_metadata?.telefone ?? null,
       instrumentoPrincipal: null,
       habilidades: null,
       statusMinisterio: "ATIVO",
