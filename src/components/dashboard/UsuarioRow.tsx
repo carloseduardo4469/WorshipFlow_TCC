@@ -31,7 +31,7 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
           <option value="ADMIN">Admin</option>
         </select>
 
-        <label className="group flex cursor-pointer items-center gap-2 text-xs font-semibold text-muted transition-colors hover:text-paper">
+        <label className="relative flex w-[100px] shrink-0 cursor-pointer items-center gap-2 text-xs font-semibold text-muted transition-colors hover:text-paper">
           <input
             type="checkbox"
             name="isSuspended"
@@ -41,10 +41,19 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
             aria-label={`Suspender conta de ${usuario.nome}`}
             className="peer sr-only"
           />
-          <span className="relative h-5 w-9 rounded-full border border-white/15 bg-white/10 transition-colors peer-checked:border-amber-300/60 peer-checked:bg-amber-300/25 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-300/60">
-            <span className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-muted transition-transform peer-checked:translate-x-4 peer-checked:bg-amber-200" />
-          </span>
-          <span>{isSuspended ? "Suspensa" : "Ativa"}</span>
+          <span
+            className={`relative h-5 w-9 shrink-0 rounded-full border transition-colors ${
+              isSuspended
+                ? "border-amber-300/60 bg-amber-300/25"
+                : "border-white/15 bg-white/10"
+            }`}
+          />
+          <span
+            className={`pointer-events-none absolute left-0.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-muted transition-transform ${
+              isSuspended ? "translate-x-4 bg-amber-200" : ""
+            }`}
+          />
+          <span className="w-[52px]">{isSuspended ? "Suspensa" : "Ativa"}</span>
         </label>
 
         <select
