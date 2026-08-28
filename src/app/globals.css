@@ -463,6 +463,16 @@ body {
   color: #ffffff;
 }
 
+@media (max-width: 767px) {
+  .db-select-menu {
+    position: static;
+    margin-top: 0.35rem;
+    max-height: min(10rem, calc(100vh - 12rem));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 /* Tabla del dashboard con cabecera mono en mayúsculas */
 .db-table {
   border: 1px solid rgba(148, 163, 184, 0.14);
