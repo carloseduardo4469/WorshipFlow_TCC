@@ -33,9 +33,9 @@ export async function criarRepertorioAction(
   await repos.repertorios.setMusicas(repertorio.id, musicaIds);
 
   invalidateDataCache("repertorios");
-  revalidatePath("/dashboard/repertorios");
+  revalidatePath("/dashboard/historico");
   revalidatePath("/dashboard");
-  redirect("/dashboard/repertorios");
+  redirect("/dashboard/historico");
 }
 
 export async function atualizarRepertorioAction(
@@ -60,9 +60,9 @@ export async function atualizarRepertorioAction(
   await repos.repertorios.setMusicas(id, musicaIds);
 
   invalidateDataCache("repertorios");
-  revalidatePath("/dashboard/repertorios");
+  revalidatePath("/dashboard/historico");
   revalidatePath("/dashboard");
-  redirect("/dashboard/repertorios");
+  redirect("/dashboard/historico");
 }
 
 export async function removerRepertorioAction(formData: FormData) {
@@ -73,6 +73,6 @@ export async function removerRepertorioAction(formData: FormData) {
   await repos.repertorios.remove(id);
 
   invalidateDataCache("repertorios");
-  revalidatePath("/dashboard/repertorios");
+  revalidatePath("/dashboard/historico");
   revalidatePath("/dashboard");
 }

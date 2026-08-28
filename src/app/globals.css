@@ -966,3 +966,40 @@ html[data-dashboard-theme="light"] .db-member-modal .text-paper { color:#172d48 
   .db-mobile-header .db-brand-subtitle { letter-spacing:.18em !important; }
   .db-mobile-nav span { line-height:1.1; text-align:center; }
 }
+
+/* Mantém a identidade visual no mobile, reduzindo apenas efeitos caros de pintura. */
+@media (max-width: 639px) {
+  .af-beam { filter: blur(12px); opacity: calc(var(--af-beam-opacity) * 0.55); }
+  .af-theme-toggle,
+  .db-panel,
+  .db-card,
+  .db-section-panel,
+  .db-overview,
+  .backdrop-blur,
+  .backdrop-blur-sm { backdrop-filter: none; }
+  .db-grid { opacity: 0.45; }
+  .db-hero-light { filter: blur(34px); opacity: 0.25; }
+  .db-panel,
+  .db-card,
+  .db-section-panel,
+  .db-overview { box-shadow: 0 12px 28px -22px #000; }
+  .db-overview::after { filter: blur(24px); }
+}
+
+@media (prefers-reduced-motion: reduce), (prefers-reduced-data: reduce) {
+  .af-beam,
+  .db-loading-line,
+  .db-loading-title,
+  .db-loading-card { animation: none !important; }
+  .af-beam { filter: none; }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .af-theme-toggle,
+  .db-panel,
+  .db-card,
+  .db-section-panel,
+  .db-overview,
+  .backdrop-blur,
+  .backdrop-blur-sm { backdrop-filter: none; }
+}
