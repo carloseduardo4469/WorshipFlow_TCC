@@ -4,9 +4,9 @@ import { useActionState, useState } from "react";
 import { atualizarUsuarioAdminAction } from "@/lib/actions/usuarios";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { Select } from "@/components/ui/Select";
-import type { Ministerio, Usuario } from "@/types/domain";
+import type { Usuario } from "@/types/domain";
 
-export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministerios: Ministerio[] }) {
+export function UsuarioRow({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarUsuarioAdminAction, null);
   const [isSuspended, setIsSuspended] = useState(usuario.isSuspended);
 
@@ -22,7 +22,7 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
         <p className="truncate text-xs text-muted">{usuario.email}</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-3 sm:justify-end">
         <Select
           name="perfil"
           defaultValue={usuario.perfil}
@@ -66,20 +66,6 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
         >
           <option value="ATIVO">Ativo</option>
           <option value="INATIVO">Inativo</option>
-        </Select>
-
-        <Select
-          name="ministerioId"
-          defaultValue={usuario.ministerioId ?? ""}
-          className="db-select w-40"
-          aria-label={`Ministério de ${usuario.nome}`}
-        >
-          <option value="">Sem ministério</option>
-          {ministerios.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nome}
-            </option>
-          ))}
         </Select>
 
         <button type="submit" disabled={pending} className="db-btn-sm">
