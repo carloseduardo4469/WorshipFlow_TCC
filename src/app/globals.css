@@ -706,6 +706,8 @@ html[data-dashboard-theme="light"] .db-label, html[data-dashboard-theme="light"]
 html[data-dashboard-theme="light"] .text-paper, html[data-dashboard-theme="light"] .db-title { color: #17233a !important; }
 html[data-dashboard-theme="light"] .db-ghost, html[data-dashboard-theme="light"] .db-icon-button { color: #18253c; border-color: rgba(44, 104, 151, .25); background: rgba(255,255,255,.62); }
 html[data-dashboard-theme="light"] .db-nav-link { color: #354863; }
+html[data-dashboard-theme="light"] .db-mobile-header,
+html[data-dashboard-theme="light"] .db-mobile-nav { background: rgba(245, 251, 255, .96) !important; color: #18253c; }
 html[data-dashboard-theme="light"] .db-brand-title { color: #f7f9fd !important; text-shadow: none; }
 html[data-dashboard-theme="light"] .db-brand-subtitle { color: #62e5f7 !important; }
 html[data-dashboard-theme="light"] aside, html[data-dashboard-theme="light"] header, html[data-dashboard-theme="light"] nav.fixed { background-color: rgba(245, 251, 255, .91) !important; border-color: rgba(44, 104, 151, .18) !important; }
@@ -871,4 +873,11 @@ html[data-dashboard-theme="light"] .db-member-modal .text-paper { color:#172d48 
 
 @media (max-width:639px) {
   .db-page-header { border-radius:18px; padding:1.2rem 1rem; }
+  .db-profile-form > .flex.items-center { align-items:flex-start; flex-wrap:wrap; }
+  .db-profile-form > .flex.items-center > .min-w-0 { flex:1 1 180px; }
+  .db-profile-form .db-file-button { max-width:100%; }
+  .db-profile-form .db-file-name { display:block; max-width:100%; }
+  .db-mobile-header .db-brand-title { font-size:20px; }
+  .db-mobile-header .db-brand-subtitle { letter-spacing:.18em !important; }
+  .db-mobile-nav span { line-height:1.1; text-align:center; }
 }

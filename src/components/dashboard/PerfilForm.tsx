@@ -44,12 +44,12 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
         )}
         <div className="min-w-0">
           <label htmlFor="fotoPerfil" className="db-label">Foto de perfil</label>
-          <div className="mt-2 flex min-w-0 items-center gap-3">
+          <div className="mt-2 flex min-w-0 flex-wrap items-center gap-3">
             <input id="fotoPerfil" name="fotoPerfil" type="file" accept="image/jpeg,image/png,image/webp" onChange={updatePreview} className="sr-only" />
             <label htmlFor="fotoPerfil" className="db-file-button shrink-0">
               <Upload size={15} /> Escolher arquivo
             </label>
-            <span className="db-file-name truncate">{fileName || "Nenhum arquivo escolhido"}</span>
+            <span className="db-file-name min-w-0 flex-1 break-all">{fileName || "Nenhum arquivo escolhido"}</span>
           </div>
           <p className="db-hint mt-1">JPG, PNG ou WebP, com até 1 MB.</p>
         </div>
