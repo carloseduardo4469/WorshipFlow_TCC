@@ -32,3 +32,4 @@ Thumbs.db
 
 docs/migrations.md
 src/lib/db/schema.sql
+src/lib/db/seed.sql

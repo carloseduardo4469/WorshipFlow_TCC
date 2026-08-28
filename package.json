@@ -10,8 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:seed:local": "tsx scripts/seed-local.ts"
+    "lint": "next lint"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
