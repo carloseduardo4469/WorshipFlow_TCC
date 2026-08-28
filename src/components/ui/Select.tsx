@@ -15,12 +15,13 @@ type SelectProps = {
   value?: string | number | null;
   onValueChange?: (value: string) => void;
   className?: string;
+  menuClassName?: string;
   "aria-label"?: string;
   options?: SelectOption[];
   children?: ReactNode;
 };
 
-export function Select({ id, name, defaultValue = "", value: controlledValue, onValueChange, className = "", options: providedOptions, children, ...ariaProps }: SelectProps) {
+export function Select({ id, name, defaultValue = "", value: controlledValue, onValueChange, className = "", menuClassName = "", options: providedOptions, children, ...ariaProps }: SelectProps) {
   const childOptions = Children.toArray(children).flatMap((child) => {
     if (!isValidElement<{ value?: string | number; children?: ReactNode }>(child)) return [];
     return [{
@@ -66,7 +67,7 @@ export function Select({ id, name, defaultValue = "", value: controlledValue, on
         <ChevronDown size={16} className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="db-select-menu" role="listbox" aria-labelledby={id}>
+        <div className={`db-select-menu ${menuClassName}`} role="listbox" aria-labelledby={id}>
           {options.map((option) => (
             <button
               key={option.value}

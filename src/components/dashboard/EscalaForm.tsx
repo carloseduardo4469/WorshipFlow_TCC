@@ -5,7 +5,6 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { criarEscalaAction, atualizarEscalaAction } from "@/lib/actions/escalas";
 import { Input } from "@/components/ui/Input";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
@@ -38,6 +37,8 @@ export function EscalaForm({
   const [usuarioIds, setUsuarioIds] = useState<Set<string>>(new Set(escala?.usuarioIds ?? []));
   const [musicaIds, setMusicaIds] = useState<Set<number>>(new Set(escala?.musicaIds ?? []));
   const [musicaBusca, setMusicaBusca] = useState("");
+  const hoje = new Date();
+  const dataMinima = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
 
   const funcaoAtual = (usuarioId: string) =>
     escala?.funcoesUsuarios.find((f) => f.usuarioId === usuarioId)?.funcao ?? "";
@@ -75,7 +76,14 @@ export function EscalaForm({
         <Input label="Título" name="titulo" defaultValue={escala?.titulo} required />
 
         <div className="flex flex-col gap-4 sm:flex-row">
-          <DatePicker name="dataEscala" defaultValue={escala?.dataEscala} />
+          <Input
+            label="Data"
+            name="dataEscala"
+            type="date"
+            min={dataMinima}
+            defaultValue={escala?.dataEscala ?? ""}
+            className="db-date-input w-full sm:w-48"
+          />
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="status" className="db-label">

@@ -52,8 +52,8 @@ export function EscalasManager({
         </button>
       </div>
 
-      <div className="db-card overflow-x-auto p-3 sm:p-4">
-        <table className="db-table w-full min-w-[760px] text-left text-sm">
+      <div className="db-card db-responsive-table p-3 sm:p-4">
+        <table className="db-table w-full text-left text-sm">
           <thead className="bg-white/[0.035] text-xs uppercase tracking-wide text-muted">
             <tr>
               {['Título', 'Data', 'Status', 'Equipe', ''].map((header) => (
@@ -63,14 +63,14 @@ export function EscalasManager({
           </thead>
           <tbody className="divide-y divide-[color:rgba(148,163,184,0.1)]">
             {escalas.map((escala) => (
-              <tr key={escala.id}>
-                <td className="px-4 py-3.5 font-medium text-paper">{escala.titulo}</td>
-                <td className="px-4 py-3.5 text-muted">{formatDate(escala.dataEscala)}</td>
-                <td className="px-4 py-3.5"><StatusBadge status={escala.status} /></td>
-                <td className="px-4 py-3.5 text-muted">
+              <tr key={escala.id} className="db-responsive-row">
+                <td data-label="Título" className="px-4 py-3.5 font-medium text-paper">{escala.titulo}</td>
+                <td data-label="Data" className="px-4 py-3.5 text-muted">{formatDate(escala.dataEscala)}</td>
+                <td data-label="Status" className="px-4 py-3.5"><StatusBadge status={escala.status} /></td>
+                <td data-label="Equipe" className="px-4 py-3.5 text-muted">
                   {escala.usuarioIds.length === 0 ? "—" : escala.usuarioIds.map((id) => nomesPorId.get(id) ?? "?").join(", ")}
                 </td>
-                <td className="px-4 py-3.5 text-right">
+                <td data-label="Ações" className="px-4 py-3.5 text-right">
                   <div className="db-row-actions">
                     <button type="button" onClick={() => setEscalaAberta(escala)} className="db-btn-sm">
                       <Pencil size={14} />

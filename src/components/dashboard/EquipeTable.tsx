@@ -36,11 +36,11 @@ export function EquipeTable({ usuarios }: { usuarios: Usuario[] }) {
 
   return (
     <>
-      <div className="db-card db-data-table overflow-x-auto p-2 sm:p-3">
-        <table className="db-table w-full min-w-[620px] text-left text-sm">
+      <div className="db-card db-data-table db-responsive-table p-2 sm:p-3">
+        <table className="db-table w-full text-left text-sm">
           <thead className="bg-white/[0.035] text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-3 font-medium">Nome</th><th className="px-4 py-3 font-medium">Instrumentos</th><th className="px-4 py-3 font-medium">Status</th></tr></thead>
           <tbody className="divide-y divide-[color:rgba(148,163,184,0.1)]">
-            {usuarios.map((usuario) => <tr key={usuario.id} role="button" tabIndex={0} onClick={() => setSelecionado(usuario)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelecionado(usuario); } }} className="cursor-pointer transition hover:bg-cyan-300/[.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"><td className="px-4 py-3.5 text-paper font-medium">{usuario.nome}</td><td className="px-4 py-3.5 text-muted">{habilidadesFormatadas(usuario)}</td><td className="px-4 py-3.5"><span className={usuario.statusMinisterio === "ATIVO" ? "db-badge db-badge-green" : "db-badge db-badge-muted"}>{usuario.statusMinisterio === "ATIVO" ? "Ativo" : "Inativo"}</span></td></tr>)}
+            {usuarios.map((usuario) => <tr key={usuario.id} role="button" tabIndex={0} onClick={() => setSelecionado(usuario)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelecionado(usuario); } }} className="db-responsive-row cursor-pointer transition hover:bg-cyan-300/[.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"><td data-label="Nome" className="px-4 py-3.5 text-paper font-medium">{usuario.nome}</td><td data-label="Instrumentos" className="px-4 py-3.5 text-muted">{habilidadesFormatadas(usuario)}</td><td data-label="Status" className="px-4 py-3.5"><span className={usuario.statusMinisterio === "ATIVO" ? "db-badge db-badge-green" : "db-badge db-badge-muted"}>{usuario.statusMinisterio === "ATIVO" ? "Ativo" : "Inativo"}</span></td></tr>)}
           </tbody>
         </table>
       </div>
