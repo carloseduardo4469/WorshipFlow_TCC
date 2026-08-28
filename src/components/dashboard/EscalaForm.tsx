@@ -1,9 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { criarEscalaAction, atualizarEscalaAction } from "@/lib/actions/escalas";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import type { Escala, Ministerio, Musica, StatusEscala, Usuario } from "@/types/domain";
@@ -34,11 +37,19 @@ export function EscalaForm({
 
   const [usuarioIds, setUsuarioIds] = useState<Set<string>>(new Set(escala?.usuarioIds ?? []));
   const [musicaIds, setMusicaIds] = useState<Set<number>>(new Set(escala?.musicaIds ?? []));
+  const [musicaBusca, setMusicaBusca] = useState("");
 
   const funcaoAtual = (usuarioId: string) =>
     escala?.funcoesUsuarios.find((f) => f.usuarioId === usuarioId)?.funcao ?? "";
   const tonalidadeAtual = (musicaId: number) =>
     escala?.tonalidadesMusicas.find((t) => t.musicaId === musicaId)?.tonalidade ?? "";
+
+  const musicasFiltradas = musicas.filter((musica) => {
+    if (musicaIds.has(musica.id)) return true;
+    const termo = musicaBusca.trim().toLocaleLowerCase();
+    if (!termo) return true;
+    return `${musica.titulo} ${musica.artista ?? ""}`.toLocaleLowerCase().includes(termo);
+  });
 
   function toggleUsuario(id: string) {
     setUsuarioIds((prev) => {
@@ -64,49 +75,43 @@ export function EscalaForm({
         <Input label="Título" name="titulo" defaultValue={escala?.titulo} required />
 
         <div className="flex flex-col gap-4 sm:flex-row">
-          <Input
-            label="Data"
-            name="dataEscala"
-            type="date"
-            defaultValue={escala?.dataEscala ?? ""}
-            className="w-full sm:w-48"
-          />
+          <DatePicker name="dataEscala" defaultValue={escala?.dataEscala} />
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="status" className="db-label">
               Estado
             </label>
-            <select
+            <Select
               id="status"
               name="status"
               defaultValue={escala?.status ?? "RASCUNHO"}
-              className="db-select"
+              aria-label="Estado"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>
                   {s.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div className="flex flex-1 flex-col gap-1.5">
             <label htmlFor="ministerioId" className="db-label">
               Ministério
             </label>
-            <select
+            <Select
               id="ministerioId"
               name="ministerioId"
               defaultValue={escala?.ministerioId ?? ""}
-              className="db-select"
-            >
-              <option value="">Nenhum</option>
-              {ministerios.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nome}
-                </option>
-              ))}
-            </select>
+              aria-label="Ministério"
+              options={[
+                { value: "", label: "Nenhum" },
+                ...ministerios.map((ministerio) => ({
+                  value: String(ministerio.id),
+                  label: ministerio.nome,
+                })),
+              ]}
+            />
           </div>
         </div>
 
@@ -149,9 +154,20 @@ export function EscalaForm({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="db-label mb-1">Músicas</legend>
+        <label className="relative">
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            value={musicaBusca}
+            onChange={(event) => setMusicaBusca(event.target.value)}
+            placeholder="Pesquisar músicas..."
+            className="db-input w-full !pl-10"
+            aria-label="Pesquisar músicas para a escala"
+          />
+        </label>
         <div className="db-card max-h-72 space-y-1 overflow-y-auto p-3">
           {musicas.length === 0 && <p className="text-sm text-muted">Nenhuma música cadastrada.</p>}
-          {musicas.map((m) => {
+          {musicas.length > 0 && musicasFiltradas.length === 0 && <p className="text-sm text-muted">Nenhuma música encontrada.</p>}
+          {musicasFiltradas.map((m) => {
             const checked = musicaIds.has(m.id);
             return (
               <div key={m.id} className="flex items-center gap-3 py-1.5">

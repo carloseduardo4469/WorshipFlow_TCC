@@ -407,12 +407,124 @@ body {
   padding: 0.66rem 0.9rem;
   font-size: 0.85rem;
   color: #f4f1e9;
+  color-scheme: dark;
   transition: border-color 0.2s ease;
+}
+
+.db-select option {
+  background: #0b1b30;
+  color: #dce8f2;
 }
 
 .db-select:focus {
   outline: none;
   border-color: rgba(232, 163, 61, 0.6);
+}
+
+.db-select-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 40;
+  overflow: hidden;
+  border: 1px solid rgba(83, 217, 235, 0.42);
+  border-radius: 12px;
+  background: #0b1b30;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  padding: 0.3rem;
+}
+
+.db-select-option {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  color: #dce8f2;
+  font-size: 0.85rem;
+}
+
+.db-select-option:hover,
+.db-select-option[aria-selected="true"] {
+  background: rgba(83, 217, 235, 0.16);
+  color: #ffffff;
+}
+
+.db-wheel-column {
+  position: relative;
+  min-width: 0;
+}
+
+.db-wheel-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #97a3bd;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.db-wheel-list {
+  position: relative;
+  height: 9rem;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(83, 217, 235, .55) transparent;
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+}
+
+.db-wheel-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.db-wheel-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.db-wheel-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(83, 217, 235, .55);
+}
+
+.db-wheel-spacer {
+  height: 3.25rem;
+}
+
+.db-wheel-option {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 2.5rem;
+  scroll-snap-align: center;
+  color: #8291aa;
+  font-size: 0.85rem;
+  transition: color .15s ease, transform .15s ease;
+}
+
+.db-wheel-option:hover,
+.db-wheel-option[aria-selected="true"] {
+  color: #ffffff;
+  font-weight: 700;
+  transform: scale(1.04);
+}
+
+.db-wheel-column::after {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2.5rem;
+  border-top: 1px solid rgba(83, 217, 235, .25);
+  border-bottom: 1px solid rgba(83, 217, 235, .25);
+  border-radius: 0.55rem;
+  content: "";
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
 /* Tabla del dashboard con cabecera mono en mayúsculas */
@@ -572,6 +684,77 @@ html[data-dashboard-theme="light"] .db-bg {
 html[data-dashboard-theme="light"] .db-grid { opacity: .45; background-image: linear-gradient(rgba(27, 77, 112, .13) 1px, transparent 1px), linear-gradient(90deg, rgba(27, 77, 112, .13) 1px, transparent 1px); }
 html[data-dashboard-theme="light"] .db-panel, html[data-dashboard-theme="light"] .db-card, html[data-dashboard-theme="light"] .db-section-panel, html[data-dashboard-theme="light"] .db-overview { background: linear-gradient(135deg, rgba(255,255,255,.91), rgba(238,249,255,.86)); border-color: rgba(44, 104, 151, .23); box-shadow: inset 0 1px 0 white, 0 24px 52px -38px rgba(28, 62, 114, .55); }
 html[data-dashboard-theme="light"] .db-input, html[data-dashboard-theme="light"] .db-select { background: rgba(255,255,255,.8); color: #18253c; border-color: rgba(44, 104, 151, .28); }
+html[data-dashboard-theme="light"] .db-select { color-scheme: light; }
+html[data-dashboard-theme="light"] .db-select option { background: #ffffff; color: #263b57; }
+html[data-dashboard-theme="light"] .db-select-menu { background: #ffffff; border-color: rgba(44, 104, 151, .3); box-shadow: 0 16px 32px rgba(28, 62, 114, .2); }
+html[data-dashboard-theme="light"] .db-select-option { color: #263b57; }
+html[data-dashboard-theme="light"] .db-select-option:hover,
+html[data-dashboard-theme="light"] .db-select-option[aria-selected="true"] { background: rgba(65, 178, 226, .14); color: #123955; }
+html[data-dashboard-theme="light"] .db-wheel-label { color: #526780; }
+html[data-dashboard-theme="light"] .db-wheel-list { scrollbar-color: rgba(39, 121, 170, .55) transparent; }
+html[data-dashboard-theme="light"] .db-wheel-list::-webkit-scrollbar-thumb { background: rgba(39, 121, 170, .55); }
+html[data-dashboard-theme="light"] .db-wheel-option { color: #70809a; }
+html[data-dashboard-theme="light"] .db-wheel-option:hover,
+html[data-dashboard-theme="light"] .db-wheel-option[aria-selected="true"] { color: #172d48; }
+html[data-dashboard-theme="light"] .db-wheel-column::after { border-color: rgba(39, 121, 170, .28); }
+
+/* Barras de rolagem finas e sem os controles nativos do navegador. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(83, 217, 235, .62) rgba(7, 19, 35, .5);
+}
+
+html::-webkit-scrollbar,
+.db-music-scroll::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+html::-webkit-scrollbar-track,
+.db-music-scroll::-webkit-scrollbar-track {
+  background: rgba(7, 19, 35, .5);
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb,
+.db-music-scroll::-webkit-scrollbar-thumb {
+  background: rgba(83, 217, 235, .62);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+.db-music-scroll::-webkit-scrollbar-thumb:hover {
+  background: #55d9ff;
+  background-clip: padding-box;
+}
+
+.db-music-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(83, 217, 235, .62) rgba(7, 19, 35, .5);
+}
+
+html[data-dashboard-theme="light"] {
+  scrollbar-color: rgba(39, 121, 170, .62) rgba(211, 232, 242, .7);
+}
+
+html[data-dashboard-theme="light"]::-webkit-scrollbar-track,
+html[data-dashboard-theme="light"] .db-music-scroll::-webkit-scrollbar-track {
+  background: rgba(211, 232, 242, .7);
+}
+
+html[data-dashboard-theme="light"]::-webkit-scrollbar-thumb,
+html[data-dashboard-theme="light"] .db-music-scroll::-webkit-scrollbar-thumb {
+  background: rgba(39, 121, 170, .62);
+  background-clip: padding-box;
+}
+
+html[data-dashboard-theme="light"]::-webkit-scrollbar-thumb:hover,
+html[data-dashboard-theme="light"] .db-music-scroll::-webkit-scrollbar-thumb:hover {
+  background: #2779aa;
+  background-clip: padding-box;
+}
 html[data-dashboard-theme="light"] .db-input::placeholder { color: #70809a; }
 html[data-dashboard-theme="light"] .db-label, html[data-dashboard-theme="light"] .db-hint, html[data-dashboard-theme="light"] .text-muted { color: #526780 !important; }
 html[data-dashboard-theme="light"] .text-paper, html[data-dashboard-theme="light"] .db-title { color: #17233a !important; }

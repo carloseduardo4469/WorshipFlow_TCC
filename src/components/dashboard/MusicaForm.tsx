@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { criarMusicaAction, atualizarMusicaAction } from "@/lib/actions/musicas";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import type { Ministerio, Musica } from "@/types/domain";
@@ -57,11 +58,11 @@ export function MusicaForm({
         <label htmlFor="ministerioId" className="db-label">
           Ministério
         </label>
-        <select
+        <Select
           id="ministerioId"
           name="ministerioId"
           defaultValue={musica?.ministerioId ?? ""}
-          className="db-select"
+          aria-label="Ministério"
         >
           <option value="">Nenhum</option>
           {ministerios.map((m) => (
@@ -69,7 +70,7 @@ export function MusicaForm({
               {m.nome}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {state?.error && <FormAlert>{state.error}</FormAlert>}

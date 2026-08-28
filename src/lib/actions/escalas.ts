@@ -11,6 +11,27 @@ export type ActionState = { error?: string } | null;
 
 const STATUS_VALIDOS: StatusEscala[] = ["RASCUNHO", "PUBLICADA", "CONCLUIDA", "CANCELADA"];
 
+function dataEscalaValida(dataEscala: string | null) {
+  if (!dataEscala) return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataEscala)) return false;
+
+  const [year, month, day] = dataEscala.split("-").map(Number);
+  const data = new Date(Date.UTC(year, month - 1, day));
+  if (
+    data.getUTCFullYear() !== year ||
+    data.getUTCMonth() !== month - 1 ||
+    data.getUTCDate() !== day
+  ) return false;
+
+  const hoje = new Date();
+  const hojeIso = [
+    hoje.getFullYear(),
+    String(hoje.getMonth() + 1).padStart(2, "0"),
+    String(hoje.getDate()).padStart(2, "0"),
+  ].join("-");
+  return dataEscala >= hojeIso;
+}
+
 function readEscalaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const dataEscala = String(formData.get("dataEscala") ?? "").trim();
@@ -58,6 +79,7 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   await requireAdmin();
   const data = readEscalaForm(formData);
   if (!data.titulo) return { error: "Informe o título da escala." };
+  if (!dataEscalaValida(data.dataEscala)) return { error: "Informe uma data válida a partir de hoje." };
 
   const repos = await getRepositories();
   const escala = await repos.escalas.create({
@@ -87,6 +109,7 @@ export async function atualizarEscalaAction(
   const id = Number(formData.get("id"));
   const data = readEscalaForm(formData);
   if (!data.titulo) return { error: "Informe o título da escala." };
+  if (!dataEscalaValida(data.dataEscala)) return { error: "Informe uma data válida a partir de hoje." };
 
   const repos = await getRepositories();
   await repos.escalas.update(id, {

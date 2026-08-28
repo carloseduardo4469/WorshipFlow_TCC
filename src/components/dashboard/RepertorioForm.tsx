@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { criarRepertorioAction, atualizarRepertorioAction } from "@/lib/actions/repertorios";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import type { Ministerio, Musica, Repertorio } from "@/types/domain";
@@ -32,11 +33,11 @@ export function RepertorioForm({
         <label htmlFor="ministerioId" className="db-label">
           Ministério
         </label>
-        <select
+        <Select
           id="ministerioId"
           name="ministerioId"
           defaultValue={repertorio?.ministerioId ?? ""}
-          className="db-select"
+          aria-label="Ministério"
         >
           <option value="">Nenhum</option>
           {ministerios.map((m) => (
@@ -44,7 +45,7 @@ export function RepertorioForm({
               {m.nome}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <fieldset className="flex flex-col gap-2">

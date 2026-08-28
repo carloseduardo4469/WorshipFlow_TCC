@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { atualizarUsuarioAdminAction } from "@/lib/actions/usuarios";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { Select } from "@/components/ui/Select";
 import type { Ministerio, Usuario } from "@/types/domain";
 
 export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministerios: Ministerio[] }) {
@@ -22,14 +23,15 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <select
+        <Select
           name="perfil"
           defaultValue={usuario.perfil}
           className="db-select w-28"
+          aria-label={`Perfil de ${usuario.nome}`}
         >
           <option value="MEMBRO">Membro</option>
           <option value="ADMIN">Admin</option>
-        </select>
+        </Select>
 
         <label className="relative flex w-[100px] shrink-0 cursor-pointer items-center gap-2 text-xs font-semibold text-muted transition-colors hover:text-paper">
           <input
@@ -56,19 +58,21 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
           <span className="w-[52px]">{isSuspended ? "Suspensa" : "Ativa"}</span>
         </label>
 
-        <select
+        <Select
           name="statusMinisterio"
           defaultValue={usuario.statusMinisterio}
           className="db-select w-28"
+          aria-label={`Status do ministério de ${usuario.nome}`}
         >
           <option value="ATIVO">Ativo</option>
           <option value="INATIVO">Inativo</option>
-        </select>
+        </Select>
 
-        <select
+        <Select
           name="ministerioId"
           defaultValue={usuario.ministerioId ?? ""}
           className="db-select w-40"
+          aria-label={`Ministério de ${usuario.nome}`}
         >
           <option value="">Sem ministério</option>
           {ministerios.map((m) => (
@@ -76,7 +80,7 @@ export function UsuarioRow({ usuario, ministerios }: { usuario: Usuario; ministe
               {m.nome}
             </option>
           ))}
-        </select>
+        </Select>
 
         <button type="submit" disabled={pending} className="db-btn-sm">
           {pending ? "..." : "Salvar"}
