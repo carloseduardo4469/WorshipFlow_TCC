@@ -9,16 +9,13 @@ export default async function EditarMusicaPage({ params }: { params: Promise<{ i
   const { id } = await params;
 
   const repos = await getRepositories();
-  const [musica, ministerios] = await Promise.all([
-    repos.musicas.getById(Number(id)),
-    repos.ministerios.list(),
-  ]);
+  const musica = await repos.musicas.getById(Number(id));
   if (!musica) notFound();
 
   return (
     <div className="mx-auto max-w-[760px] lg:mx-0">
       <PageHeader title={`Editar: ${musica.titulo}`} />
-      <MusicaForm musica={musica} ministerios={ministerios} />
+      <MusicaForm musica={musica} />
     </div>
   );
 }

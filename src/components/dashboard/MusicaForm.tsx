@@ -7,36 +7,47 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
-import type { Ministerio, Musica } from "@/types/domain";
+import { TONALIDADES_VALIDAS, isTonalidadeValida } from "@/lib/music/tonalidades";
+import type { Musica } from "@/types/domain";
 
 export function MusicaForm({
   musica,
-  ministerios,
   onCancel,
 }: {
   musica?: Musica;
-  ministerios: Ministerio[];
   onCancel?: () => void;
 }) {
   const action = musica ? atualizarMusicaAction : criarMusicaAction;
   const [state, formAction, pending] = useActionState(action, null);
   const router = useRouter();
+  const tonalidadeInicial = isTonalidadeValida(musica?.tonalidade) ? musica?.tonalidade : "";
 
   return (
     <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       {musica && <input type="hidden" name="id" value={musica.id} />}
 
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} required />
-      <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} />
+      <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} required />
 
       <div className="flex flex-col gap-4 sm:flex-row">
-        <Input
-          label="Tonalidade"
-          name="tonalidade"
-          defaultValue={musica?.tonalidade ?? ""}
-          placeholder="Ex: G, Am, D"
-          className="w-full sm:w-32"
-        />
+        <div className="flex w-full flex-col gap-2 sm:w-32">
+          <label htmlFor="tonalidade" className="db-label">
+            Tonalidade
+          </label>
+          <Select
+            id="tonalidade"
+            name="tonalidade"
+            defaultValue={tonalidadeInicial}
+            aria-label="Tonalidade"
+            options={[
+              { value: "", label: "Nenhum" },
+              ...TONALIDADES_VALIDAS.map((tonalidade) => ({
+                value: tonalidade,
+                label: tonalidade,
+              })),
+            ]}
+          />
+        </div>
         <Input
           label="BPM"
           name="bpm"
@@ -44,33 +55,6 @@ export function MusicaForm({
           defaultValue={musica?.bpm ?? ""}
           className="w-full sm:w-32"
         />
-      </div>
-
-      <Input
-        label="Link da cifra"
-        name="linkCifra"
-        type="url"
-        defaultValue={musica?.linkCifra ?? ""}
-        placeholder="https://..."
-      />
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="ministerioId" className="db-label">
-          Ministério
-        </label>
-        <Select
-          id="ministerioId"
-          name="ministerioId"
-          defaultValue={musica?.ministerioId ?? ""}
-          aria-label="Ministério"
-        >
-          <option value="">Nenhum</option>
-          {ministerios.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nome}
-            </option>
-          ))}
-        </Select>
       </div>
 
       {state?.error && <FormAlert>{state.error}</FormAlert>}
