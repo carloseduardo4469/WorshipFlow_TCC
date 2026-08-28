@@ -12,7 +12,7 @@ import { DashboardThemeToggle } from "./DashboardThemeToggle";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
 const memberItems: NavItem[] = [{ href: "/dashboard", label: "Início", icon: Home }, { href: "/dashboard/perfil", label: "Perfil", icon: UserRound }, { href: "/dashboard/equipe", label: "Equipe", icon: UsersRound }, { href: "/dashboard/musicas", label: "Músicas", icon: Music2 }, { href: "/dashboard/escalas", label: "Escalas", icon: CalendarDays }, { href: "/dashboard/repertorios", label: "Histórico", icon: History }];
-const adminItems: NavItem[] = [{ href: "/dashboard/admin/usuarios", label: "Registros de usuários", icon: UsersRound }, { href: "/dashboard/admin/escalas", label: "Registro de escalas", icon: ClipboardList }];
+const adminItems: NavItem[] = [{ href: "/dashboard/admin/usuarios", label: "Registros", icon: UsersRound }, { href: "/dashboard/admin/escalas", label: "Registro de escalas", icon: ClipboardList }];
 const mobileItems = [memberItems[0], memberItems[2], memberItems[3], memberItems[4], memberItems[1]];
 const activePath = (pathname: string, href: string) => href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
