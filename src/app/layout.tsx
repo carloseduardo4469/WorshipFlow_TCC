@@ -56,6 +56,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       className={`${display.variable} ${serif.variable} ${body.variable} ${mono.variable}`}
+      suppressHydrationWarning
     >
       <body>
         <PwaRegister />

@@ -11,6 +11,8 @@ const PUBLIC_PATHS = [
   "/auth/callback",
   "/termos",
   "/privacidade",
+  "/manifest.webmanifest",
+  "/sw.js",
 ];
 
 function isPublicPath(pathname: string) {
@@ -19,10 +21,24 @@ function isPublicPath(pathname: string) {
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const { pathname } = request.nextUrl;
+
+  if (isPublicPath(pathname) || pathname === "/") {
+    return response;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    const redirectUrl = new URL("/login", request.url);
+    redirectUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -38,8 +54,6 @@ export async function updateSession(request: NextRequest) {
       },
     }
   );
-
-  const { pathname } = request.nextUrl;
 
   // Páginas públicas não precisam validar sessão no Auth. Além de reduzir
   // chamadas desnecessárias, isso evita atingir o limite de requisições ao
