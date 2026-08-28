@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
+import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { FuncaoUsuario, StatusEscala, TonalidadeMusica } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
@@ -35,7 +36,7 @@ function dataEscalaValida(dataEscala: string | null) {
 function readEscalaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const dataEscala = String(formData.get("dataEscala") ?? "").trim();
-  const statusRaw = String(formData.get("status") ?? "RASCUNHO");
+  const statusRaw = String(formData.get("status") ?? "PUBLICADA");
   const observacoes = String(formData.get("observacoes") ?? "").trim();
   const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
@@ -46,7 +47,7 @@ function readEscalaForm(formData: FormData) {
   const funcoesUsuarios: FuncaoUsuario[] = usuarioIds
     .map((usuarioId) => ({
       usuarioId,
-      funcao: String(formData.get(`funcao_${usuarioId}`) ?? "").trim(),
+      funcao: formData.getAll(`funcao_${usuarioId}`).map(String).map((funcao) => funcao.trim()).filter(Boolean).join(","),
     }))
     .filter((f) => f.funcao);
 
@@ -57,6 +58,8 @@ function readEscalaForm(formData: FormData) {
       tonalidade: String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
     }))
     .filter((t) => t.tonalidade);
+
+  const tonalidadeValida = tonalidadesMusicas.every(({ tonalidade }) => isTonalidadeValida(tonalidade));
 
   const status = STATUS_VALIDOS.includes(statusRaw as StatusEscala)
     ? (statusRaw as StatusEscala)
@@ -72,6 +75,7 @@ function readEscalaForm(formData: FormData) {
     tonalidadesMusicas,
     usuarioIds,
     musicaIds,
+    tonalidadeValida,
   };
 }
 
@@ -80,6 +84,7 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   const data = readEscalaForm(formData);
   if (!data.titulo) return { error: "Informe o título da escala." };
   if (!dataEscalaValida(data.dataEscala)) return { error: "Informe uma data válida a partir de hoje." };
+  if (!data.tonalidadeValida) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
   const repos = await getRepositories();
   const escala = await repos.escalas.create({
@@ -110,6 +115,7 @@ export async function atualizarEscalaAction(
   const data = readEscalaForm(formData);
   if (!data.titulo) return { error: "Informe o título da escala." };
   if (!dataEscalaValida(data.dataEscala)) return { error: "Informe uma data válida a partir de hoje." };
+  if (!data.tonalidadeValida) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
   const repos = await getRepositories();
   await repos.escalas.update(id, {

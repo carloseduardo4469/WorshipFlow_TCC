@@ -2,6 +2,7 @@ import "server-only";
 import { and, count, eq, inArray } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   escalaMusicas as escalaMusicasTable,
   escalas as escalasTable,
@@ -167,7 +168,20 @@ function createSupabaseRepository(supabase: SupabaseClient): EscalasRepository {
       return mapSupabaseRow(row);
     },
     async remove(id) {
-      const { error } = await supabase.from("escalas").delete().eq("id", id);
+      const admin = createAdminClient();
+      const { error: usuariosError } = await admin
+        .from("escala_usuarios")
+        .delete()
+        .eq("escala_id", id);
+      if (usuariosError) throw usuariosError;
+
+      const { error: musicasError } = await admin
+        .from("escala_musicas")
+        .delete()
+        .eq("escala_id", id);
+      if (musicasError) throw musicasError;
+
+      const { error } = await admin.from("escalas").delete().eq("id", id);
       if (error) throw error;
     },
     async setUsuarios(escalaId, usuarioIds) {

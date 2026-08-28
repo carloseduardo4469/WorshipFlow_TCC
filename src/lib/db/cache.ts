@@ -46,9 +46,9 @@ export function cachedData<T>(
 /** Remove todas as chaves de uma tag de domínio — use após mutações. */
 export function invalidateDataCache(...tags: string[]): void {
   for (const tag of tags) {
-    const prefix = `cache:${tag}:`;
+    const prefixes = [`cache:${tag}:`, `${tag}:`];
     for (const key of Array.from(store.keys())) {
-      if (key.startsWith(prefix)) {
+      if (prefixes.some((prefix) => key.startsWith(prefix))) {
         store.delete(key);
       }
     }

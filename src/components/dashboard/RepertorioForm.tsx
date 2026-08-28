@@ -53,7 +53,7 @@ export function RepertorioForm({
         <div className="db-card max-h-64 space-y-1 overflow-y-auto p-3">
           {musicas.length === 0 && <p className="text-sm text-muted">Nenhuma música cadastrada.</p>}
           {musicas.map((m) => (
-            <label key={m.id} className="flex items-center gap-2 py-1 text-sm text-paper/80">
+            <label key={m.id} className="flex min-w-0 items-start gap-2 break-words py-1 text-sm text-paper/80">
               <input
                 type="checkbox"
                 name="musicaIds"

@@ -7,6 +7,9 @@ const nextConfig = {
   // Toda mutation passa por revalidatePath nas Server Actions, que invalida
   // esse cache na hora, então o dado alterado aparece na próxima visita.
   experimental: {
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
     staleTimes: {
       dynamic: 600,
       static: 1800,

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useActionState, useState } from "react";
+import { ChangeEvent, FormEvent, useActionState, useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { atualizarPerfilAction, excluirMinhaContaAction } from "@/lib/actions/usuarios";
 import { Input, CheckboxGroup } from "@/components/ui/Input";
@@ -18,38 +18,104 @@ const OPCOES_HABILIDADES = [
   { value: "voz-secundaria", label: "Voz secundária" },
 ];
 
+const FOTO_TIPOS_PERMITIDOS = ["image/jpeg", "image/png", "image/webp"];
+const FOTO_TAMANHO_MAXIMO_BYTES = 1 * 1024 * 1024;
+const FOTO_ERRO_TAMANHO = "A foto precisa ter no máximo 1 MB.";
+const FOTO_ERRO_TIPO = "Use uma imagem JPG, PNG ou WebP.";
+
 export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarPerfilAction, null);
   const [deleteState, deleteAction, deletePending] = useActionState(excluirMinhaContaAction, null);
   const [preview, setPreview] = useState(usuario.fotoPerfilUrl);
   const [fileName, setFileName] = useState("");
+  const [bottomMessage, setBottomMessage] = useState("");
+  const previewUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!bottomMessage) return;
+    const timeoutId = window.setTimeout(() => setBottomMessage(""), 4500);
+    return () => window.clearTimeout(timeoutId);
+  }, [bottomMessage]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
+
+  function showBottomMessage(message: string) {
+    setBottomMessage(message);
+  }
+
+  function clearSelectedFile(input: HTMLInputElement) {
+    input.value = "";
+    setFileName("");
+    setPreview(usuario.fotoPerfilUrl);
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  }
+
+  function validatePhoto(file: File) {
+    if (!FOTO_TIPOS_PERMITIDOS.includes(file.type)) return FOTO_ERRO_TIPO;
+    if (file.size > FOTO_TAMANHO_MAXIMO_BYTES) return FOTO_ERRO_TAMANHO;
+    return "";
+  }
 
   function updatePreview(event: ChangeEvent<HTMLInputElement>) {
+    setBottomMessage("");
     const file = event.target.files?.[0];
     if (!file) return;
+
+    const validationError = validatePhoto(file);
+    if (validationError) {
+      clearSelectedFile(event.target);
+      showBottomMessage(validationError);
+      return;
+    }
+
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    const objectUrl = URL.createObjectURL(file);
+    previewUrlRef.current = objectUrl;
     setFileName(file.name);
-    setPreview(URL.createObjectURL(file));
+    setPreview(objectUrl);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const fileInput = event.currentTarget.elements.namedItem("fotoPerfil");
+    if (!(fileInput instanceof HTMLInputElement)) return;
+
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    const validationError = validatePhoto(file);
+    if (!validationError) return;
+
+    event.preventDefault();
+    clearSelectedFile(fileInput);
+    showBottomMessage(validationError);
   }
 
   return (
     <>
-      <form action={formAction} className="db-panel db-profile-form flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
-      <div className="flex items-center gap-4">
+      <form action={formAction} onSubmit={handleSubmit} className="db-panel db-profile-form flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
+      <div className="db-profile-photo-field flex items-center gap-4">
         {preview ? (
-          <img src={preview} alt="Prévia da foto de perfil" className="h-16 w-16 rounded-full object-cover ring-2 ring-cyan-300/45" />
+          <img src={preview} alt="Prévia da foto de perfil" className="db-profile-avatar h-16 w-16 rounded-full object-cover ring-2 ring-cyan-300/45" />
         ) : (
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#e9d375] to-[#5ccee0] text-lg font-bold text-[#07101e]">
+          <span className="db-profile-avatar flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#e9d375] to-[#5ccee0] text-lg font-bold text-[#07101e]">
             {usuario.nome.slice(0, 1).toUpperCase()}
           </span>
         )}
-        <div className="min-w-0">
+        <div className="db-profile-photo-content min-w-0">
           <label htmlFor="fotoPerfil" className="db-label">Foto de perfil</label>
-          <div className="mt-2 flex min-w-0 flex-wrap items-center gap-3">
+          <div className="db-profile-upload-row mt-2 flex min-w-0 flex-wrap items-center gap-3">
             <input id="fotoPerfil" name="fotoPerfil" type="file" accept="image/jpeg,image/png,image/webp" onChange={updatePreview} className="sr-only" />
             <label htmlFor="fotoPerfil" className="db-file-button shrink-0">
               <Upload size={15} /> Escolher arquivo
             </label>
-            <span className="db-file-name min-w-0 flex-1 break-all">{fileName || "Nenhum arquivo escolhido"}</span>
+            <span className="db-file-name min-w-0 flex-1">{fileName || "Nenhum arquivo escolhido"}</span>
           </div>
           <p className="db-hint mt-1">JPG, PNG ou WebP, com até 1 MB.</p>
         </div>
@@ -86,6 +152,15 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
         {deletePending ? "Excluindo..." : "Excluir minha conta"}
       </Button>
       </form>
+      {bottomMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-2xl border border-red-300/30 bg-[#190d14]/95 px-4 py-3 text-sm font-semibold text-red-100 shadow-2xl shadow-black/40 backdrop-blur sm:bottom-6"
+        >
+          {bottomMessage}
+        </div>
+      )}
     </>
   );
 }
