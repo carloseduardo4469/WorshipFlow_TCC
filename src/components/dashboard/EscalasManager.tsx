@@ -5,7 +5,7 @@ import { Pencil, Plus, X } from "lucide-react";
 import { removerEscalaAction } from "@/lib/actions/escalas";
 import { EscalaForm } from "./EscalaForm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { Escala, Ministerio, Musica, Usuario } from "@/types/domain";
+import type { Escala, Ministerio, Usuario } from "@/types/domain";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -19,12 +19,10 @@ function formatDate(iso: string | null) {
 export function EscalasManager({
   escalas,
   usuarios,
-  musicas,
   ministerios,
 }: {
   escalas: Escala[];
   usuarios: Usuario[];
-  musicas: Musica[];
   ministerios: Ministerio[];
 }) {
   const [escalaAberta, setEscalaAberta] = useState<Escala | "nova" | null>(null);
@@ -91,7 +89,7 @@ export function EscalasManager({
 
       {escalaAberta && (
         <div role="presentation" className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-4 backdrop-blur-sm" onMouseDown={() => setEscalaAberta(null)}>
-          <section role="dialog" aria-modal="true" aria-labelledby="escala-dialog-title" className="db-member-modal relative my-auto w-full max-w-4xl" onMouseDown={(event) => event.stopPropagation()}>
+          <section role="dialog" aria-modal="true" aria-labelledby="escala-dialog-title" className="db-member-modal relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto overscroll-contain touch-pan-y pb-4" onMouseDown={(event) => event.stopPropagation()}>
             <button type="button" onClick={() => setEscalaAberta(null)} aria-label="Fechar formulário" className="db-icon-button absolute right-4 top-4 z-10 h-9 w-9">
               <X size={18} />
             </button>
@@ -103,7 +101,6 @@ export function EscalasManager({
               <EscalaForm
                 escala={escalaAberta === "nova" ? undefined : escalaAberta}
                 usuarios={usuarios}
-                musicas={musicas}
                 ministerios={ministerios}
                 onCancel={() => setEscalaAberta(null)}
               />

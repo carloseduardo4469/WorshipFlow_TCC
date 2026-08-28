@@ -6,16 +6,15 @@ import { EscalaForm } from "@/components/dashboard/EscalaForm";
 export default async function NovaEscalaPage() {
   await requireAdmin();
   const repos = await getRepositories();
-  const [usuarios, musicas, ministerios] = await Promise.all([
+  const [usuarios, ministerios] = await Promise.all([
     repos.usuarios.list(),
-    repos.musicas.list(),
     repos.ministerios.list(),
   ]);
 
   return (
     <div className="mx-auto max-w-[860px] lg:mx-0">
       <PageHeader title="Nova escala" />
-      <EscalaForm usuarios={usuarios} musicas={musicas} ministerios={ministerios} />
+      <EscalaForm usuarios={usuarios} ministerios={ministerios} />
     </div>
   );
 }

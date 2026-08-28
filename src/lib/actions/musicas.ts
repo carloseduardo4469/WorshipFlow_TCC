@@ -7,8 +7,35 @@ import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { gerarLinkCifraClub } from "@/lib/music/cifraclub";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
+import type { Musica } from "@/types/domain";
 
 export type ActionState = { error?: string } | null;
+
+export type BuscarMusicasInput = {
+  busca: string;
+  offset: number;
+  limit: number;
+};
+
+/** Busca paginada de músicas para seletores com rolagem infinita. */
+export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]> {
+  await requireAdmin();
+  const repos = await getRepositories();
+  return repos.musicas.search({
+    busca: input.busca,
+    offset: Math.max(0, Math.floor(input.offset)),
+    limit: Math.min(100, Math.max(1, Math.floor(input.limit))),
+  });
+}
+
+/** Retorna as músicas já vinculadas (ids) para exibir como chips no seletor. */
+export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
+  await requireAdmin();
+  const idsLimpos = [...new Set(ids)].filter((id) => Number.isInteger(id));
+  if (idsLimpos.length === 0) return [];
+  const repos = await getRepositories();
+  return repos.musicas.getByIds(idsLimpos);
+}
 
 function readMusicaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();

@@ -1,5 +1,6 @@
 import "server-only";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, inArray, or, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import { musicas as musicasTable } from "@/lib/db/local/schema";
@@ -63,6 +64,35 @@ function createLocalRepository(): MusicasRepository {
       const rows = await localDb.select().from(musicasTable).where(eq(musicasTable.id, id));
       return rows[0] ? mapLocalRow(rows[0]) : null;
     },
+    async search({ busca, offset = 0, limit = 50, ministerioId }) {
+      const termo = (busca ?? "").trim().toLocaleLowerCase();
+      const conditions: SQL[] = [];
+      if (ministerioId) conditions.push(eq(musicasTable.ministerioId, ministerioId));
+      if (termo) {
+        const pattern = `%${termo}%`;
+        conditions.push(
+          or(
+            sql`lower(${musicasTable.titulo}) like ${pattern}`,
+            sql`lower(coalesce(${musicasTable.artista}, '')) like ${pattern}`
+          )!
+        );
+      }
+      const base =
+        conditions.length > 0
+          ? localDb.select().from(musicasTable).where(and(...conditions))
+          : localDb.select().from(musicasTable);
+      const rows = await base.orderBy(musicasTable.titulo).limit(limit).offset(offset);
+      return rows.map(mapLocalRow);
+    },
+    async getByIds(ids) {
+      if (ids.length === 0) return [];
+      const rows = await localDb
+        .select()
+        .from(musicasTable)
+        .where(inArray(musicasTable.id, ids))
+        .orderBy(musicasTable.titulo);
+      return rows.map(mapLocalRow);
+    },
     async create(data: NewMusica) {
       const [row] = await localDb
         .insert(musicasTable)
@@ -112,6 +142,29 @@ function createSupabaseRepository(supabase: SupabaseClient): MusicasRepository {
       const { data, error } = await supabase.from("musicas").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
       return data ? mapSupabaseRow(data) : null;
+    },
+    async search({ busca, offset = 0, limit = 50, ministerioId }) {
+      const termo = (busca ?? "").trim().toLocaleLowerCase();
+      let query = supabase
+        .from("musicas")
+        .select("*")
+        .order("titulo")
+        .range(offset, offset + limit - 1);
+      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+      if (termo) query = query.or(`titulo.ilike.%${termo}%,artista.ilike.%${termo}%`);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []).map(mapSupabaseRow);
+    },
+    async getByIds(ids) {
+      if (ids.length === 0) return [];
+      const { data, error } = await supabase
+        .from("musicas")
+        .select("*")
+        .in("id", ids)
+        .order("titulo");
+      if (error) throw error;
+      return (data ?? []).map(mapSupabaseRow);
     },
     async create(data: NewMusica) {
       const { data: row, error } = await supabase

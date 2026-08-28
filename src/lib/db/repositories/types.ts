@@ -29,6 +29,18 @@ export interface MusicasRepository {
   list(ministerioId?: number): Promise<Musica[]>;
   count(ministerioId?: number): Promise<number>;
   getById(id: number): Promise<Musica | null>;
+  /**
+   * Busca paginada por título/artista (case-insensitive). Sem `busca`,
+   * retorna o catálogo ordenado por título. `offset`/`limit` controlam a página.
+   */
+  search(params: {
+    busca?: string;
+    offset?: number;
+    limit?: number;
+    ministerioId?: number;
+  }): Promise<Musica[]>;
+  /** Busca várias músicas de uma vez pelos IDs (ex.: itens já selecionados). */
+  getByIds(ids: number[]): Promise<Musica[]>;
   create(data: NewMusica): Promise<Musica>;
   update(id: number, data: UpdateMusica): Promise<Musica>;
   remove(id: number): Promise<void>;

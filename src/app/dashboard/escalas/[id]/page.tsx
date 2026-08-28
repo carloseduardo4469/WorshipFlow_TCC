@@ -9,10 +9,9 @@ export default async function EditarEscalaPage({ params }: { params: Promise<{ i
   const { id } = await params;
 
   const repos = await getRepositories();
-  const [escala, usuarios, musicas, ministerios] = await Promise.all([
+  const [escala, usuarios, ministerios] = await Promise.all([
     repos.escalas.getById(Number(id)),
     repos.usuarios.list(),
-    repos.musicas.list(),
     repos.ministerios.list(),
   ]);
   if (!escala) notFound();
@@ -20,7 +19,7 @@ export default async function EditarEscalaPage({ params }: { params: Promise<{ i
   return (
     <div className="mx-auto max-w-[860px] lg:mx-0">
       <PageHeader title={`Editar: ${escala.titulo}`} />
-      <EscalaForm escala={escala} usuarios={usuarios} musicas={musicas} ministerios={ministerios} />
+      <EscalaForm escala={escala} usuarios={usuarios} ministerios={ministerios} />
     </div>
   );
 }
