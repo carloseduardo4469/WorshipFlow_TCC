@@ -18,7 +18,7 @@ export function DataTable({
   const rows = Children.toArray(children).map((row) => {
     if (!isValidElement<{ children?: ReactNode; className?: string }>(row)) return row;
     const cells = Children.toArray(row.props.children).map((cell, index) => {
-      if (!isValidElement<{ className?: string }>(cell)) return cell;
+      if (!isValidElement<{ className?: string; "data-label"?: string }>(cell)) return cell;
       return cloneElement(cell, { "data-label": headers[index] });
     });
     return cloneElement(row, {
