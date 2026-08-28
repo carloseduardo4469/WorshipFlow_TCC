@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import logo from "@/app/icon.png";
+import logo from "@/app/icon.webp";
 
 type ShowcaseProps = {
   /** Título serifado grande (pode conter <br /> para quebras). */
@@ -26,7 +26,7 @@ export function Showcase({ title, subtitle, ctaHref, ctaLabel }: ShowcaseProps) 
 
       <div className="relative z-10 flex max-w-lg flex-col items-center text-center">
         <div className="relative mb-8 h-28 w-28 overflow-hidden rounded-full shadow-[0_0_70px_rgba(56,189,248,0.28)] ring-1 ring-white/15">
-          <Image src={logo} alt="" fill sizes="112px" className="object-cover" priority />
+          <Image src={logo} alt="" aria-hidden width={112} height={112} sizes="112px" className="object-cover" priority fetchPriority="high" />
         </div>
 
         <h2 className="font-serif text-5xl font-black leading-[1.02] text-white sm:text-6xl">

@@ -24,10 +24,11 @@ const PRECACHE_URLS = [
   "/dashboard",
   "/manifest.webmanifest",
   "/favicon.ico",
-  "/icon.png",
+  "/icon.webp",
+  "/icon-512.webp",
 ];
 
-const CACHEABLE_EXT = /\.(?:js|css|woff2?|ttf|otf|png|jpg|jpeg|webp|svg|ico)$/;
+const CACHEABLE_EXT = /\.(?:js|css|woff2?|webp|svg|ico|png)$/;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

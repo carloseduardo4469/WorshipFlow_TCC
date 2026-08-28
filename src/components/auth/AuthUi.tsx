@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import logo from "@/app/icon.png";
+import logo from "@/app/icon.webp";
 
 /* ============ Logo ============ */
 
@@ -12,7 +12,7 @@ export function AuthBadge({ size = 88 }: { size?: number }) {
       className="relative shrink-0 overflow-hidden rounded-full shadow-[0_10px_40px_-10px_rgba(56,189,248,0.45)] ring-1 ring-white/10"
       style={{ width: size, height: size }}
     >
-      <Image src={logo} alt="Logotipo WorshipFlow" fill sizes={`${size}px`} className="object-cover" />
+      <Image src={logo} alt="Logotipo WorshipFlow" width={size} height={size} sizes={`${size}px`} className="object-cover" />
     </div>
   );
 }
