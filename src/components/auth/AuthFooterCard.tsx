@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import logo from "@/app/icon.png";
+import logo from "@/app/icon.webp";
 
 const linkBase =
   "font-bold text-[color:var(--af-text)] transition hover:text-amber";
@@ -17,7 +17,7 @@ export function AuthFooterCard() {
         <div className="flex flex-col">
           <div className="flex items-start gap-4">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/10">
-              <Image src={logo} alt="WorshipFlow" fill sizes="56px" className="object-cover" />
+              <Image src={logo} alt="WorshipFlow" width={56} height={56} sizes="56px" className="object-cover" />
             </div>
             <div>
               <p className="font-serif text-xl font-extrabold af-text">WorshipFlow</p>

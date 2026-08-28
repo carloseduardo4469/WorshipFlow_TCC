@@ -4,12 +4,14 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
   /* compensa o header fixo ao navegar por âncoras */
   scroll-padding-top: 5.5rem;
 }
 
 body {
   @apply bg-ink text-paper font-body antialiased;
+  overflow-x: clip;
 }
 
 /* Respeita usuários que preferem menos animação */

@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { CalendarDays, ClipboardList, History, Home, Menu, Music2, UserRound, UsersRound, X, type LucideIcon } from "lucide-react";
-import logo from "@/app/icon.png";
+import logo from "@/app/icon.webp";
 import type { PerfilUsuario } from "@/types/domain";
 import { DashboardThemeToggle } from "./DashboardThemeToggle";
 
