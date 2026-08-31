@@ -6,12 +6,11 @@ import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
-import type { FuncaoUsuario, StatusEscala, TonalidadeMusica } from "@/types/domain";
+import type { FuncaoUsuario, TonalidadeMusica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
 
 export type ActionState = { error?: string } | null;
 
-const STATUS_VALIDOS: StatusEscala[] = ["RASCUNHO", "PUBLICADA", "CONCLUIDA", "CANCELADA"];
 const FUNCOES_VALIDAS = new Set([
   "violao", "guitarra", "bateria", "teclado", "baixo", "voz-principal", "voz-secundaria",
 ]);
@@ -40,9 +39,7 @@ function dataEscalaValida(dataEscala: string | null) {
 function readEscalaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const dataEscala = String(formData.get("dataEscala") ?? "").trim();
-  const statusRaw = String(formData.get("status") ?? "PUBLICADA");
   const observacoes = String(formData.get("observacoes") ?? "").trim();
-  const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
   const usuarioIdsRaw = [...new Set(formData.getAll("usuarioIds").map(String).filter(Boolean))];
   const usuarioIds = usuarioIdsRaw
@@ -69,16 +66,10 @@ function readEscalaForm(formData: FormData) {
 
   const tonalidadeValida = tonalidadesMusicas.every(({ tonalidade }) => isTonalidadeValida(tonalidade));
 
-  const status = STATUS_VALIDOS.includes(statusRaw as StatusEscala)
-    ? (statusRaw as StatusEscala)
-    : "RASCUNHO";
-
   return {
     titulo,
     dataEscala: dataEscala || null,
-    status,
     observacoes: observacoes || null,
-    ministerioId: ministerioIdRaw ? Number(ministerioIdRaw) : null,
     funcoesUsuarios,
     tonalidadesMusicas,
     usuarioIds,
@@ -95,9 +86,6 @@ function validarEscala(data: ReturnType<typeof readEscalaForm>): string | null {
   if (tituloError) return tituloError;
   const observacoesError = validateMaxLength(data.observacoes ?? "", FORM_LIMITS.observacoes, "Observações");
   if (observacoesError) return observacoesError;
-  if (data.ministerioId !== null && (!Number.isInteger(data.ministerioId) || data.ministerioId <= 0)) {
-    return "Ministério inválido.";
-  }
   if (!data.usuarioIdsValidos) return "Seleção de usuários inválida.";
   return null;
 }
@@ -129,9 +117,9 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   const escala = await repos.escalas.create({
     titulo: data.titulo,
     dataEscala: data.dataEscala,
-    status: data.status,
+    status: "PUBLICADA",
     observacoes: data.observacoes,
-    ministerioId: data.ministerioId,
+    ministerioId: null,
     funcoesUsuarios: data.funcoesUsuarios,
     tonalidadesMusicas: data.tonalidadesMusicas,
   });
@@ -168,9 +156,7 @@ export async function atualizarEscalaAction(
   await repos.escalas.update(id, {
     titulo: data.titulo,
     dataEscala: data.dataEscala,
-    status: data.status,
     observacoes: data.observacoes,
-    ministerioId: data.ministerioId,
     funcoesUsuarios: data.funcoesUsuarios,
     tonalidadesMusicas: data.tonalidadesMusicas,
   });

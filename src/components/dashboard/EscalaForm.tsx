@@ -12,15 +12,8 @@ import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
-import type { Escala, Ministerio, Musica, StatusEscala, Usuario } from "@/types/domain";
+import type { Escala, Musica, Usuario } from "@/types/domain";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
-
-const STATUS_OPTIONS: { value: StatusEscala; label: string }[] = [
-  { value: "RASCUNHO", label: "Rascunho" },
-  { value: "PUBLICADA", label: "Publicada" },
-  { value: "CONCLUIDA", label: "Concluída" },
-  { value: "CANCELADA", label: "Cancelada" },
-];
 
 const NOMES_FUNCOES: Record<string, string> = {
   violao: "Violão",
@@ -35,12 +28,10 @@ const NOMES_FUNCOES: Record<string, string> = {
 export function EscalaForm({
   escala,
   usuarios,
-  ministerios,
   onCancel,
 }: {
   escala?: Escala;
   usuarios: Usuario[];
-  ministerios: Ministerio[];
   onCancel?: () => void;
 }) {
   const action = escala ? atualizarEscalaAction : criarEscalaAction;
@@ -188,59 +179,20 @@ export function EscalaForm({
   }
 
   return (
-    <form action={formAction} className="db-panel db-scale-form flex max-w-2xl flex-col gap-6 p-6 text-left sm:p-8">
+    <form action={formAction} className="db-panel db-scale-form flex w-full max-w-2xl flex-col gap-5 p-4 text-left sm:gap-6 sm:p-8">
       {escala && <input type="hidden" name="id" value={escala.id} />}
 
       <div className="flex flex-col gap-4">
         <Input label="Título" name="titulo" defaultValue={escala?.titulo} maxLength={FORM_LIMITS.nomeGenerico} required />
 
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Input
-            label="Data"
-            name="dataEscala"
-            type="date"
-            min={dataMinima}
-            defaultValue={escala?.dataEscala ?? ""}
-            className="db-date-input w-full sm:w-48"
-          />
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="status" className="db-label">
-              Status
-            </label>
-            <Select
-              id="status"
-              name="status"
-              defaultValue={escala?.status ?? "PUBLICADA"}
-              aria-label="Status"
-            >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="flex flex-1 flex-col gap-1.5">
-            <label htmlFor="ministerioId" className="db-label">
-              Ministério
-            </label>
-            <Select
-              id="ministerioId"
-              name="ministerioId"
-              defaultValue={escala?.ministerioId ?? ""}
-              aria-label="Ministério"
-              options={[
-                { value: "", label: "Nenhum" },
-                ...ministerios.map((ministerio) => ({
-                  value: String(ministerio.id),
-                  label: ministerio.nome,
-                })),
-              ]}
-            />
-          </div>
-        </div>
+        <Input
+          label="Data"
+          name="dataEscala"
+          type="date"
+          min={dataMinima}
+          defaultValue={escala?.dataEscala ?? ""}
+          className="db-date-input w-full sm:max-w-64"
+        />
 
         <Input label="Observações" name="observacoes" defaultValue={escala?.observacoes ?? ""} maxLength={FORM_LIMITS.observacoes} />
       </div>
@@ -258,7 +210,7 @@ export function EscalaForm({
               return (
                 <div key={u.id} className="db-scale-selected-person rounded-xl p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-sm font-semibold text-paper/90">{u.nome}</span>
+                    <span className="db-scale-person-name min-w-0 truncate text-sm font-semibold text-paper/90">{u.nome}</span>
                     <button type="button" onClick={() => toggleUsuario(u)} aria-label={`Remover ${u.nome}`} className="db-icon-button h-7 w-7 shrink-0"><X size={14} /></button>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5">
@@ -288,7 +240,7 @@ export function EscalaForm({
           {usuariosVisiveis.filter((u) => !usuarioIds.has(u.id)).map((u) => {
             return (
               <div key={u.id} ref={refLinhaUsuario(u)} className="db-scale-option py-1.5">
-                <label className="flex flex-1 items-center gap-2 text-sm text-paper/80">
+                <label className="db-scale-person-name flex flex-1 items-center gap-2 text-sm text-paper/80">
                   <input
                     type="checkbox"
                     checked={false}

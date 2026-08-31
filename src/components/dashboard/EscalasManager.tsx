@@ -98,12 +98,12 @@ export function EscalasManager({
       {detalhe && <EscalaDetailsDialog escala={detalhe} usuarios={usuarios} ministerios={ministerios} onClose={() => setDetalhe(null)} />}
 
       {escalaAberta && (
-        <div role="presentation" className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-4 backdrop-blur-sm" onMouseDown={() => setEscalaAberta(null)}>
+        <div role="presentation" className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-4" onMouseDown={() => setEscalaAberta(null)}>
           <section role="dialog" aria-modal="true" aria-labelledby="escala-dialog-title" className="db-member-modal relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto overscroll-contain touch-pan-y pb-4" onMouseDown={(event) => event.stopPropagation()}>
             <button type="button" onClick={() => setEscalaAberta(null)} aria-label="Fechar formulário" className="db-icon-button absolute right-4 top-4 z-10 h-9 w-9">
               <X size={18} />
             </button>
-            <div className="px-6 pt-6 sm:px-8 sm:pt-8">
+            <div className="px-4 pt-5 sm:px-8 sm:pt-8">
               <p className="db-label text-cyan-300">Programação do ministério</p>
               <h2 id="escala-dialog-title" className="db-title mt-2 pr-10 text-3xl text-paper">{escalaAberta === "nova" ? "Nova escala" : "Editar escala"}</h2>
             </div>
@@ -112,7 +112,6 @@ export function EscalasManager({
                 key={escalaAberta === "nova" ? "nova" : escalaAberta.id}
                 escala={escalaAberta === "nova" ? undefined : escalaAberta}
                 usuarios={usuarios}
-                ministerios={ministerios}
                 onCancel={() => setEscalaAberta(null)}
               />
             </div>

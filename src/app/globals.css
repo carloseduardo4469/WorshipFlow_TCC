@@ -1117,6 +1117,7 @@ html[data-dashboard-theme="light"] .db-schedule-tone { background: #fff1c9; colo
 html[data-dashboard-theme="light"] .db-schedule-song a { border-color: rgba(8,116,154,.42); color: #075f82; background: #f2fbfe; }
 html[data-dashboard-theme="light"] .db-scale-picker { border-color: rgba(34,91,132,.25); background: rgba(255,255,255,.72); }
 html[data-dashboard-theme="light"] .db-scale-option:hover { background: #e8f6fb; }
+html[data-dashboard-theme="light"] .db-scale-person-name { color: #142f49 !important; }
 
 @media (max-width: 639px) {
   .db-schedule-song { align-items: flex-start; flex-wrap: wrap; }
