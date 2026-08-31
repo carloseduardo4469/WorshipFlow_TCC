@@ -95,8 +95,9 @@ export async function atualizarPerfilAction(
     fotoPerfilUrl = `data:${fotoPerfil.type};base64,${bytes.toString("base64")}`;
   }
 
-  const repos = await getRepositories();
-  await repos.usuarios.update(profile.id, {
+  try {
+    const repos = await getRepositories();
+    await repos.usuarios.update(profile.id, {
     nome,
     telefone: telefone || null,
     // A interface trabalha apenas com a seleção de instrumentos. Mantemos
@@ -104,7 +105,10 @@ export async function atualizarPerfilAction(
     instrumentoPrincipal: habilidades[0] ?? null,
     habilidades: habilidades.length ? habilidades.join(",") : null,
     ...(fotoPerfilUrl ? { fotoPerfilUrl } : {}),
-  });
+    });
+  } catch {
+    return { error: "Não foi possível salvar o perfil. Tente novamente." };
+  }
 
   invalidateDataCache("usuarios");
   revalidatePath("/dashboard/perfil");

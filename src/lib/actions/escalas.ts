@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { FuncaoUsuario, TonalidadeMusica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
@@ -229,8 +230,36 @@ export async function adicionarMusicasNaEscalaAction(
     return { error: "Uma ou mais músicas selecionadas não existem mais." };
   }
 
-  await repos.escalas.setMusicas(escalaId, musicaIds);
-  await repos.escalas.update(escalaId, { tonalidadesMusicas });
+  try {
+    if (repos.backend === "supabase") {
+      const admin = createAdminClient();
+      if (musicaIds.length > 0) {
+        const { error: insertError } = await admin
+          .from("escala_musicas")
+          .upsert(
+            musicaIds.map((musicaId) => ({ escala_id: escalaId, musica_id: musicaId })),
+            { onConflict: "escala_id,musica_id", ignoreDuplicates: true }
+          );
+        if (insertError) throw insertError;
+      }
+
+      let removerAntigas = admin.from("escala_musicas").delete().eq("escala_id", escalaId);
+      if (musicaIds.length > 0) removerAntigas = removerAntigas.not("musica_id", "in", `(${musicaIds.join(",")})`);
+      const { error: deleteError } = await removerAntigas;
+      if (deleteError) throw deleteError;
+
+      const { error: updateError } = await admin
+        .from("escalas")
+        .update({ tonalidades_musicas: tonalidadesMusicas })
+        .eq("id", escalaId);
+      if (updateError) throw updateError;
+    } else {
+      await repos.escalas.setMusicas(escalaId, musicaIds);
+      await repos.escalas.update(escalaId, { tonalidadesMusicas });
+    }
+  } catch {
+    return { error: "Não foi possível salvar as músicas da escala. Tente novamente." };
+  }
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
   revalidatePath("/dashboard/historico");

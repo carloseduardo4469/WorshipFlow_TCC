@@ -26,8 +26,32 @@ const OPCOES_HABILIDADES = [
 
 const FOTO_TIPOS_PERMITIDOS = ["image/jpeg", "image/png", "image/webp"];
 const FOTO_TAMANHO_MAXIMO_BYTES = 1 * 1024 * 1024;
+const FOTO_DIMENSAO_MAXIMA = 512;
 const FOTO_ERRO_TAMANHO = "A foto precisa ter no máximo 1 MB.";
 const FOTO_ERRO_TIPO = "Use uma imagem JPG, PNG ou WebP.";
+
+async function otimizarFoto(file: File): Promise<File> {
+  const url = URL.createObjectURL(file);
+  try {
+    const imagem = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const elemento = new Image();
+      elemento.onload = () => resolve(elemento);
+      elemento.onerror = () => reject(new Error("Imagem inválida"));
+      elemento.src = url;
+    });
+    const escala = Math.min(1, FOTO_DIMENSAO_MAXIMA / Math.max(imagem.naturalWidth, imagem.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(imagem.naturalWidth * escala));
+    canvas.height = Math.max(1, Math.round(imagem.naturalHeight * escala));
+    const contexto = canvas.getContext("2d");
+    if (!contexto) return file;
+    contexto.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+    return blob ? new File([blob], "foto-perfil.jpg", { type: "image/jpeg", lastModified: Date.now() }) : file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarPerfilAction, null);
@@ -69,7 +93,7 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
     return "";
   }
 
-  function updatePreview(event: ChangeEvent<HTMLInputElement>) {
+  async function updatePreview(event: ChangeEvent<HTMLInputElement>) {
     setBottomMessage("");
     const file = event.target.files?.[0];
     if (!file) return;
@@ -81,8 +105,20 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
       return;
     }
 
+    let fotoOtimizada: File;
+    try {
+      fotoOtimizada = await otimizarFoto(file);
+      const arquivos = new DataTransfer();
+      arquivos.items.add(fotoOtimizada);
+      event.target.files = arquivos.files;
+    } catch {
+      clearSelectedFile(event.target);
+      showBottomMessage("Não foi possível preparar essa foto. Escolha outra imagem.");
+      return;
+    }
+
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    const objectUrl = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(fotoOtimizada);
     previewUrlRef.current = objectUrl;
     setFileName(file.name);
     setPreview(objectUrl);
