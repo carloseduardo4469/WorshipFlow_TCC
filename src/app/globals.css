@@ -1181,9 +1181,19 @@ html[data-dashboard-theme="light"] .db-history-event-card > span:not(:first-chil
 .db-home-schedule-row { transition: color .18s ease, background-color .18s ease; }
 .db-home-schedule-row:hover { background: rgba(83,217,235,.055); }
 html[data-dashboard-theme="light"] .db-home-schedule-row:hover { background: rgba(19,111,151,.065); }
+.db-section-panel { display: block; width: 100%; min-width: 0; }
 
 @media (max-width: 639px) {
+  .db-section-panel { min-height: 180px; padding: 1.25rem; margin-bottom: 1rem; }
   .db-schedule-song { align-items: flex-start; flex-wrap: wrap; }
   .db-schedule-song .db-schedule-tone { margin-left: 2.35rem; }
   .db-schedule-dialog { padding: 1.2rem; }
+}
+/* Navegação sólida no dashboard: evita que o conteúdo atravesse a barra. */
+[class~="bg-[#070d1a]/75"],
+[class~="bg-[#07101e]/90"],
+[class~="bg-[#071525]/95"],
+[class~="bg-[#07101e]/95"] {
+  background-color: #070d1a !important;
+  backdrop-filter: none !important;
 }

@@ -119,7 +119,7 @@ export function HistoricoCalendar({
                 {preenchido && (
                   <span className="db-history-day-content">
                     <span className="db-history-dot" />
-                    <span>{escalasNaData.length === 1 ? escalasNaData[0].titulo : `${escalasNaData.length} escalas`}</span>
+                    <span className="hidden sm:inline">{escalasNaData.length === 1 ? escalasNaData[0].titulo : `${escalasNaData.length} escalas`}</span>
                   </span>
                 )}
               </button>
