@@ -1,19 +1,8 @@
-import Link from "next/link";
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { cachedData } from "@/lib/db/cache";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { DataTable } from "@/components/ui/DataTable";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-
-function formatDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("pt-BR", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { EscalasTable } from "@/components/dashboard/EscalasTable";
 
 function hojeIso() {
   const hoje = new Date();
@@ -24,35 +13,26 @@ function hojeIso() {
   ].join("-");
 }
 
-export default async function RepertoriosPage() {
-  const { profile } = await requireAuth();
+export default async function HistoricoPage() {
+  await requireAuth();
   const repos = await getRepositories();
-  const escalas = await cachedData("escalas:list", () => repos.escalas.list());
+  const [escalas, ministerios] = await Promise.all([
+    cachedData("escalas:list", () => repos.escalas.list()),
+    cachedData("ministerios:list", () => repos.ministerios.list()),
+  ]);
   const limite = hojeIso();
   const historico = escalas.filter(
     (escala) => escala.status === "CONCLUIDA" || Boolean(escala.dataEscala && escala.dataEscala < limite)
   );
+  const usuarioIds = [...new Set(historico.flatMap((escala) => escala.usuarioIds))];
+  const usuarios = await repos.usuarios.getByIds(usuarioIds);
 
   return (
-    <div className="mx-auto max-w-[1240px]">
-      <div className="db-page-toolbar">
-        <PageHeader title="Histórico" description="Escalas concluídas ou que já passaram da data programada." />
-      </div>
-
-      <DataTable
-        headers={["Escala", "Data", "Status", "Equipe"]}
-        isEmpty={historico.length === 0}
-        emptyMessage="Nenhuma escala concluída ou passada ainda."
-      >
-        {historico.map((escala) => (
-          <tr key={escala.id}>
-            <td className="px-4 py-3.5 text-paper font-medium">{escala.titulo}</td>
-            <td className="px-4 py-3.5 text-muted">{formatDate(escala.dataEscala)}</td>
-            <td className="px-4 py-3.5"><StatusBadge status={escala.status} /></td>
-            <td className="px-4 py-3.5 text-muted">{escala.usuarioIds.length} membro(s)</td>
-          </tr>
-        ))}
-      </DataTable>
+    <div className="db-schedule-page mx-auto max-w-[1240px]">
+      <PageHeader title="Histórico" description="Escalas concluídas ou que já passaram da data programada." />
+      {historico.length === 0
+        ? <div className="db-empty db-empty-modern">Nenhuma escala concluída ou passada ainda.</div>
+        : <EscalasTable escalas={historico} usuarios={usuarios} ministerios={ministerios} />}
     </div>
   );
 }

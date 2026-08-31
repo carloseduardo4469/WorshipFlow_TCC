@@ -885,6 +885,7 @@ html[data-dashboard-theme="light"] .db-badge-muted { color:#405b78; background:r
 html[data-dashboard-theme="light"] .db-badge-green,
 html[data-dashboard-theme="light"] .db-badge-teal { color:#087451; background:rgba(8,116,81,.11); }
 html[data-dashboard-theme="light"] .db-badge-amber { color:#895800; background:rgba(137,88,0,.12); }
+html[data-dashboard-theme="light"] .db-badge-red { color:#a82118; background:rgba(168,33,24,.1); }
 /* O hero continua deliberadamente escuro no tema claro; portanto seu texto
    precisa permanecer claro, sem herdar a regra geral dos títulos do painel. */
 html[data-dashboard-theme="light"] .db-hero .db-title { color:#f8fbff !important; text-shadow:0 2px 18px rgba(0,0,0,.22); }
@@ -1040,4 +1041,79 @@ html[data-dashboard-theme="light"] .db-member-modal .text-paper { color:#172d48 
   .db-overview,
   .backdrop-blur,
   .backdrop-blur-sm { backdrop-filter: none; }
+}
+
+/* Escalas, histórico e registro de escalas compartilham a mesma linguagem
+   visual e o mesmo contraste nos dois temas. */
+.db-schedule-table { overflow: hidden; }
+.db-schedule-table .db-table thead { background: rgba(83, 217, 235, .075); }
+.db-schedule-table .db-table tbody { color: #dce6ef; }
+.db-schedule-row { transition: background-color .18s ease, box-shadow .18s ease; }
+.db-schedule-row:hover { background: rgba(83, 217, 235, .07) !important; }
+.db-schedule-row:focus-visible { outline: 2px solid #55d9ec; outline-offset: -2px; }
+.db-schedule-row-title { color: #f5f7f8; font-weight: 750; line-height: 1.35; }
+.db-schedule-row-hint { color: #91a4b8; font-size: .73rem; line-height: 1.4; }
+.db-schedule-cell { display: inline-flex; align-items: center; gap: .4rem; color: #bdcad8; font-weight: 600; }
+.db-schedule-kicker { color: #67e8f9; }
+.db-schedule-fact { border: 1px solid rgba(121,164,198,.24); border-radius: .9rem; background: rgba(3,15,32,.32); padding: .85rem 1rem; }
+.db-schedule-fact dt, .db-schedule-section h3 { display: flex; align-items: center; gap: .45rem; color: #93a9bd; font-family: var(--font-mono); font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.db-schedule-fact dd { margin-top: .4rem; color: #f3f6f8; font-size: .94rem; font-weight: 700; }
+.db-schedule-section { border-top: 1px solid rgba(121,164,198,.2); padding-top: 1.1rem; }
+.db-schedule-section > p { color: #b8c7d5; font-size: .88rem; font-weight: 550; line-height: 1.65; }
+.db-schedule-person { display: flex; min-width: 0; flex-direction: column; gap: .18rem; border: 1px solid rgba(83,217,235,.22); border-radius: .8rem; background: rgba(83,217,235,.055); padding: .7rem .8rem; }
+.db-schedule-person strong { overflow-wrap: anywhere; color: #eef4f7; font-size: .88rem; }
+.db-schedule-person span { overflow-wrap: anywhere; color: #9dafc0; font-size: .73rem; }
+.db-schedule-song { display: flex; min-width: 0; align-items: center; gap: .7rem; border: 1px solid rgba(121,164,198,.22); border-radius: .85rem; background: rgba(3,15,32,.3); padding: .7rem .8rem; }
+.db-schedule-song strong { color: #f1f5f7; font-size: .88rem; }
+.db-schedule-song small { color: #91a4b8; font-size: .72rem; }
+.db-schedule-song-index { display: flex; height: 1.65rem; width: 1.65rem; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 999px; background: rgba(83,217,235,.13); color: #79e7f5; font-family: var(--font-mono); font-size: .7rem; font-weight: 800; }
+.db-schedule-tone { flex: 0 0 auto; border-radius: .5rem; background: rgba(242,193,78,.12); padding: .3rem .48rem; color: #f4cf67; font-family: var(--font-mono); font-size: .76rem; font-weight: 800; }
+.db-schedule-song a { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .3rem; border: 1px solid rgba(83,217,235,.28); border-radius: .55rem; padding: .35rem .5rem; color: #67e8f9; font-size: .74rem; font-weight: 750; }
+.db-scale-section-label { color: #67e8f9; }
+.db-scale-selected-person, .db-scale-selected-song { border: 1px solid rgba(83,217,235,.26); background: rgba(83,217,235,.06); }
+.db-scale-picker { border-radius: .9rem; }
+.db-scale-option { border-radius: .55rem; padding-inline: .45rem; transition: background-color .15s ease; }
+.db-scale-option:hover { background: rgba(83,217,235,.075); }
+
+html[data-dashboard-theme="light"] .db-schedule-table {
+  border-color: rgba(34, 91, 132, .3);
+  background: #fbfdff;
+  box-shadow: 0 18px 42px -34px rgba(24, 70, 108, .52);
+}
+html[data-dashboard-theme="light"] .db-schedule-table .db-table { border-color: rgba(34,91,132,.2); }
+html[data-dashboard-theme="light"] .db-schedule-table .db-table thead { background: #e8f4fa; }
+html[data-dashboard-theme="light"] .db-schedule-table .db-table thead th { color: #36536d; }
+html[data-dashboard-theme="light"] .db-schedule-table .db-table tbody { color: #263e56; }
+html[data-dashboard-theme="light"] .db-schedule-table .db-table tbody tr + tr { border-color: rgba(34,91,132,.16); }
+html[data-dashboard-theme="light"] .db-schedule-row:hover { background: #eef8fc !important; }
+html[data-dashboard-theme="light"] .db-schedule-row-title { color: #102c46; }
+html[data-dashboard-theme="light"] .db-schedule-row-hint { color: #587088; }
+html[data-dashboard-theme="light"] .db-schedule-cell { color: #304b65; }
+html[data-dashboard-theme="light"] .db-schedule-kicker,
+html[data-dashboard-theme="light"] .db-scale-section-label { color: #08749a !important; }
+html[data-dashboard-theme="light"] .db-schedule-dialog-title { color: #122e49 !important; }
+html[data-dashboard-theme="light"] .db-schedule-fact { border-color: rgba(34,91,132,.22); background: rgba(255,255,255,.78); }
+html[data-dashboard-theme="light"] .db-schedule-fact dt,
+html[data-dashboard-theme="light"] .db-schedule-section h3 { color: #3f617d; }
+html[data-dashboard-theme="light"] .db-schedule-fact dd { color: #142f49; }
+html[data-dashboard-theme="light"] .db-schedule-section { border-color: rgba(34,91,132,.18); }
+html[data-dashboard-theme="light"] .db-schedule-section > p { color: #3f5870; }
+html[data-dashboard-theme="light"] .db-schedule-person,
+html[data-dashboard-theme="light"] .db-scale-selected-person,
+html[data-dashboard-theme="light"] .db-scale-selected-song { border-color: rgba(19,111,151,.28); background: rgba(220,244,252,.72); }
+html[data-dashboard-theme="light"] .db-schedule-person strong,
+html[data-dashboard-theme="light"] .db-schedule-song strong { color: #142f49; }
+html[data-dashboard-theme="light"] .db-schedule-person span,
+html[data-dashboard-theme="light"] .db-schedule-song small { color: #536d84; }
+html[data-dashboard-theme="light"] .db-schedule-song { border-color: rgba(34,91,132,.22); background: rgba(255,255,255,.76); }
+html[data-dashboard-theme="light"] .db-schedule-song-index { background: #dff3fa; color: #096b91; }
+html[data-dashboard-theme="light"] .db-schedule-tone { background: #fff1c9; color: #754b00; }
+html[data-dashboard-theme="light"] .db-schedule-song a { border-color: rgba(8,116,154,.42); color: #075f82; background: #f2fbfe; }
+html[data-dashboard-theme="light"] .db-scale-picker { border-color: rgba(34,91,132,.25); background: rgba(255,255,255,.72); }
+html[data-dashboard-theme="light"] .db-scale-option:hover { background: #e8f6fb; }
+
+@media (max-width: 639px) {
+  .db-schedule-song { align-items: flex-start; flex-wrap: wrap; }
+  .db-schedule-song .db-schedule-tone { margin-left: 2.35rem; }
+  .db-schedule-dialog { padding: 1.2rem; }
 }

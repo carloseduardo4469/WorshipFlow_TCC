@@ -14,7 +14,7 @@ export default async function RegistrosEscalasPage() {
   const usuarios = await repos.usuarios.getByIds(usuarioIds);
 
   return (
-    <div className="mx-auto max-w-[1240px]">
+    <div className="db-schedule-page mx-auto max-w-[1240px]">
       <EscalasManager escalas={escalas} usuarios={usuarios} ministerios={ministerios} />
     </div>
   );

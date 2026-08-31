@@ -16,8 +16,10 @@ import type { Escala, Ministerio, Musica, StatusEscala, Usuario } from "@/types/
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 
 const STATUS_OPTIONS: { value: StatusEscala; label: string }[] = [
+  { value: "RASCUNHO", label: "Rascunho" },
   { value: "PUBLICADA", label: "Publicada" },
   { value: "CONCLUIDA", label: "Concluída" },
+  { value: "CANCELADA", label: "Cancelada" },
 ];
 
 const NOMES_FUNCOES: Record<string, string> = {
@@ -47,7 +49,7 @@ export function EscalaForm({
 
   const [usuarioIds, setUsuarioIds] = useState<Set<string>>(new Set(escala?.usuarioIds ?? []));
   const [usuariosSelecionados, setUsuariosSelecionados] = useState<Usuario[]>(
-    usuarios.filter((usuario) => escala?.usuarioIds.includes(usuario.id))
+    [...new Map(usuarios.filter((usuario) => escala?.usuarioIds.includes(usuario.id)).map((usuario) => [usuario.id, usuario])).values()]
   );
   const [musicaIds, setMusicaIds] = useState<Set<number>>(new Set(escala?.musicaIds ?? []));
   const [musicasSelecionadas, setMusicasSelecionadas] = useState<Musica[]>([]);
@@ -128,10 +130,8 @@ export function EscalaForm({
     buscarMusicasPorIds(ids)
       .then((resultado) => {
         if (!ativo) return;
-        setMusicasSelecionadas((prev) => {
-          const vistos = new Set(prev.map((m) => m.id));
-          return [...prev, ...resultado.filter((m) => !vistos.has(m.id))];
-        });
+        const porId = new Map(resultado.map((musica) => [musica.id, musica]));
+        setMusicasSelecionadas(ids.map((id) => porId.get(id)).filter((musica): musica is Musica => Boolean(musica)));
       })
       .catch(() => {});
     return () => {
@@ -150,7 +150,7 @@ export function EscalaForm({
       .then((resultado) => {
         if (!ativo) return;
         const ordem = new Map(ids.map((id, indice) => [id, indice]));
-        setUsuariosSelecionados((atuais) => [...atuais, ...resultado]
+        setUsuariosSelecionados((atuais) => [...new Map([...atuais, ...resultado].map((usuario) => [usuario.id, usuario])).values()]
           .sort((a, b) => (ordem.get(a.id) ?? 0) - (ordem.get(b.id) ?? 0)));
       })
       .catch(() => {});
@@ -188,7 +188,7 @@ export function EscalaForm({
   }
 
   return (
-    <form action={formAction} className="db-panel flex max-w-2xl flex-col gap-6 p-6 text-left sm:p-8">
+    <form action={formAction} className="db-panel db-scale-form flex max-w-2xl flex-col gap-6 p-6 text-left sm:p-8">
       {escala && <input type="hidden" name="id" value={escala.id} />}
 
       <div className="flex flex-col gap-4">
@@ -206,13 +206,13 @@ export function EscalaForm({
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="status" className="db-label">
-              Estado
+              Status
             </label>
             <Select
               id="status"
               name="status"
               defaultValue={escala?.status ?? "PUBLICADA"}
-              aria-label="Estado"
+              aria-label="Status"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -251,12 +251,12 @@ export function EscalaForm({
 
         {usuariosSelecionados.length > 0 && (
           <div className="mb-2 flex flex-col gap-2">
-            <span className="db-label text-xs text-cyan-300">Selecionados ({usuariosSelecionados.length})</span>
+            <span className="db-label db-scale-section-label text-xs">Equipe selecionada ({usuariosSelecionados.length})</span>
             {usuariosSelecionados.map((u) => {
-              const funcoes = (u.habilidades ?? "").split(",").map((funcao) => funcao.trim()).filter(Boolean);
+              const funcoes = [...new Set((u.habilidades ?? "").split(",").map((funcao) => funcao.trim()).filter(Boolean))];
               const funcoesSelecionadas = new Set(funcaoAtual(u.id).split(",").map((funcao) => funcao.trim()).filter(Boolean));
               return (
-                <div key={u.id} className="rounded-xl border border-cyan-300/25 bg-cyan-300/[0.05] p-3">
+                <div key={u.id} className="db-scale-selected-person rounded-xl p-3">
                   <div className="flex items-center justify-between gap-3">
                     <span className="min-w-0 truncate text-sm font-semibold text-paper/90">{u.nome}</span>
                     <button type="button" onClick={() => toggleUsuario(u)} aria-label={`Remover ${u.nome}`} className="db-icon-button h-7 w-7 shrink-0"><X size={14} /></button>
@@ -275,7 +275,8 @@ export function EscalaForm({
           </div>
         )}
 
-        <div ref={usuariosListaRef} className="db-card max-h-72 space-y-1 overflow-y-auto p-3">
+        <span className="db-hint">Adicionar membros</span>
+        <div ref={usuariosListaRef} className="db-card db-scale-picker max-h-72 space-y-1 overflow-y-auto p-3">
           {usuariosCarregando && usuariosTotalCarregado === 0 ? (
             <p className="text-sm text-muted">Carregando membros...</p>
           ) : usuariosErro ? (
@@ -284,14 +285,13 @@ export function EscalaForm({
             <p className="text-sm text-muted">Nenhum membro cadastrado.</p>
           ) : null}
           {usuariosTopoAltura > 0 && <div aria-hidden="true" style={{ height: usuariosTopoAltura }} />}
-          {usuariosVisiveis.map((u) => {
-            const checked = usuarioIds.has(u.id);
+          {usuariosVisiveis.filter((u) => !usuarioIds.has(u.id)).map((u) => {
             return (
-              <div key={u.id} ref={refLinhaUsuario(u)} className="py-1.5">
+              <div key={u.id} ref={refLinhaUsuario(u)} className="db-scale-option py-1.5">
                 <label className="flex flex-1 items-center gap-2 text-sm text-paper/80">
                   <input
                     type="checkbox"
-                    checked={checked}
+                    checked={false}
                     onChange={() => toggleUsuario(u)}
                     className="h-4 w-4 db-checkbox"
                   />
@@ -316,14 +316,14 @@ export function EscalaForm({
 
         {musicasSelecionadas.length > 0 && (
           <div className="flex flex-col gap-2">
-            <span className="db-label text-xs text-cyan-300">
-              Selecionadas ({musicasSelecionadas.length})
+            <span className="db-label db-scale-section-label text-xs">
+              Músicas selecionadas ({musicasSelecionadas.length})
             </span>
             <div className="flex flex-wrap gap-2">
               {musicasSelecionadas.map((m) => {
                 const tonalidadeInicial = tomParaSelecao(tonalidadeAtual(m.id) || m.tonalidade);
                 return (
-                  <div key={m.id} className="flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.06] py-1.5 pl-3 pr-1.5">
+                  <div key={m.id} className="db-scale-selected-song flex items-center gap-2 rounded-xl py-1.5 pl-3 pr-1.5">
                     <span className="min-w-0 text-sm text-paper/90">
                       {m.titulo}
                       {m.artista && <span className="block text-[11px] text-muted">{m.artista}</span>}
@@ -359,6 +359,7 @@ export function EscalaForm({
           </div>
         )}
 
+        <span className="db-hint">Adicionar músicas</span>
         <label className="relative">
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -371,7 +372,7 @@ export function EscalaForm({
           />
         </label>
 
-        <div ref={listaRef} className="db-card db-scale-music-list max-h-64 overflow-y-auto p-3">
+        <div ref={listaRef} className="db-card db-scale-picker db-scale-music-list max-h-64 overflow-y-auto p-3">
           {carregando && totalCarregado === 0 ? (
             <p className="text-sm text-muted">Carregando músicas...</p>
           ) : erroCarregar ? (
@@ -381,17 +382,16 @@ export function EscalaForm({
           ) : (
             <>
               {topoAltura > 0 && <div aria-hidden="true" style={{ height: topoAltura }} />}
-              {itensVisiveis.map((m) => {
-                const checked = musicaIds.has(m.id);
+              {itensVisiveis.filter((m) => !musicaIds.has(m.id)).map((m) => {
                 return (
                   <label
                     key={m.id}
                     ref={refLinha(m)}
-                    className={`flex min-w-0 cursor-pointer items-start gap-2 break-words py-1 text-sm ${checked ? "text-cyan-300" : "text-paper/80"}`}
+                    className="db-scale-option flex min-w-0 cursor-pointer items-start gap-2 break-words py-1 text-sm text-paper/80"
                   >
                     <input
                       type="checkbox"
-                      checked={checked}
+                      checked={false}
                       onChange={() => toggleMusica(m)}
                       className="h-4 w-4 db-checkbox"
                     />

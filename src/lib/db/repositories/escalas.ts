@@ -10,9 +10,10 @@ import {
 } from "@/lib/db/local/schema";
 import type { Escala, NewEscala, UpdateEscala } from "@/types/domain";
 import type { Backend, EscalasRepository } from "./types";
+import { normalizarEscala } from "@/lib/escalas/normalize";
 
 function mapSupabaseRow(row: any): Escala {
-  return {
+  return normalizarEscala({
     id: row.id,
     titulo: row.titulo,
     dataEscala: row.data_escala ?? null,
@@ -24,7 +25,7 @@ function mapSupabaseRow(row: any): Escala {
     usuarioIds: (row.escala_usuarios ?? []).map((r: any) => r.usuario_id),
     musicaIds: (row.escala_musicas ?? []).map((r: any) => r.musica_id),
     createdAt: row.created_at,
-  };
+  });
 }
 
 function toSupabasePayload(data: Partial<NewEscala>) {
@@ -47,7 +48,7 @@ function createLocalRepository(): EscalasRepository {
       localDb.select().from(escalaUsuariosTable).where(eq(escalaUsuariosTable.escalaId, row.id)),
       localDb.select().from(escalaMusicasTable).where(eq(escalaMusicasTable.escalaId, row.id)),
     ]);
-    return {
+    return normalizarEscala({
       id: row.id,
       titulo: row.titulo,
       dataEscala: row.dataEscala ?? null,
@@ -59,7 +60,7 @@ function createLocalRepository(): EscalasRepository {
       usuarioIds: usuarioLinks.map((l) => l.usuarioId),
       musicaIds: musicaLinks.map((l) => l.musicaId),
       createdAt: row.createdAt,
-    };
+    });
   }
 
   return {
@@ -99,19 +100,21 @@ function createLocalRepository(): EscalasRepository {
       await localDb.delete(escalasTable).where(eq(escalasTable.id, id));
     },
     async setUsuarios(escalaId, usuarioIds) {
+      const idsUnicos = [...new Set(usuarioIds.filter(Boolean))];
       await localDb.delete(escalaUsuariosTable).where(eq(escalaUsuariosTable.escalaId, escalaId));
-      if (usuarioIds.length > 0) {
+      if (idsUnicos.length > 0) {
         await localDb
           .insert(escalaUsuariosTable)
-          .values(usuarioIds.map((usuarioId) => ({ escalaId, usuarioId })));
+          .values(idsUnicos.map((usuarioId) => ({ escalaId, usuarioId })));
       }
     },
     async setMusicas(escalaId, musicaIds) {
+      const idsUnicos = [...new Set(musicaIds.filter((id) => Number.isInteger(id) && id > 0))];
       await localDb.delete(escalaMusicasTable).where(eq(escalaMusicasTable.escalaId, escalaId));
-      if (musicaIds.length > 0) {
+      if (idsUnicos.length > 0) {
         await localDb
           .insert(escalaMusicasTable)
-          .values(musicaIds.map((musicaId) => ({ escalaId, musicaId })));
+          .values(idsUnicos.map((musicaId) => ({ escalaId, musicaId })));
       }
     },
   };
@@ -185,30 +188,32 @@ function createSupabaseRepository(supabase: SupabaseClient): EscalasRepository {
       if (error) throw error;
     },
     async setUsuarios(escalaId, usuarioIds) {
+      const idsUnicos = [...new Set(usuarioIds.filter(Boolean))];
       const { error: deleteError } = await supabase
         .from("escala_usuarios")
         .delete()
         .eq("escala_id", escalaId);
       if (deleteError) throw deleteError;
 
-      if (usuarioIds.length > 0) {
+      if (idsUnicos.length > 0) {
         const { error: insertError } = await supabase
           .from("escala_usuarios")
-          .insert(usuarioIds.map((usuarioId) => ({ escala_id: escalaId, usuario_id: usuarioId })));
+          .insert(idsUnicos.map((usuarioId) => ({ escala_id: escalaId, usuario_id: usuarioId })));
         if (insertError) throw insertError;
       }
     },
     async setMusicas(escalaId, musicaIds) {
+      const idsUnicos = [...new Set(musicaIds.filter((id) => Number.isInteger(id) && id > 0))];
       const { error: deleteError } = await supabase
         .from("escala_musicas")
         .delete()
         .eq("escala_id", escalaId);
       if (deleteError) throw deleteError;
 
-      if (musicaIds.length > 0) {
+      if (idsUnicos.length > 0) {
         const { error: insertError } = await supabase
           .from("escala_musicas")
-          .insert(musicaIds.map((musicaId) => ({ escala_id: escalaId, musica_id: musicaId })));
+          .insert(idsUnicos.map((musicaId) => ({ escala_id: escalaId, musica_id: musicaId })));
         if (insertError) throw insertError;
       }
     },

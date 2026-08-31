@@ -102,6 +102,19 @@ function validarEscala(data: ReturnType<typeof readEscalaForm>): string | null {
   return null;
 }
 
+async function validarVinculos(
+  repos: Awaited<ReturnType<typeof getRepositories>>,
+  data: ReturnType<typeof readEscalaForm>
+): Promise<string | null> {
+  const [usuarios, musicas] = await Promise.all([
+    repos.usuarios.getByIds(data.usuarioIds),
+    repos.musicas.getByIds(data.musicaIds),
+  ]);
+  if (usuarios.length !== data.usuarioIds.length) return "Um ou mais membros selecionados não existem mais.";
+  if (musicas.length !== data.musicaIds.length) return "Uma ou mais músicas selecionadas não existem mais.";
+  return null;
+}
+
 export async function criarEscalaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
   const data = readEscalaForm(formData);
@@ -111,6 +124,8 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   if (!data.tonalidadeValida) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
   const repos = await getRepositories();
+  const vinculosError = await validarVinculos(repos, data);
+  if (vinculosError) return { error: vinculosError };
   const escala = await repos.escalas.create({
     titulo: data.titulo,
     dataEscala: data.dataEscala,
@@ -140,10 +155,16 @@ export async function atualizarEscalaAction(
   const data = readEscalaForm(formData);
   const escalaError = validarEscala(data);
   if (escalaError) return { error: escalaError };
-  if (!dataEscalaValida(data.dataEscala)) return { error: "Informe uma data válida a partir de hoje." };
   if (!data.tonalidadeValida) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
   const repos = await getRepositories();
+  const escalaAtual = await repos.escalas.getById(id);
+  if (!escalaAtual) return { error: "Escala não encontrada." };
+  if (!dataEscalaValida(data.dataEscala) && data.dataEscala !== escalaAtual.dataEscala) {
+    return { error: "A nova data precisa ser válida e não pode estar no passado." };
+  }
+  const vinculosError = await validarVinculos(repos, data);
+  if (vinculosError) return { error: vinculosError };
   await repos.escalas.update(id, {
     titulo: data.titulo,
     dataEscala: data.dataEscala,
