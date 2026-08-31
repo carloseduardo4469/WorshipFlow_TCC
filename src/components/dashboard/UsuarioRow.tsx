@@ -1,13 +1,17 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { atualizarUsuarioAdminAction } from "@/lib/actions/usuarios";
+import {
+  atualizarUsuarioAdminAction,
+  removerUsuarioAdminAction,
+} from "@/lib/actions/usuarios";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { Select } from "@/components/ui/Select";
 import type { Usuario } from "@/types/domain";
 
 export function UsuarioRow({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarUsuarioAdminAction, null);
+  const [deleteState, deleteAction, deletePending] = useActionState(removerUsuarioAdminAction, null);
   const [isSuspended, setIsSuspended] = useState(usuario.isSuspended);
 
   return (
@@ -61,11 +65,28 @@ export function UsuarioRow({ usuario }: { usuario: Usuario }) {
         <button type="submit" disabled={pending} className="db-btn-sm">
           {pending ? "..." : "Salvar"}
         </button>
+
+        {usuario.perfil !== "ADMIN" && (
+          <button
+            type="submit"
+            formAction={deleteAction}
+            disabled={pending || deletePending}
+            onClick={(event) => {
+              const confirmado = window.confirm(
+                `Deseja realmente remover ${usuario.nome}? Todos os dados desse usuário serão excluídos do site.`
+              );
+              if (!confirmado) event.preventDefault();
+            }}
+            className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {deletePending ? "Removendo..." : "Remover"}
+          </button>
+        )}
       </div>
 
-      {state?.error && (
+      {(state?.error || deleteState?.error) && (
         <div className="w-full sm:basis-full">
-          <FormAlert>{state.error}</FormAlert>
+          <FormAlert>{state?.error ?? deleteState?.error}</FormAlert>
         </div>
       )}
     </form>

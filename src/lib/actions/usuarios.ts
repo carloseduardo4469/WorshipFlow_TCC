@@ -142,6 +142,53 @@ export async function atualizarUsuarioAdminAction(
   return { success: true };
 }
 
+export async function removerUsuarioAdminAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const current = await requireAdmin();
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) return { error: "Usuário inválido." };
+  if (id === current.authId) {
+    return { error: "Você não pode remover a própria conta por esta tela." };
+  }
+
+  try {
+    const repos = await getRepositories();
+    const usuario = await repos.usuarios.getById(id);
+
+    if (!usuario) return { error: "Usuário não encontrado." };
+    if (usuario.perfil === "ADMIN") {
+      return { error: "Administradores não podem ser removidos por esta tela." };
+    }
+
+    if (repos.backend === "supabase") {
+      const admin = createAdminClient();
+      const { error: authError } = await admin.auth.admin.deleteUser(id);
+      if (authError) throw authError;
+
+      // A FK normalmente remove o profile em cascata. Esta operação também
+      // cobre instalações antigas nas quais a cascata ainda não foi aplicada.
+      const { error: profileError } = await admin.from("profiles").delete().eq("id", id);
+      if (profileError) throw profileError;
+    } else {
+      await repos.usuarios.remove(id);
+    }
+  } catch {
+    return { error: "Não foi possível remover o usuário. Tente novamente." };
+  }
+
+  invalidateDataCache("usuarios");
+  revalidatePath("/dashboard/usuarios");
+  revalidatePath("/dashboard/equipe");
+  revalidatePath("/dashboard/admin/usuarios");
+  revalidatePath("/dashboard/escalas");
+  revalidatePath("/dashboard/historico");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 export async function excluirMinhaContaAction(
   _prev: ActionState,
   formData: FormData
