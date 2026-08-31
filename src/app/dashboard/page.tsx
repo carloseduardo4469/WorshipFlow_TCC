@@ -3,16 +3,22 @@ import { ArrowUpRight, CalendarDays, Check, History } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { cachedData } from "@/lib/db/cache";
+import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-automatico";
 
 function monthLabel() { return new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date()); }
 
 export default async function DashboardHomePage() {
   const { profile } = await requireAuth(); const repos = await getRepositories();
-  const [activeSchedules, musicasCount, teamCount] = await Promise.all([
-    cachedData("escalas:active-count", () => repos.escalas.count(undefined, ["RASCUNHO", "PUBLICADA", "CONCLUIDA"])),
+  const [escalasLidas, musicasCount, teamCount] = await Promise.all([
+    repos.escalas.list(),
     cachedData("musicas:count", () => repos.musicas.count()),
     cachedData("usuarios:active-count", () => repos.usuarios.count(undefined, "ATIVO")),
   ]);
+  const escalas = await concluirEscalasVencidas(repos, escalasLidas);
+  const hoje = hojeEmSaoPaulo();
+  const activeSchedules = escalas.filter((escala) =>
+    escala.status === "PUBLICADA" && Boolean(escala.dataEscala && escala.dataEscala >= hoje)
+  ).length;
   const completeProfile = Boolean(profile.habilidades);
   const overview = [
     { label: "Membros ativos", value: `${teamCount} ${teamCount === 1 ? "cadastro" : "cadastros"}`, text: "Equipe disponível para escalas e ensaios.", href: "/dashboard/equipe", tint: "cyan" },

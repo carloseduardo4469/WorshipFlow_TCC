@@ -16,7 +16,7 @@ const FUNCOES_VALIDAS = new Set([
 ]);
 
 function dataEscalaValida(dataEscala: string | null) {
-  if (!dataEscala) return true;
+  if (!dataEscala) return false;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dataEscala)) return false;
 
   const [year, month, day] = dataEscala.split("-").map(Number);
@@ -164,10 +164,9 @@ export async function atualizarEscalaAction(
     dataEscala: data.dataEscala,
     observacoes: data.observacoes,
     funcoesUsuarios: data.funcoesUsuarios,
-    tonalidadesMusicas: data.tonalidadesMusicas,
+    // Músicas não são mais editadas neste formulário; preserve as existentes.
   });
   await repos.escalas.setUsuarios(id, data.usuarioIds);
-  await repos.escalas.setMusicas(id, data.musicaIds);
 
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");

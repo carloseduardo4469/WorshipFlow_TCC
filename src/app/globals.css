@@ -1139,6 +1139,46 @@ html[data-dashboard-theme="light"] .db-schedule-page .db-empty-modern {
   color: #3f5870;
 }
 
+/* Histórico em calendário — compacto no mobile e amplo no desktop. */
+.db-history-calendar { overflow: visible; }
+.db-history-calendar-header { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem; align-items: center; gap: .65rem; }
+.db-history-month { color: #f4f1e9; font-size: 1.1rem; font-weight: 800; }
+.db-history-weekdays, .db-history-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.db-history-weekdays { margin-top: 1.15rem; color: #8fa5ba; font-size: .64rem; font-weight: 800; letter-spacing: .08em; text-align: center; text-transform: uppercase; }
+.db-history-weekdays span { padding: .45rem 0; }
+.db-history-grid { gap: .25rem; }
+.db-history-day { position: relative; min-height: 3.5rem; border: 1px solid rgba(148,181,208,.16); border-radius: .7rem; background: rgba(4,18,34,.42); padding: .4rem; color: #cbd7e4; text-align: left; transition: border-color .18s ease, background-color .18s ease, transform .18s ease; }
+.db-history-day:disabled { cursor: default; opacity: .72; }
+.db-history-day-empty { visibility: hidden; }
+.db-history-day-filled { border-color: rgba(83,217,235,.4); background: rgba(31,112,139,.18); cursor: pointer; }
+.db-history-day-filled:hover { border-color: rgba(83,217,235,.75); background: rgba(43,145,174,.24); transform: translateY(-1px); }
+.db-history-day-number { font-size: .72rem; font-weight: 800; }
+.db-history-day-content { display: flex; min-width: 0; align-items: center; gap: .3rem; margin-top: .45rem; color: #dcecf4; font-size: .62rem; font-weight: 700; }
+.db-history-day-content > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-history-dot { width: .38rem; height: .38rem; flex: 0 0 auto; border-radius: 999px; background: #54d7d5; box-shadow: 0 0 0 3px rgba(84,215,213,.12); }
+.db-history-event-card { border: 1px solid rgba(83,217,235,.24); border-radius: .9rem; background: rgba(83,217,235,.07); padding: .9rem; color: #e8f1f7; transition: border-color .18s ease, background-color .18s ease; }
+.db-history-event-card:hover { border-color: rgba(83,217,235,.55); background: rgba(83,217,235,.12); }
+.db-history-event-card > span:not(:first-child) { color: #a9bdce; }
+
+@media (min-width: 640px) {
+  .db-history-calendar-header { grid-template-columns: 3rem minmax(0, 1fr) 3rem; }
+  .db-history-month { font-size: 1.35rem; }
+  .db-history-grid { gap: .5rem; }
+  .db-history-day { min-height: 7rem; padding: .65rem; }
+  .db-history-day-number { font-size: .82rem; }
+  .db-history-day-content { margin-top: .8rem; font-size: .75rem; }
+}
+
+html[data-dashboard-theme="light"] .db-history-month { color: #142f49; }
+html[data-dashboard-theme="light"] .db-history-weekdays { color: #536d84; }
+html[data-dashboard-theme="light"] .db-history-day { border-color: rgba(34,91,132,.18); background: rgba(255,255,255,.62); color: #304b65; }
+html[data-dashboard-theme="light"] .db-history-day-filled { border-color: rgba(19,111,151,.34); background: rgba(220,244,252,.8); }
+html[data-dashboard-theme="light"] .db-history-day-filled:hover { border-color: rgba(19,111,151,.62); background: #d5f1fa; }
+html[data-dashboard-theme="light"] .db-history-day-content { color: #173d59; }
+html[data-dashboard-theme="light"] .db-history-event-card { border-color: rgba(19,111,151,.27); background: rgba(220,244,252,.72); color: #142f49; }
+html[data-dashboard-theme="light"] .db-history-event-card:hover { border-color: rgba(19,111,151,.52); background: #d9f2fa; }
+html[data-dashboard-theme="light"] .db-history-event-card > span:not(:first-child) { color: #536d84; }
+
 @media (max-width: 639px) {
   .db-schedule-song { align-items: flex-start; flex-wrap: wrap; }
   .db-schedule-song .db-schedule-tone { margin-left: 2.35rem; }

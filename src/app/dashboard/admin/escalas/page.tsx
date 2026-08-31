@@ -1,12 +1,12 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
-import { cachedData } from "@/lib/db/cache";
 import { EscalasManager } from "@/components/dashboard/EscalasManager";
+import { concluirEscalasVencidas } from "@/lib/escalas/status-automatico";
 
 export default async function RegistrosEscalasPage() {
   await requireAdmin();
   const repos = await getRepositories();
-  const escalas = await cachedData("escalas:list", () => repos.escalas.list());
+  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list());
   const usuarioIds = [...new Set(escalas.flatMap((escala) => escala.usuarioIds))];
   const usuarios = await repos.usuarios.getByIds(usuarioIds);
 

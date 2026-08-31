@@ -1,17 +1,16 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import { useActionState, useCallback, useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { criarEscalaAction, atualizarEscalaAction } from "@/lib/actions/escalas";
-import { buscarMusicas, buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { buscarUsuarios, buscarUsuariosPorIds } from "@/lib/actions/usuarios";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
-import type { Escala, Musica, Usuario } from "@/types/domain";
-import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
+import type { Escala, Usuario } from "@/types/domain";
+import { FORM_LIMITS } from "@/lib/validation/forms";
 
 const NOMES_FUNCOES: Record<string, string> = {
   violao: "Violão",
@@ -45,22 +44,6 @@ export function EscalaForm({
   const [usuariosSelecionados, setUsuariosSelecionados] = useState<Usuario[]>(
     [...new Map(usuarios.filter((usuario) => escala?.usuarioIds.includes(usuario.id)).map((usuario) => [usuario.id, usuario])).values()]
   );
-  const [musicaIds, setMusicaIds] = useState<Set<number>>(new Set(escala?.musicaIds ?? []));
-  const [musicasSelecionadas, setMusicasSelecionadas] = useState<Musica[]>([]);
-  const [musicaBusca, setMusicaBusca] = useState("");
-  const [musicaTermo, setMusicaTermo] = useState("");
-
-  // Busca com debounce: só consulta o banco quando o usuário para de digitar.
-  useEffect(() => {
-    const timer = setTimeout(() => setMusicaTermo(musicaBusca.trim()), 250);
-    return () => clearTimeout(timer);
-  }, [musicaBusca]);
-
-  const buscaMusicasPaginada = useCallback(
-    (offset: number, limite: number) => buscarMusicas({ busca: musicaTermo, offset, limit: limite }),
-    [musicaTermo]
-  );
-
   const buscaUsuariosPaginada = useCallback(
     (offset: number, limite: number) => buscarUsuarios(offset, limite),
     []
@@ -86,50 +69,11 @@ export function EscalaForm({
     alturaPadraoLinha: 36,
   });
 
-  const {
-    containerRef: listaRef,
-    sentinelaRef,
-    itensVisiveis,
-    topoAltura,
-    fundoAltura,
-    carregando,
-    carregandoMais,
-    temMais,
-    erro: erroCarregar,
-    totalCarregado,
-    refLinha,
-  } = usePaginacaoDeslizante<Musica>({
-    chaveDeItem: (musica) => musica.id,
-    buscaPorPagina: buscaMusicasPaginada,
-    tamanhoPagina: 10,
-    limiteDom: 30,
-    alturaPadraoLinha: 28,
-    reiniciarAo: musicaTermo,
-  });
-
   const hoje = new Date();
   const dataMinima = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
 
   const funcaoAtual = (usuarioId: string) =>
     escala?.funcoesUsuarios.find((f) => f.usuarioId === usuarioId)?.funcao ?? "";
-
-  // Músicas já vinculadas à escala aparecem como chips fora da busca, para não
-  // ocuparem o espaço dos resultados da pesquisa.
-  useEffect(() => {
-    const ids = escala?.musicaIds ?? [];
-    if (ids.length === 0) return;
-    let ativo = true;
-    buscarMusicasPorIds(ids)
-      .then((resultado) => {
-        if (!ativo) return;
-        const porId = new Map(resultado.map((musica) => [musica.id, musica]));
-        setMusicasSelecionadas(ids.map((id) => porId.get(id)).filter((musica): musica is Musica => Boolean(musica)));
-      })
-      .catch(() => {});
-    return () => {
-      ativo = false;
-    };
-  }, [escala]);
 
   useEffect(() => {
     const ids = escala?.usuarioIds ?? [];
@@ -163,22 +107,6 @@ export function EscalaForm({
     });
   }
 
-  function toggleMusica(musica: Musica) {
-    setMusicaIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(musica.id)) {
-        next.delete(musica.id);
-        setMusicasSelecionadas((prevSel) => prevSel.filter((m) => m.id !== musica.id));
-      } else {
-        next.add(musica.id);
-        setMusicasSelecionadas((prevSel) =>
-          prevSel.some((m) => m.id === musica.id) ? prevSel : [...prevSel, musica]
-        );
-      }
-      return next;
-    });
-  }
-
   return (
     <form action={formAction} className="db-panel db-scale-form flex w-full max-w-2xl flex-col gap-5 p-4 text-left sm:gap-6 sm:p-8">
       {escala && <input type="hidden" name="id" value={escala.id} />}
@@ -192,6 +120,7 @@ export function EscalaForm({
           type="date"
           min={dataMinima}
           defaultValue={escala?.dataEscala ?? ""}
+          required
           className="db-date-input w-full sm:max-w-64"
         />
 
@@ -257,99 +186,6 @@ export function EscalaForm({
           <div ref={usuariosSentinelaRef} className="h-px" aria-hidden="true" />
           {usuariosCarregandoMais && <p className="py-2 text-center text-xs text-muted">Carregando mais...</p>}
           {!usuariosCarregandoMais && !usuariosTemMais && usuariosTotalCarregado > 0 && <p className="py-2 text-center text-xs text-muted">Todos os membros foram carregados.</p>}
-        </div>
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-2">
-        <legend className="db-label mb-1">Músicas</legend>
-
-        {[...musicaIds].map((id) => (
-          <input key={id} type="hidden" name="musicaIds" value={id} />
-        ))}
-
-        {musicasSelecionadas.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <span className="db-label db-scale-section-label text-xs">
-              Músicas selecionadas ({musicasSelecionadas.length})
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {musicasSelecionadas.map((m) => {
-                return (
-                  <div key={m.id} className="db-scale-selected-song flex items-center justify-between gap-3 rounded-xl py-1.5 pl-3 pr-1.5">
-                    <span className="db-scale-song-name min-w-0 flex-1 text-sm text-paper/90">
-                      {m.titulo}
-                      {m.artista && <span className="block text-[11px] text-muted">{m.artista}</span>}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => toggleMusica(m)}
-                      aria-label={`Remover ${m.titulo}`}
-                      title="Remover"
-                      className="db-icon-button h-7 w-7 shrink-0"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <span className="db-hint">Adicionar músicas</span>
-        <label className="relative">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            value={musicaBusca}
-            onChange={(event) => setMusicaBusca(normalizeSearch(event.target.value))}
-            maxLength={FORM_LIMITS.busca}
-            placeholder="Pesquisar músicas..."
-            className="db-input w-full !pl-10"
-            aria-label="Pesquisar músicas para a escala"
-          />
-        </label>
-
-        <div ref={listaRef} className="db-card db-music-scroll db-scale-picker db-scale-music-list h-64 overflow-y-scroll overscroll-contain p-3 pb-5 sm:h-80">
-          {carregando && totalCarregado === 0 ? (
-            <p className="text-sm text-muted">Carregando músicas...</p>
-          ) : erroCarregar ? (
-            <p className="text-sm text-red-400">Não foi possível carregar as músicas. Tente novamente.</p>
-          ) : totalCarregado === 0 ? (
-            <p className="text-sm text-muted">Nenhuma música encontrada.</p>
-          ) : (
-            <>
-              {topoAltura > 0 && <div aria-hidden="true" style={{ height: topoAltura }} />}
-              {itensVisiveis.filter((m) => !musicaIds.has(m.id)).map((m) => {
-                return (
-                  <label
-                    key={m.id}
-                    ref={refLinha(m)}
-                    className="db-scale-option flex min-w-0 cursor-pointer items-start gap-2 break-words py-1 text-sm text-paper/80"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={false}
-                      onChange={() => toggleMusica(m)}
-                      className="h-4 w-4 db-checkbox"
-                    />
-                    <span className="min-w-0">
-                      {m.titulo}
-                      {m.artista && <span className="text-muted"> — {m.artista}</span>}
-                    </span>
-                  </label>
-                );
-              })}
-              {fundoAltura > 0 && <div aria-hidden="true" style={{ height: fundoAltura }} />}
-              <div ref={sentinelaRef} className="h-px" aria-hidden="true" />
-              {carregandoMais && <p className="py-2 text-center text-xs text-muted" aria-live="polite">Carregando próxima página...</p>}
-              {!carregandoMais && temMais && (
-                <p className="py-2 text-center text-xs text-muted">Role para carregar mais músicas</p>
-              )}
-              {!carregandoMais && !temMais && (
-                <p className="py-2 text-center text-xs text-muted">Todas as músicas foram carregadas.</p>
-              )}
-            </>
-          )}
         </div>
       </fieldset>
 

@@ -1,19 +1,14 @@
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
-import { cachedData } from "@/lib/db/cache";
+import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-automatico";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EscalasTable } from "@/components/dashboard/EscalasTable";
-
-function hojeIso() {
-  const hoje = new Date();
-  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
-}
 
 export default async function EscalasPage() {
   await requireAuth();
   const repos = await getRepositories();
-  const escalas = await cachedData("escalas:list", () => repos.escalas.list());
-  const hoje = hojeIso();
+  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list());
+  const hoje = hojeEmSaoPaulo();
   const proximasEscalas = escalas.filter((escala) =>
     escala.status === "PUBLICADA" && (!escala.dataEscala || escala.dataEscala >= hoje)
   );
