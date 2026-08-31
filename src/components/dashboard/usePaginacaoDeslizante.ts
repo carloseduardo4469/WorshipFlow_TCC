@@ -201,12 +201,20 @@ const aoRolar = useCallback(() => {
     if (!container) return;
     const rolou = container.scrollTop > 80;
     setRoleiDaLista((atual) => (atual === rolou ? atual : rolou));
+
+    // Fallback para navegadores/layouts em que a sentinela pode ficar coberta
+    // pela borda da caixa: antecipa a próxima página perto do final.
+    const distanciaDoFim = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanciaDoFim < 180 && temMais && !carregandoRef.current) {
+      void carregarMais();
+    }
+
     if (frameRef.current != null) return;
     frameRef.current = requestAnimationFrame(() => {
       frameRef.current = null;
       deslizarJanela();
     });
-  }, [deslizarJanela]);
+  }, [carregarMais, deslizarJanela, temMais]);
 
   useEffect(() => {
     const container = containerRef.current;

@@ -746,7 +746,11 @@ html[data-dashboard-theme="light"] .db-date-input::-webkit-calendar-picker-indic
 html[data-dashboard-theme="light"] .db-label, html[data-dashboard-theme="light"] .db-hint, html[data-dashboard-theme="light"] .text-muted { color: #526780 !important; }
 html[data-dashboard-theme="light"] .text-paper, html[data-dashboard-theme="light"] .db-title { color: #17233a !important; }
 html[data-dashboard-theme="light"] .db-overview .text-\[\#c0cada\], html[data-dashboard-theme="light"] .db-overview .text-\[\#c1cad6\], html[data-dashboard-theme="light"] .db-section-panel .text-\[\#c4ced9\] { color: #526780 !important; }
-.db-scale-music-list { min-height: 0; }
+.db-scale-music-list {
+  min-height: 0;
+  scrollbar-gutter: stable;
+  scroll-padding-block: 0.75rem;
+}
 .db-music-option { border-color: rgba(148, 181, 208, .2); background: rgba(255, 255, 255, .025); }
 .db-music-option:hover { border-color: rgba(83, 217, 235, .45); background: rgba(83, 217, 235, .06); }
 .db-choice-checkbox { appearance: none; width: 1.05rem; height: 1.05rem; flex: 0 0 auto; margin-top: .05rem; border: 1.5px solid rgba(148, 163, 184, .55); border-radius: .3rem; background: rgba(255, 255, 255, .08); cursor: pointer; }
@@ -1118,6 +1122,11 @@ html[data-dashboard-theme="light"] .db-schedule-song a { border-color: rgba(8,11
 html[data-dashboard-theme="light"] .db-scale-picker { border-color: rgba(34,91,132,.25); background: rgba(255,255,255,.72); }
 html[data-dashboard-theme="light"] .db-scale-option:hover { background: #e8f6fb; }
 html[data-dashboard-theme="light"] .db-scale-person-name { color: #142f49 !important; }
+html[data-dashboard-theme="light"] .db-schedule-page .db-empty-modern {
+  border-color: rgba(34, 91, 132, 0.24);
+  background: rgba(255, 255, 255, 0.72);
+  color: #3f5870;
+}
 
 @media (max-width: 639px) {
   .db-schedule-song { align-items: flex-start; flex-wrap: wrap; }

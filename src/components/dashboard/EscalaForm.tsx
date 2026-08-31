@@ -98,8 +98,8 @@ export function EscalaForm({
   } = usePaginacaoDeslizante<Musica>({
     chaveDeItem: (musica) => musica.id,
     buscaPorPagina: buscaMusicasPaginada,
-    tamanhoPagina: 20,
-    limiteDom: 60,
+    tamanhoPagina: 15,
+    limiteDom: 45,
     alturaPadraoLinha: 28,
     reiniciarAo: musicaTermo,
   });
@@ -324,7 +324,7 @@ export function EscalaForm({
           />
         </label>
 
-        <div ref={listaRef} className="db-card db-scale-picker db-scale-music-list max-h-64 overflow-y-auto p-3">
+        <div ref={listaRef} className="db-card db-music-scroll db-scale-picker db-scale-music-list max-h-64 overflow-y-auto overscroll-contain p-3 pb-5">
           {carregando && totalCarregado === 0 ? (
             <p className="text-sm text-muted">Carregando músicas...</p>
           ) : erroCarregar ? (
