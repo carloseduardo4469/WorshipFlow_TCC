@@ -27,6 +27,7 @@ export const usuarios = sqliteTable("usuarios", {
   ministerioId: integer("ministerio_id").references(() => ministerios.id, {
     onDelete: "set null",
   }),
+  ultimaAtividade: text("ultima_atividade"),
   createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });
 
@@ -35,7 +36,6 @@ export const musicas = sqliteTable("musicas", {
   titulo: text("titulo").notNull(),
   artista: text("artista"),
   tonalidade: text("tonalidade"),
-  bpm: integer("bpm"),
   linkCifra: text("link_cifra"),
   ministerioId: integer("ministerio_id").references(() => ministerios.id, {
     onDelete: "set null",

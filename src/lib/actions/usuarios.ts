@@ -6,9 +6,25 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { PerfilUsuario, StatusMinisterio } from "@/types/domain";
+import type { PerfilUsuario, StatusMinisterio, Usuario } from "@/types/domain";
 
 export type ActionState = { error?: string; success?: boolean } | null;
+
+/** Registra a última atividade do usuário logado (heartbeat de presença). */
+export async function registrarAtividade(): Promise<void> {
+  const { profile } = await requireAuth();
+  const repos = await getRepositories();
+  await repos.usuarios.update(profile.id, {
+    ultimaAtividade: new Date().toISOString(),
+  });
+}
+
+/** Lista os usuários com presença fresca (sem cache) para a equipe. */
+export async function listarUsuariosComPresenca(): Promise<Usuario[]> {
+  await requireAuth();
+  const repos = await getRepositories();
+  return repos.usuarios.list();
+}
 
 export async function atualizarPerfilAction(
   _prev: ActionState,

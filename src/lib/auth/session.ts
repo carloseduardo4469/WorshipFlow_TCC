@@ -41,6 +41,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       perfil: "MEMBRO",
       fotoPerfilUrl: null,
       ministerioId: null,
+      ultimaAtividade: null,
     });
   }
 

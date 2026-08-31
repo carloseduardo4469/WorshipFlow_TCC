@@ -34,6 +34,7 @@ create table if not exists usuarios (
   perfil text not null default 'MEMBRO',
   foto_perfil_url text,
   ministerio_id integer references ministerios(id) on delete set null,
+  ultima_atividade text,
   created_at text not null default current_timestamp
 );
 
@@ -42,7 +43,6 @@ create table if not exists musicas (
   titulo text not null,
   artista text,
   tonalidade text,
-  bpm integer,
   link_cifra text,
   ministerio_id integer references ministerios(id) on delete set null,
   created_at text not null default current_timestamp
@@ -103,6 +103,19 @@ function getSqliteHandle(): Database.Database {
   const usuarioColumns = db.prepare("pragma table_info(usuarios)").all() as Array<{ name: string }>;
   if (!usuarioColumns.some((column) => column.name === "is_suspended")) {
     db.exec("alter table usuarios add column is_suspended integer not null default 0");
+  }
+  // Migração leve: coluna de presença (Online/Offline na equipe).
+  if (!usuarioColumns.some((column) => column.name === "ultima_atividade")) {
+    db.exec("alter table usuarios add column ultima_atividade text");
+  }
+  // Migração leve: BPM foi removido do sistema — elimina a coluna se ainda existir.
+  try {
+    const musicaColumns = db.prepare("pragma table_info(musicas)").all() as Array<{ name: string }>;
+    if (musicaColumns.some((column) => column.name === "bpm")) {
+      db.exec("alter table musicas drop column bpm");
+    }
+  } catch {
+    // Versões antigas do SQLite não suportam DROP COLUMN; deixa a coluna parada (sem uso).
   }
 
   _sqlite = db;

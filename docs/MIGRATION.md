@@ -116,3 +116,19 @@ chaves; os dados de ministérios/músicas/escalas funcionam offline).
 - Rodar `src/lib/db/schema.sql` no SQL editor do Supabase antes do primeiro
   deploy.
 
+### Mudanças recentes (cliente pediu)
+
+- **Presença Online/Offline na equipe** — `usuarios` ganhou a coluna
+  `ultima_atividade` (ISO) para mostrar quem está online no site (heartbeat a
+  cada 60s + atualização a cada 30s na página de equipe). No SQLite local a
+  coluna é criada automaticamente na abertura. No Supabase, rode no SQL editor:
+  ```sql
+  alter table profiles add column ultima_atividade timestamptz;
+  ```
+- **BPM removido do sistema** — o campo de BPM e a coluna `bpm` de `musicas`
+  foram eliminados do código. No SQLite local a coluna é removida
+  automaticamente; no Supabase, rode (opcional) para limpar o schema:
+  ```sql
+  alter table musicas drop column bpm;
+  ```
+

@@ -29,31 +29,22 @@ export function MusicaForm({
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} required />
       <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} required />
 
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div className="flex w-full flex-col gap-2 sm:w-32">
-          <label htmlFor="tonalidade" className="db-label">
-            Tonalidade
-          </label>
-          <Select
-            id="tonalidade"
-            name="tonalidade"
-            defaultValue={tonalidadeInicial}
-            aria-label="Tonalidade"
-            options={[
-              { value: "", label: "Nenhum" },
-              ...TONALIDADES_MAIORES.map((tonalidade) => ({
-                value: tonalidade,
-                label: tonalidade,
-              })),
-            ]}
-          />
-        </div>
-        <Input
-          label="BPM"
-          name="bpm"
-          type="number"
-          defaultValue={musica?.bpm ?? ""}
-          className="w-full sm:w-32"
+      <div className="flex w-full flex-col gap-2 sm:w-48">
+        <label htmlFor="tonalidade" className="db-label">
+          Tonalidade
+        </label>
+        <Select
+          id="tonalidade"
+          name="tonalidade"
+          defaultValue={tonalidadeInicial}
+          aria-label="Tonalidade"
+          options={[
+            { value: "", label: "Nenhum" },
+            ...TONALIDADES_MAIORES.map((tonalidade) => ({
+              value: tonalidade,
+              label: tonalidade,
+            })),
+          ]}
         />
       </div>
 
