@@ -6,12 +6,12 @@ import { RepertorioForm } from "@/components/dashboard/RepertorioForm";
 export default async function NovoRepertorioPage() {
   await requireAdmin();
   const repos = await getRepositories();
-  const [musicas, ministerios] = await Promise.all([repos.musicas.list(), repos.ministerios.list()]);
+  const ministerios = await repos.ministerios.list();
 
   return (
     <div className="mx-auto max-w-[760px] lg:mx-0">
       <PageHeader title="Novo repertório" />
-      <RepertorioForm musicas={musicas} ministerios={ministerios} />
+      <RepertorioForm ministerios={ministerios} />
     </div>
   );
 }

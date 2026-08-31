@@ -62,18 +62,26 @@ function createLocalRepository(): MusicasRepository {
       const rows = await localDb.select().from(musicasTable).where(eq(musicasTable.id, id));
       return rows[0] ? mapLocalRow(rows[0]) : null;
     },
-    async search({ busca, offset = 0, limit = 50, ministerioId }) {
+    async search({ busca, offset = 0, limit = 50, ministerioId, campo }) {
       const termo = (busca ?? "").trim().toLocaleLowerCase();
       const conditions: SQL[] = [];
       if (ministerioId) conditions.push(eq(musicasTable.ministerioId, ministerioId));
       if (termo) {
         const pattern = `%${termo}%`;
-        conditions.push(
-          or(
-            sql`lower(${musicasTable.titulo}) like ${pattern}`,
-            sql`lower(coalesce(${musicasTable.artista}, '')) like ${pattern}`
-          )!
-        );
+        if (campo === "titulo") {
+          conditions.push(sql`lower(${musicasTable.titulo}) like ${pattern}`);
+        } else if (campo === "artista") {
+          conditions.push(sql`lower(coalesce(${musicasTable.artista}, '')) like ${pattern}`);
+        } else if (campo === "tonalidade") {
+          conditions.push(sql`lower(coalesce(${musicasTable.tonalidade}, '')) like ${pattern}`);
+        } else {
+          conditions.push(
+            or(
+              sql`lower(${musicasTable.titulo}) like ${pattern}`,
+              sql`lower(coalesce(${musicasTable.artista}, '')) like ${pattern}`
+            )!
+          );
+        }
       }
       const base =
         conditions.length > 0
@@ -140,7 +148,7 @@ function createSupabaseRepository(supabase: SupabaseClient): MusicasRepository {
       if (error) throw error;
       return data ? mapSupabaseRow(data) : null;
     },
-    async search({ busca, offset = 0, limit = 50, ministerioId }) {
+    async search({ busca, offset = 0, limit = 50, ministerioId, campo }) {
       const termo = (busca ?? "").trim().toLocaleLowerCase();
       let query = supabase
         .from("musicas")
@@ -148,7 +156,17 @@ function createSupabaseRepository(supabase: SupabaseClient): MusicasRepository {
         .order("titulo")
         .range(offset, offset + limit - 1);
       if (ministerioId) query = query.eq("ministerio_id", ministerioId);
-      if (termo) query = query.or(`titulo.ilike.%${termo}%,artista.ilike.%${termo}%`);
+      if (termo) {
+        if (campo === "titulo") {
+          query = query.ilike("titulo", `%${termo}%`);
+        } else if (campo === "artista") {
+          query = query.ilike("artista", `%${termo}%`);
+        } else if (campo === "tonalidade") {
+          query = query.ilike("tonalidade", `%${termo}%`);
+        } else {
+          query = query.or(`titulo.ilike.%${termo}%,artista.ilike.%${termo}%`);
+        }
+      }
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);

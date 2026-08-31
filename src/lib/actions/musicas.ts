@@ -15,14 +15,16 @@ export type BuscarMusicasInput = {
   busca: string;
   offset: number;
   limit: number;
+  campo?: "titulo" | "artista" | "tonalidade";
 };
 
-/** Busca paginada de músicas para seletores com rolagem infinita. */
+/** Busca paginada de músicas para listas e seletores com rolagem infinita. */
 export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]> {
-  await requireAdmin();
+  await requireAuth();
   const repos = await getRepositories();
   return repos.musicas.search({
     busca: input.busca,
+    campo: input.campo,
     offset: Math.max(0, Math.floor(input.offset)),
     limit: Math.min(100, Math.max(1, Math.floor(input.limit))),
   });
@@ -30,7 +32,7 @@ export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]
 
 /** Retorna as músicas já vinculadas (ids) para exibir como chips no seletor. */
 export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
-  await requireAdmin();
+  await requireAuth();
   const idsLimpos = [...new Set(ids)].filter((id) => Number.isInteger(id));
   if (idsLimpos.length === 0) return [];
   const repos = await getRepositories();

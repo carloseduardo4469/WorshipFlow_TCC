@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
 import logo from "@/app/icon.webp";
 
 /* ============ Logo ============ */
@@ -19,16 +19,11 @@ export function AuthBadge({ size = 88 }: { size?: number }) {
 
 /* ============ Campos ============ */
 
-type AuthFieldProps = {
+type AuthFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "name" | "type" | "defaultValue"> & {
   label: string;
   name: string;
   type?: string;
   placeholder?: string;
-  required?: boolean;
-  autoComplete?: string;
-  minLength?: number;
-  maxLength?: number;
-  inputMode?: "text" | "numeric" | "tel" | "email";
   hint?: string;
   defaultValue?: string;
 };
@@ -46,6 +41,7 @@ export function AuthField({
   inputMode,
   hint,
   defaultValue,
+  ...rest
 }: AuthFieldProps) {
   const inputId = `field-${name}`;
 
@@ -67,6 +63,7 @@ export function AuthField({
         inputMode={inputMode}
         defaultValue={defaultValue}
         className="af-input"
+        {...rest}
       />
       {hint && <p className="af-hint">{hint}</p>}
     </div>

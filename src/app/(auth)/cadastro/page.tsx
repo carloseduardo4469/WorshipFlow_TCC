@@ -15,6 +15,13 @@ import {
   PrimaryButton,
 } from "@/components/auth/AuthUi";
 import { AuthMiniFooter } from "@/components/auth/AuthMiniFooter";
+import {
+  FORM_LIMITS,
+  NAME_ALLOWED_PATTERN,
+  PHONE_ALLOWED_PATTERN,
+  normalizePersonName,
+  normalizePhone,
+} from "@/lib/validation/forms";
 
 export default function CadastroPage() {
   const [state, formAction, pending] = useActionState(cadastroAction, null);
@@ -28,12 +35,12 @@ export default function CadastroPage() {
           <Showcase
             title={
               <>
-                Já faz parte
+                Ja faz parte
                 <br />
                 da equipe?
               </>
             }
-            subtitle="Entre com sua conta para acompanhar escalas, ensaios e repertórios do ministério."
+            subtitle="Entre com sua conta para acompanhar escalas, ensaios e repertorios do ministerio."
             ctaHref="/login"
             ctaLabel="Entrar"
           />
@@ -51,7 +58,7 @@ export default function CadastroPage() {
             Criar conta
           </h1>
           <p className="mb-8 max-w-md text-[15px] font-semibold leading-relaxed af-muted">
-            Cadastre seus dados ministeriais para participar das escalas e repertórios.
+            Cadastre seus dados ministeriais para participar das escalas e repertorios.
           </p>
 
           <form action={formAction} className="flex flex-col gap-5">
@@ -63,7 +70,12 @@ export default function CadastroPage() {
                 placeholder="Nome completo"
                 autoComplete="name"
                 required
-                hint="Use seu nome completo, sem números."
+                maxLength={FORM_LIMITS.nomePessoa}
+                pattern={NAME_ALLOWED_PATTERN}
+                onChange={(event) => {
+                  event.currentTarget.value = normalizePersonName(event.currentTarget.value);
+                }}
+                hint="Use apenas letras, com ate 32 caracteres."
               />
               <AuthField
                 label="E-mail"
@@ -72,27 +84,33 @@ export default function CadastroPage() {
                 placeholder="nome.sobrenome@email.com"
                 autoComplete="email"
                 required
+                maxLength={FORM_LIMITS.email}
                 hint="Use um e-mail real, com pelo menos 5 caracteres antes do @."
               />
               <AuthField
                 label="Senha"
                 name="senha"
                 type="password"
-                placeholder="Mínimo de 8 caracteres"
+                placeholder="Minimo de 8 caracteres"
                 autoComplete="new-password"
                 minLength={8}
+                maxLength={FORM_LIMITS.senha}
                 required
               />
               <AuthField
                 label="Telefone"
                 name="telefone"
                 type="tel"
-                placeholder="(11) 98552-0784"
-                inputMode="tel"
-                maxLength={15}
+                placeholder="11985520784"
+                inputMode="numeric"
+                pattern={PHONE_ALLOWED_PATTERN}
+                maxLength={FORM_LIMITS.telefone}
                 autoComplete="tel-national"
                 required
-                hint="DDD + número, com 11 dígitos."
+                onChange={(event) => {
+                  event.currentTarget.value = normalizePhone(event.currentTarget.value);
+                }}
+                hint="DDD + numero, com 11 digitos."
               />
             </div>
 
@@ -110,7 +128,7 @@ export default function CadastroPage() {
           </div>
 
           <p className="mt-5 text-center text-xs font-semibold leading-relaxed af-muted">
-            Ao criar conta, você concorda com os{" "}
+            Ao criar conta, voce concorda com os{" "}
             <Link
               href="/termos"
               className="underline underline-offset-2 transition hover:text-amber"
@@ -122,7 +140,7 @@ export default function CadastroPage() {
               href="/privacidade"
               className="underline underline-offset-2 transition hover:text-amber"
             >
-              Política de Privacidade
+              Politica de Privacidade
             </Link>
             .
           </p>

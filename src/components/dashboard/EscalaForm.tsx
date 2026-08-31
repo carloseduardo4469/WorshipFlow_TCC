@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
+import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Escala, Ministerio, Musica, StatusEscala, Usuario } from "@/types/domain";
 
 const STATUS_OPTIONS: { value: StatusEscala; label: string }[] = [
@@ -26,10 +27,6 @@ const NOMES_FUNCOES: Record<string, string> = {
   "voz-principal": "Voz principal",
   "voz-secundaria": "Voz secundária",
 };
-
-// Paginação do seletor de músicas: pede +1 item para saber se existe próxima página.
-const PAGE_SIZE = 20;
-const REQUEST_SIZE = PAGE_SIZE + 1;
 
 export function EscalaForm({
   escala,
@@ -50,15 +47,39 @@ export function EscalaForm({
   const [musicaIds, setMusicaIds] = useState<Set<number>>(new Set(escala?.musicaIds ?? []));
   const [musicasSelecionadas, setMusicasSelecionadas] = useState<Musica[]>([]);
   const [musicaBusca, setMusicaBusca] = useState("");
-  const [musicasLista, setMusicasLista] = useState<Musica[]>([]);
-  const [temMais, setTemMais] = useState(true);
-  const [carregando, setCarregando] = useState(true);
-  const [erroCarregar, setErroCarregar] = useState(false);
+  const [musicaTermo, setMusicaTermo] = useState("");
 
-  const buscaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const geracaoRef = useRef(0);
-  const listaRef = useRef<HTMLDivElement | null>(null);
-  const sentinelaRef = useRef<HTMLDivElement | null>(null);
+  // Busca com debounce: só consulta o banco quando o usuário para de digitar.
+  useEffect(() => {
+    const timer = setTimeout(() => setMusicaTermo(musicaBusca.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [musicaBusca]);
+
+  const buscaMusicasPaginada = useCallback(
+    (offset: number, limite: number) => buscarMusicas({ busca: musicaTermo, offset, limit: limite }),
+    [musicaTermo]
+  );
+
+  const {
+    containerRef: listaRef,
+    sentinelaRef,
+    itensVisiveis,
+    topoAltura,
+    fundoAltura,
+    carregando,
+    carregandoMais,
+    temMais,
+    erro: erroCarregar,
+    totalCarregado,
+    refLinha,
+  } = usePaginacaoDeslizante<Musica>({
+    chaveDeItem: (musica) => musica.id,
+    buscaPorPagina: buscaMusicasPaginada,
+    tamanhoPagina: 20,
+    limiteDom: 60,
+    alturaPadraoLinha: 28,
+    reiniciarAo: musicaTermo,
+  });
 
   const hoje = new Date();
   const dataMinima = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
@@ -88,69 +109,6 @@ export function EscalaForm({
     };
   }, [escala]);
 
-  // Carrega a primeira página do catálogo e reinicia a lista a cada busca
-  // (debounce de 250ms). Pede REQUEST_SIZE para saber se "tem mais".
-  useEffect(() => {
-    const geracao = ++geracaoRef.current;
-    setCarregando(true);
-    setErroCarregar(false);
-    const termo = musicaBusca.trim();
-    buscaTimerRef.current = setTimeout(() => {
-      buscarMusicas({ busca: termo, offset: 0, limit: REQUEST_SIZE })
-        .then((resultado) => {
-          if (geracao !== geracaoRef.current) return;
-          setMusicasLista(resultado.slice(0, PAGE_SIZE));
-          setTemMais(resultado.length > PAGE_SIZE);
-        })
-        .catch(() => {
-          if (geracao === geracaoRef.current) setErroCarregar(true);
-        })
-        .finally(() => {
-          if (geracao === geracaoRef.current) setCarregando(false);
-        });
-    }, 250);
-    return () => {
-      if (buscaTimerRef.current) clearTimeout(buscaTimerRef.current);
-    };
-  }, [musicaBusca]);
-
-  // Infinite scroll: ao rolar até o fim da box, busca a próxima página.
-  const carregarMais = useCallback(() => {
-    if (carregando || !temMais) return;
-    const geracao = geracaoRef.current;
-    setCarregando(true);
-    buscarMusicas({ busca: musicaBusca.trim(), offset: musicasLista.length, limit: REQUEST_SIZE })
-      .then((resultado) => {
-        if (geracao !== geracaoRef.current) return;
-        const pagina = resultado.slice(0, PAGE_SIZE);
-        setMusicasLista((prev) => {
-          const vistos = new Set(prev.map((m) => m.id));
-          return [...prev, ...pagina.filter((m) => !vistos.has(m.id))];
-        });
-        setTemMais(resultado.length > PAGE_SIZE);
-      })
-      .catch(() => {
-        if (geracao === geracaoRef.current) setErroCarregar(true);
-      })
-      .finally(() => {
-        if (geracao === geracaoRef.current) setCarregando(false);
-      });
-  }, [carregando, temMais, musicaBusca, musicasLista.length]);
-
-  useEffect(() => {
-    const container = listaRef.current;
-    const sentinela = sentinelaRef.current;
-    if (!container || !sentinela) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) carregarMais();
-      },
-      { root: container, rootMargin: "160px 0px" }
-    );
-    observer.observe(sentinela);
-    return () => observer.disconnect();
-  }, [carregarMais]);
-
   function toggleUsuario(id: string) {
     setUsuarioIds((prev) => {
       const next = new Set(prev);
@@ -174,8 +132,6 @@ export function EscalaForm({
       return next;
     });
   }
-
-  const musicasVisiveis = musicasLista.filter((m) => !musicaIds.has(m.id));
 
   return (
     <form action={formAction} className="db-panel flex max-w-2xl flex-col gap-6 p-6 text-left sm:p-8">
@@ -338,37 +294,41 @@ export function EscalaForm({
           />
         </label>
 
-        <div ref={listaRef} className="db-card db-scale-music-list max-h-64 space-y-1 overflow-y-auto p-3">
-          {carregando && musicasLista.length === 0 ? (
+        <div ref={listaRef} className="db-card db-scale-music-list max-h-64 overflow-y-auto p-3">
+          {carregando && totalCarregado === 0 ? (
             <p className="text-sm text-muted">Carregando músicas...</p>
           ) : erroCarregar ? (
             <p className="text-sm text-red-400">Não foi possível carregar as músicas. Tente novamente.</p>
-          ) : musicasVisiveis.length === 0 ? (
-            <p className="text-sm text-muted">
-              {musicasLista.length > 0
-                ? "Todas as músicas desta busca já estão selecionadas."
-                : "Nenhuma música encontrada."}
-            </p>
+          ) : totalCarregado === 0 ? (
+            <p className="text-sm text-muted">Nenhuma música encontrada.</p>
           ) : (
             <>
-              {musicasVisiveis.map((m) => (
-                <label key={m.id} className="flex min-w-0 cursor-pointer items-start gap-2 break-words py-1 text-sm text-paper/80">
-                  <input
-                    type="checkbox"
-                    name="musicaIds"
-                    value={m.id}
-                    onChange={() => toggleMusica(m)}
-                    className="h-4 w-4 db-checkbox"
-                  />
-                  <span className="min-w-0">
-                    {m.titulo}
-                    {m.artista && <span className="text-muted"> — {m.artista}</span>}
-                  </span>
-                </label>
-              ))}
+              {topoAltura > 0 && <div aria-hidden="true" style={{ height: topoAltura }} />}
+              {itensVisiveis.map((m) => {
+                const checked = musicaIds.has(m.id);
+                return (
+                  <label
+                    key={m.id}
+                    ref={refLinha(m)}
+                    className={`flex min-w-0 cursor-pointer items-start gap-2 break-words py-1 text-sm ${checked ? "text-cyan-300" : "text-paper/80"}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleMusica(m)}
+                      className="h-4 w-4 db-checkbox"
+                    />
+                    <span className="min-w-0">
+                      {m.titulo}
+                      {m.artista && <span className="text-muted"> — {m.artista}</span>}
+                    </span>
+                  </label>
+                );
+              })}
+              {fundoAltura > 0 && <div aria-hidden="true" style={{ height: fundoAltura }} />}
               <div ref={sentinelaRef} className="h-px" aria-hidden="true" />
-              {carregando && <p className="py-2 text-center text-xs text-muted">Carregando mais...</p>}
-              {!carregando && !temMais && (
+              {carregandoMais && <p className="py-2 text-center text-xs text-muted">Carregando mais...</p>}
+              {!carregandoMais && !temMais && (
                 <p className="py-2 text-center text-xs text-muted">Todas as músicas foram carregadas.</p>
               )}
             </>

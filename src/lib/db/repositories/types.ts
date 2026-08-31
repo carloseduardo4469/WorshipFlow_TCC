@@ -32,12 +32,14 @@ export interface MusicasRepository {
   /**
    * Busca paginada por título/artista (case-insensitive). Sem `busca`,
    * retorna o catálogo ordenado por título. `offset`/`limit` controlam a página.
+   * `campo` restringe a busca a uma coluna (ex.: filtro "Tom").
    */
   search(params: {
     busca?: string;
     offset?: number;
     limit?: number;
     ministerioId?: number;
+    campo?: "titulo" | "artista" | "tonalidade";
   }): Promise<Musica[]>;
   /** Busca várias músicas de uma vez pelos IDs (ex.: itens já selecionados). */
   getByIds(ids: number[]): Promise<Musica[]>;

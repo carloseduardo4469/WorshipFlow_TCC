@@ -13,9 +13,8 @@ export default async function EditarRepertorioPage({
   const { id } = await params;
 
   const repos = await getRepositories();
-  const [repertorio, musicas, ministerios] = await Promise.all([
+  const [repertorio, ministerios] = await Promise.all([
     repos.repertorios.getById(Number(id)),
-    repos.musicas.list(),
     repos.ministerios.list(),
   ]);
   if (!repertorio) notFound();
@@ -23,7 +22,7 @@ export default async function EditarRepertorioPage({
   return (
     <div className="mx-auto max-w-[760px] lg:mx-0">
       <PageHeader title={`Editar: ${repertorio.nome}`} />
-      <RepertorioForm repertorio={repertorio} musicas={musicas} ministerios={ministerios} />
+      <RepertorioForm repertorio={repertorio} ministerios={ministerios} />
     </div>
   );
 }
