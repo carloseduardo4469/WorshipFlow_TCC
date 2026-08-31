@@ -747,9 +747,19 @@ html[data-dashboard-theme="light"] .db-label, html[data-dashboard-theme="light"]
 html[data-dashboard-theme="light"] .text-paper, html[data-dashboard-theme="light"] .db-title { color: #17233a !important; }
 html[data-dashboard-theme="light"] .db-overview .text-\[\#c0cada\], html[data-dashboard-theme="light"] .db-overview .text-\[\#c1cad6\], html[data-dashboard-theme="light"] .db-section-panel .text-\[\#c4ced9\] { color: #526780 !important; }
 .db-scale-music-list {
+  height: 16rem;
   min-height: 0;
+  flex-shrink: 0;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
   scroll-padding-block: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .db-scale-music-list { height: 20rem; }
 }
 .db-music-option { border-color: rgba(148, 181, 208, .2); background: rgba(255, 255, 255, .025); }
 .db-music-option:hover { border-color: rgba(83, 217, 235, .45); background: rgba(83, 217, 235, .06); }
