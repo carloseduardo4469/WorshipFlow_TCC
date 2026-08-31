@@ -52,8 +52,8 @@ export function MusicasManager({ musicas, isAdmin }: { musicas: Musica[]; isAdmi
   return <>
     <div className="db-music-panel db-card p-3 sm:p-4">
       <div>
-        <div className="mb-4 flex flex-col gap-4 border-b border-white/[0.08] pb-4 sm:flex-row sm:items-end">
-          <label className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="mb-4 flex flex-col gap-4 border-b border-white/[0.08] pb-4 sm:flex-row sm:flex-wrap sm:items-end">
+          <label className="flex min-w-0 flex-1 flex-col gap-2 sm:min-w-[240px]">
             <span className="db-label">Pesquisar</span>
             <span className="relative">
               <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
