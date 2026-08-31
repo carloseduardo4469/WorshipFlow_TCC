@@ -1,3 +1,5 @@
+import { ehTonalidadeMenor, relativaMenor } from "@/lib/music/tonalidades";
+
 const CIFRA_CLUB_BASE_URL = "https://www.cifraclub.com.br";
 
 const ARTIST_ALIASES: Record<string, string> = {
@@ -65,11 +67,11 @@ function noteFromKey(tonalidade: string) {
   return normalizeKey(tonalidade)?.replace(/m$/, "") ?? null;
 }
 
-function shouldOmitKeyShape(path: string, tonalidade: string) {
+function shouldOmitKeyShape(path: string, tomAlvo: string) {
   const originalKey = ORIGINAL_KEYS[path];
   if (!originalKey) return false;
 
-  return normalizeKey(originalKey) === normalizeKey(tonalidade);
+  return normalizeKey(originalKey) === tomAlvo;
 }
 
 export function gerarLinkCifraClub({
@@ -89,13 +91,23 @@ export function gerarLinkCifraClub({
 
   const path = `${artistSlug}/${songSlug}`;
   const url = new URL(`${CIFRA_CLUB_BASE_URL}/${path}/`);
-  const note = tonalidade ? noteFromKey(tonalidade) : null;
-
   url.searchParams.set("capo", "0");
 
-  if (note && !shouldOmitKeyShape(path, tonalidade ?? "")) {
-    const keyShape = KEY_SHAPES[note];
-    if (keyShape !== undefined) url.searchParams.set("keyShape", String(keyShape));
+  const originalKey = ORIGINAL_KEYS[path] ? normalizeKey(ORIGINAL_KEYS[path]) : null;
+
+  // O tom cadastrado é sempre maior (padrão do seletor). Em músicas de tom menor,
+  // a cifra abre na relativa menor — ex.: tom C → Am, tom E → C#m.
+  let tomAlvo = tonalidade ? normalizeKey(tonalidade) : null;
+  if (tomAlvo && originalKey && ehTonalidadeMenor(originalKey) && !ehTonalidadeMenor(tomAlvo)) {
+    tomAlvo = relativaMenor(tomAlvo);
+  }
+
+  if (tomAlvo) {
+    const notaAlvo = noteFromKey(tomAlvo);
+    if (notaAlvo && !shouldOmitKeyShape(path, tomAlvo)) {
+      const keyShape = KEY_SHAPES[notaAlvo];
+      if (keyShape !== undefined) url.searchParams.set("keyShape", String(keyShape));
+    }
   }
 
   return url.toString();

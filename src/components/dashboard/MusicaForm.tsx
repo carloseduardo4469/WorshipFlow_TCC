@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { TONALIDADES_VALIDAS, isTonalidadeValida } from "@/lib/music/tonalidades";
+import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
 
 export function MusicaForm({
@@ -20,7 +20,7 @@ export function MusicaForm({
   const action = musica ? atualizarMusicaAction : criarMusicaAction;
   const [state, formAction, pending] = useActionState(action, null);
   const router = useRouter();
-  const tonalidadeInicial = isTonalidadeValida(musica?.tonalidade) ? musica?.tonalidade : "";
+  const tonalidadeInicial = tomParaSelecao(musica?.tonalidade);
 
   return (
     <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
@@ -41,7 +41,7 @@ export function MusicaForm({
             aria-label="Tonalidade"
             options={[
               { value: "", label: "Nenhum" },
-              ...TONALIDADES_VALIDAS.map((tonalidade) => ({
+              ...TONALIDADES_MAIORES.map((tonalidade) => ({
                 value: tonalidade,
                 label: tonalidade,
               })),
@@ -56,6 +56,10 @@ export function MusicaForm({
           className="w-full sm:w-32"
         />
       </div>
+
+      <p className="text-xs leading-relaxed text-muted">
+        Só tons maiores. Música em tom menor? Escolha o tom maior relativo (ex.: E) e a cifra abre na relativa menor (C#m).
+      </p>
 
       {state?.error && <FormAlert>{state.error}</FormAlert>}
 
