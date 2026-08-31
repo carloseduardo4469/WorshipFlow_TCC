@@ -10,7 +10,7 @@ import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/ton
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
 
-export type ActionState = { error?: string } | null;
+export type ActionState = { error?: string; success?: boolean; musica?: Musica } | null;
 
 export type BuscarMusicasInput = {
   busca: string;
@@ -72,6 +72,30 @@ async function readMusicaForm(formData: FormData) {
     linkCifra,
     ministerioId: ministerioIdRaw ? Number(ministerioIdRaw) : null,
   };
+}
+
+/** Cria uma música sem redirecionar, para uso dentro do modal de uma escala. */
+export async function criarMusicaNaEscalaAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAuth();
+  const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
+  if (tituloError) return { error: tituloError };
+  const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
+  if (artistaError) return { error: artistaError };
+  const data = await readMusicaForm(formData);
+  if (!data.titulo) return { error: "Informe o título da música." };
+  if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
+  if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
+  if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+
+  const repos = await getRepositories();
+  const musica = await repos.musicas.create({ ...data, ministerioId: null });
+  invalidateDataCache("musicas");
+  revalidatePath("/dashboard/musicas");
+  revalidatePath("/dashboard");
+  return { success: true, musica };
 }
 
 export async function criarMusicaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

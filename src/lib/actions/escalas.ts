@@ -204,6 +204,13 @@ export async function adicionarMusicasNaEscalaAction(
   if (musicaIdsRaw.length > FORM_LIMITS.selecoes || musicaIds.length !== musicaIdsRaw.length) {
     return { error: "Seleção de músicas inválida." };
   }
+  const tonalidadesMusicas: TonalidadeMusica[] = musicaIds.map((musicaId) => ({
+    musicaId,
+    tonalidade: String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
+  }));
+  if (tonalidadesMusicas.some(({ tonalidade }) => !isTonalidadeValida(tonalidade))) {
+    return { error: "Escolha um tom maior para cada música selecionada." };
+  }
 
   const repos = await getRepositories();
   const escala = await repos.escalas.getById(escalaId);
@@ -223,6 +230,7 @@ export async function adicionarMusicasNaEscalaAction(
   }
 
   await repos.escalas.setMusicas(escalaId, musicaIds);
+  await repos.escalas.update(escalaId, { tonalidadesMusicas });
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
   revalidatePath("/dashboard/historico");

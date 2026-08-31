@@ -1,20 +1,27 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useState } from "react";
-import { Music2, Search, X } from "lucide-react";
+import { Music2, Plus, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { adicionarMusicasNaEscalaAction } from "@/lib/actions/escalas";
 import { buscarMusicas, buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { Select } from "@/components/ui/Select";
+import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
+import { NovaMusicaEscalaDialog } from "./NovaMusicaEscalaDialog";
 import type { Escala, Musica } from "@/types/domain";
 
 export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClose: () => void }) {
   const [state, formAction, pending] = useActionState(adicionarMusicasNaEscalaAction, null);
   const [selecionadas, setSelecionadas] = useState(new Set(escala.musicaIds));
   const [nomesSelecionados, setNomesSelecionados] = useState<Musica[]>([]);
+  const [tonalidades, setTonalidades] = useState<Record<number, string>>(() =>
+    Object.fromEntries(escala.tonalidadesMusicas.map((item) => [item.musicaId, item.tonalidade]))
+  );
+  const [novaMusicaAberta, setNovaMusicaAberta] = useState(false);
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const router = useRouter();
@@ -26,7 +33,16 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
 
   useEffect(() => {
     if (escala.musicaIds.length === 0) return;
-    buscarMusicasPorIds(escala.musicaIds).then(setNomesSelecionados).catch(() => {});
+    buscarMusicasPorIds(escala.musicaIds).then((musicas) => {
+      setNomesSelecionados(musicas);
+      setTonalidades((atuais) => {
+        const proximas = { ...atuais };
+        musicas.forEach((musica) => {
+          if (!proximas[musica.id]) proximas[musica.id] = tomParaSelecao(musica.tonalidade);
+        });
+        return proximas;
+      });
+    }).catch(() => {});
   }, [escala.musicaIds]);
 
   useEffect(() => {
@@ -61,6 +77,7 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
   });
 
   function alternar(musica: Musica) {
+    const adicionando = !selecionadas.has(musica.id);
     setSelecionadas((atuais) => {
       const proximas = new Set(atuais);
       if (proximas.has(musica.id)) proximas.delete(musica.id);
@@ -71,9 +88,16 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
       if (atuais.some((item) => item.id === musica.id)) return atuais.filter((item) => item.id !== musica.id);
       return [...atuais, musica];
     });
+    if (adicionando) {
+      setTonalidades((atuais) => ({
+        ...atuais,
+        [musica.id]: atuais[musica.id] || tomParaSelecao(musica.tonalidade),
+      }));
+    }
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-5" onMouseDown={onClose}>
       <section role="dialog" aria-modal="true" aria-labelledby="musicas-escala-titulo" className="db-member-modal relative my-auto max-h-[calc(100dvh-1rem)] w-full max-w-2xl overflow-y-auto p-4 sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
         <button type="button" onClick={onClose} className="db-icon-button absolute right-4 top-4 h-9 w-9" aria-label="Fechar"><X size={17} /></button>
@@ -85,20 +109,37 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
           <input type="hidden" name="escalaId" value={escala.id} />
           {[...selecionadas].map((id) => <input key={id} type="hidden" name="musicaIds" value={id} />)}
 
-          {nomesSelecionados.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+          {nomesSelecionados.some((musica) => selecionadas.has(musica.id)) && (
+            <div className="flex flex-col gap-2">
               {nomesSelecionados.filter((musica) => selecionadas.has(musica.id)).map((musica) => (
-                <button key={musica.id} type="button" onClick={() => alternar(musica)} className="db-scale-selected-song db-scale-song-name flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs">
-                  <span className="max-w-48 truncate">{musica.titulo}</span><X size={13} />
-                </button>
+                <div key={musica.id} className="db-scale-selected-song flex items-center gap-2 rounded-xl p-2 pl-3">
+                  <span className="db-scale-song-name min-w-0 flex-1 truncate text-sm font-semibold">{musica.titulo}</span>
+                  <div className="w-28 shrink-0">
+                    <Select
+                      name={`tonalidade_${musica.id}`}
+                      value={tonalidades[musica.id] ?? ""}
+                      onValueChange={(tom) => setTonalidades((atuais) => ({ ...atuais, [musica.id]: tom }))}
+                      aria-label={`Tom de ${musica.titulo}`}
+                      className="px-2 py-1.5 text-xs"
+                      options={[
+                        { value: "", label: "Escolha o tom" },
+                        ...TONALIDADES_MAIORES.map((tom) => ({ value: tom, label: tom })),
+                      ]}
+                    />
+                  </div>
+                  <button type="button" onClick={() => alternar(musica)} className="db-icon-button h-8 w-8 shrink-0" aria-label={`Remover ${musica.titulo}`}><X size={13} /></button>
+                </div>
               ))}
             </div>
           )}
 
-          <label className="relative">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input value={busca} onChange={(event) => setBusca(normalizeSearch(event.target.value))} maxLength={FORM_LIMITS.busca} placeholder="Pesquisar músicas..." className="db-input w-full !pl-10" aria-label="Pesquisar músicas" />
-          </label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <label className="relative flex-1">
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+              <input value={busca} onChange={(event) => setBusca(normalizeSearch(event.target.value))} maxLength={FORM_LIMITS.busca} placeholder="Pesquisar músicas..." className="db-input w-full !pl-10" aria-label="Pesquisar músicas" />
+            </label>
+            <button type="button" onClick={() => setNovaMusicaAberta(true)} className="db-btn-sm justify-center text-xs"><Plus size={14} /> Nova música</button>
+          </div>
 
           <div ref={containerRef} className="db-card db-music-scroll db-scale-picker db-scale-music-list overflow-y-scroll p-3">
             {carregando && totalCarregado === 0 ? <p className="text-sm text-muted">Carregando músicas...</p>
@@ -127,5 +168,17 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
         </form>
       </section>
     </div>
+    {novaMusicaAberta && (
+      <NovaMusicaEscalaDialog
+        onClose={() => setNovaMusicaAberta(false)}
+        onCreated={(musica) => {
+          setSelecionadas((atuais) => new Set(atuais).add(musica.id));
+          setNomesSelecionados((atuais) => [...atuais, musica]);
+          setTonalidades((atuais) => ({ ...atuais, [musica.id]: tomParaSelecao(musica.tonalidade) }));
+          setNovaMusicaAberta(false);
+        }}
+      />
+    )}
+    </>
   );
 }
