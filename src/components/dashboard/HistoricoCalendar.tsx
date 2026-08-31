@@ -46,6 +46,7 @@ export function HistoricoCalendar({
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
   const [escalaSelecionada, setEscalaSelecionada] = useState<Escala | null>(null);
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
+  const mesLimiteAtingido = mesVisivel.ano > anoHoje || (mesVisivel.ano === anoHoje && mesVisivel.mes >= mesHoje - 1);
 
   const escalasPorDia = useMemo(() => {
     const mapa = new Map<string, Escala[]>();
@@ -67,6 +68,7 @@ export function HistoricoCalendar({
   const escalasDoDia = diaSelecionado ? escalasPorDia.get(diaSelecionado) ?? [] : [];
 
   function mudarMes(delta: number) {
+    if (delta > 0 && mesLimiteAtingido) return;
     setMesVisivel((atual) => {
       const data = new Date(Date.UTC(atual.ano, atual.mes + delta, 1));
       return { ano: data.getUTCFullYear(), mes: data.getUTCMonth() };
