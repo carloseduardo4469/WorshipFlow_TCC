@@ -13,7 +13,6 @@ function mapSupabaseRow(row: any): Musica {
     titulo: row.titulo,
     artista: row.artista ?? null,
     tonalidade: row.tonalidade ?? null,
-    bpm: row.bpm ?? null,
     linkCifra: row.link_cifra ?? null,
     ministerioId: row.ministerio_id ?? null,
     createdAt: row.created_at,
@@ -26,7 +25,6 @@ function mapLocalRow(row: typeof musicasTable.$inferSelect): Musica {
     titulo: row.titulo,
     artista: row.artista ?? null,
     tonalidade: row.tonalidade ?? null,
-    bpm: row.bpm ?? null,
     linkCifra: row.linkCifra ?? null,
     ministerioId: row.ministerioId ?? null,
     createdAt: row.createdAt,
@@ -100,7 +98,6 @@ function createLocalRepository(): MusicasRepository {
           titulo: data.titulo,
           artista: data.artista,
           tonalidade: data.tonalidade,
-          bpm: data.bpm,
           linkCifra: data.linkCifra,
           ministerioId: data.ministerioId,
         })

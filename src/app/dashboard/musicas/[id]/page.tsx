@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MusicaForm } from "@/components/dashboard/MusicaForm";
 
 export default async function EditarMusicaPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  await requireAuth();
   const { id } = await params;
 
   const repos = await getRepositories();

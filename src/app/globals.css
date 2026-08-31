@@ -441,7 +441,8 @@ body {
   right: 0;
   top: calc(100% + 0.35rem);
   z-index: 40;
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: min(16rem, 60vh);
   border: 1px solid rgba(83, 217, 235, 0.42);
   border-radius: 12px;
   background: #0b1b30;
@@ -467,9 +468,7 @@ body {
 
 @media (max-width: 767px) {
   .db-select-menu {
-    position: static;
-    margin-top: 0.35rem;
-    max-height: min(10rem, calc(100vh - 12rem));
+    max-height: min(14rem, 60vh);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -731,9 +730,9 @@ html[data-dashboard-theme="light"] .db-ghost, html[data-dashboard-theme="light"]
 html[data-dashboard-theme="light"] .db-nav-link { color: #354863; }
 html[data-dashboard-theme="light"] .db-mobile-header,
 html[data-dashboard-theme="light"] .db-mobile-nav { background: rgba(245, 251, 255, .96) !important; color: #18253c; }
-html[data-dashboard-theme="light"] .db-brand-title { color: #f7f9fd !important; text-shadow: none; }
-html[data-dashboard-theme="light"] .db-brand-subtitle { color: #62e5f7 !important; }
-html[data-dashboard-theme="light"] aside, html[data-dashboard-theme="light"] header, html[data-dashboard-theme="light"] nav.fixed { background-color: rgba(245, 251, 255, .91) !important; border-color: rgba(44, 104, 151, .18) !important; }
+html[data-dashboard-theme="light"] .db-brand-title { color: #16304d !important; text-shadow: none; }
+html[data-dashboard-theme="light"] .db-brand-subtitle { color: #0d6b96 !important; }
+html[data-dashboard-theme="light"] aside, html[data-dashboard-theme="light"] header, html[data-dashboard-theme="light"] nav.fixed { background-color: #f9fcfe !important; border-color: rgba(44, 104, 151, .18) !important; }
 html[data-dashboard-theme="light"] .db-nav-link-active { color: #594000; background: linear-gradient(90deg, rgba(255, 206, 72, .5), rgba(160, 225, 255, .25)); }
 html[data-dashboard-theme="light"] .db-hero { background: linear-gradient(115deg, #093d59 0%, #263272 53%, #703e8a 100%); }
 html[data-dashboard-theme="light"] .db-data-table { background: rgba(255,255,255,.82); }

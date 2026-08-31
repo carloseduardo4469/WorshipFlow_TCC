@@ -20,6 +20,7 @@ function mapSupabaseRow(row: any): Usuario {
     perfil: row.perfil,
     fotoPerfilUrl: row.foto_perfil_url ?? null,
     ministerioId: row.ministerio_id ?? null,
+    ultimaAtividade: row.ultima_atividade ?? null,
     createdAt: row.created_at,
   };
 }
@@ -37,12 +38,21 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
     perfil: row.perfil as Usuario["perfil"],
     fotoPerfilUrl: row.fotoPerfilUrl ?? null,
     ministerioId: row.ministerioId ?? null,
+    ultimaAtividade: row.ultimaAtividade ?? null,
     createdAt: row.createdAt,
   };
 }
 
 function toSupabasePayload(data: UpdateUsuario) {
-  const { instrumentoPrincipal, statusMinisterio, isSuspended, fotoPerfilUrl, ministerioId, ...rest } = data;
+  const {
+    instrumentoPrincipal,
+    statusMinisterio,
+    isSuspended,
+    fotoPerfilUrl,
+    ministerioId,
+    ultimaAtividade,
+    ...rest
+  } = data;
   return {
     ...rest,
     ...(instrumentoPrincipal !== undefined ? { instrumento_principal: instrumentoPrincipal } : {}),
@@ -50,6 +60,7 @@ function toSupabasePayload(data: UpdateUsuario) {
     ...(isSuspended !== undefined ? { is_suspended: isSuspended } : {}),
     ...(fotoPerfilUrl !== undefined ? { foto_perfil_url: fotoPerfilUrl } : {}),
     ...(ministerioId !== undefined ? { ministerio_id: ministerioId } : {}),
+    ...(ultimaAtividade !== undefined ? { ultima_atividade: ultimaAtividade } : {}),
   };
 }
 

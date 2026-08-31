@@ -29,6 +29,7 @@ export interface Usuario {
   perfil: PerfilUsuario;
   fotoPerfilUrl: string | null;
   ministerioId: number | null;
+  ultimaAtividade: string | null; // ISO — usado para mostrar Online/Offline na equipe
   createdAt: string;
 }
 
@@ -44,6 +45,7 @@ export type UpdateUsuario = Partial<
     | "perfil"
     | "fotoPerfilUrl"
     | "ministerioId"
+    | "ultimaAtividade"
   >
 >;
 
@@ -52,7 +54,6 @@ export interface Musica {
   titulo: string;
   artista: string | null;
   tonalidade: string | null;
-  bpm: number | null;
   linkCifra: string | null;
   ministerioId: number | null;
   createdAt: string;
@@ -60,7 +61,7 @@ export interface Musica {
 
 export type NewMusica = Pick<
   Musica,
-  "titulo" | "artista" | "tonalidade" | "bpm" | "linkCifra" | "ministerioId"
+  "titulo" | "artista" | "tonalidade" | "linkCifra" | "ministerioId"
 >;
 export type UpdateMusica = Partial<NewMusica>;
 
