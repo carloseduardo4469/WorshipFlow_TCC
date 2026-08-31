@@ -1178,6 +1178,9 @@ html[data-dashboard-theme="light"] .db-history-day-content { color: #173d59; }
 html[data-dashboard-theme="light"] .db-history-event-card { border-color: rgba(19,111,151,.27); background: rgba(220,244,252,.72); color: #142f49; }
 html[data-dashboard-theme="light"] .db-history-event-card:hover { border-color: rgba(19,111,151,.52); background: #d9f2fa; }
 html[data-dashboard-theme="light"] .db-history-event-card > span:not(:first-child) { color: #536d84; }
+.db-home-schedule-row { transition: color .18s ease, background-color .18s ease; }
+.db-home-schedule-row:hover { background: rgba(83,217,235,.055); }
+html[data-dashboard-theme="light"] .db-home-schedule-row:hover { background: rgba(19,111,151,.065); }
 
 @media (max-width: 639px) {
   .db-schedule-song { align-items: flex-start; flex-wrap: wrap; }

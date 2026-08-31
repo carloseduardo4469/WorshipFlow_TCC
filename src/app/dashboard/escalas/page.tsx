@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { EscalasTable } from "@/components/dashboard/EscalasTable";
 
 export default async function EscalasPage() {
-  await requireAuth();
+  const { authId } = await requireAuth();
   const repos = await getRepositories();
   const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list());
   const hoje = hojeEmSaoPaulo();
@@ -19,7 +19,7 @@ export default async function EscalasPage() {
       <PageHeader title="Escalas" description="Próximas equipes publicadas para cultos e compromissos." />
       {proximasEscalas.length === 0
         ? <div className="db-empty db-empty-modern">Nenhuma próxima escala publicada.</div>
-        : <EscalasTable escalas={proximasEscalas} usuarios={usuarios} />}
+        : <EscalasTable escalas={proximasEscalas} usuarios={usuarios} currentUserId={authId} />}
     </div>
   );
 }

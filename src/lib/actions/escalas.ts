@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { FuncaoUsuario, TonalidadeMusica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
 
-export type ActionState = { error?: string } | null;
+export type ActionState = { error?: string; success?: boolean } | null;
 
 const FUNCOES_VALIDAS = new Set([
   "violao", "guitarra", "bateria", "teclado", "baixo", "voz-principal", "voz-secundaria",
@@ -187,4 +187,46 @@ export async function removerEscalaAction(formData: FormData) {
   revalidatePath("/dashboard/escalas");
   revalidatePath("/dashboard/admin/escalas");
   revalidatePath("/dashboard");
+}
+
+export async function adicionarMusicasNaEscalaAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const current = await requireAuth();
+  const escalaId = Number(formData.get("escalaId"));
+  if (!Number.isInteger(escalaId) || escalaId <= 0) return { error: "Escala inválida." };
+
+  const musicaIdsRaw = [...new Set(formData.getAll("musicaIds").map(Number))];
+  const musicaIds = musicaIdsRaw
+    .filter((id) => Number.isInteger(id) && id > 0)
+    .slice(0, FORM_LIMITS.selecoes);
+  if (musicaIdsRaw.length > FORM_LIMITS.selecoes || musicaIds.length !== musicaIdsRaw.length) {
+    return { error: "Seleção de músicas inválida." };
+  }
+
+  const repos = await getRepositories();
+  const escala = await repos.escalas.getById(escalaId);
+  if (!escala) return { error: "Escala não encontrada." };
+
+  const cantorPrincipal = escala.funcoesUsuarios.some(
+    ({ usuarioId, funcao }) =>
+      usuarioId === current.authId && funcao.split(",").includes("voz-principal")
+  );
+  if (!cantorPrincipal && current.profile.perfil !== "ADMIN") {
+    return { error: "Somente o cantor principal desta escala pode adicionar músicas." };
+  }
+
+  const musicas = await repos.musicas.getByIds(musicaIds);
+  if (musicas.length !== musicaIds.length) {
+    return { error: "Uma ou mais músicas selecionadas não existem mais." };
+  }
+
+  await repos.escalas.setMusicas(escalaId, musicaIds);
+  invalidateDataCache("escalas");
+  revalidatePath("/dashboard/escalas");
+  revalidatePath("/dashboard/historico");
+  revalidatePath("/dashboard/admin/escalas");
+  revalidatePath("/dashboard");
+  return { success: true };
 }

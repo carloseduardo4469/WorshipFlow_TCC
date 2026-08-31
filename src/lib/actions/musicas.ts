@@ -83,7 +83,8 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
-  if (data.tonalidade && !isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+  if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
+  if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
   if (data.ministerioId !== null && (!Number.isInteger(data.ministerioId) || data.ministerioId <= 0)) {
     return { error: "Ministério inválido." };
   }
@@ -110,7 +111,8 @@ export async function atualizarMusicaAction(
   const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
-  if (data.tonalidade && !isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+  if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
+  if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
   const repos = await getRepositories();
   const { ministerioId: _ministerioId, ...musica } = data;
   await repos.musicas.update(id, musica);

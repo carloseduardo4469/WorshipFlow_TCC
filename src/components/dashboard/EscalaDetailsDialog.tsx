@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ExternalLink, Loader2, Music2, Users, X } from "lucide-react";
+import { CalendarDays, ExternalLink, Loader2, Music2, Plus, Users, X } from "lucide-react";
 import { buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { normalizarEscala } from "@/lib/escalas/normalize";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -36,10 +36,12 @@ export function EscalaDetailsDialog({
   escala: escalaOriginal,
   usuarios,
   onClose,
+  onAddMusicas,
 }: {
   escala: Escala;
   usuarios: Usuario[];
   onClose: () => void;
+  onAddMusicas?: () => void;
 }) {
   const escala = useMemo(() => normalizarEscala(escalaOriginal), [escalaOriginal]);
   const [musicas, setMusicas] = useState<Musica[]>([]);
@@ -147,7 +149,12 @@ export function EscalaDetailsDialog({
         </section>
 
         <section className="db-schedule-section mt-5">
-          <h3><Music2 size={15} /> Músicas ({escala.musicaIds.length})</h3>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3><Music2 size={15} /> Músicas ({escala.musicaIds.length})</h3>
+            {onAddMusicas && (
+              <button type="button" onClick={onAddMusicas} className="db-btn-sm text-xs"><Plus size={14} /> Adicionar músicas</button>
+            )}
+          </div>
           {carregando ? (
             <p className="mt-3 flex items-center gap-2"><Loader2 size={15} className="animate-spin" /> Carregando músicas...</p>
           ) : erro ? (

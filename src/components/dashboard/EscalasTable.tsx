@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, Music2, Users } from "lucide-react";
+import { CalendarDays, Music2, Plus, Users } from "lucide-react";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
+import { EscalaMusicasDialog } from "./EscalaMusicasDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { Escala, Usuario } from "@/types/domain";
 
@@ -19,11 +20,14 @@ function formatarData(iso: string | null) {
 export function EscalasTable({
   escalas: escalasOriginais,
   usuarios,
+  currentUserId,
 }: {
   escalas: Escala[];
   usuarios: Usuario[];
+  currentUserId: string;
 }) {
   const [selecionada, setSelecionada] = useState<Escala | null>(null);
+  const [escalaParaMusicas, setEscalaParaMusicas] = useState<Escala | null>(null);
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
   const nomesPorId = useMemo(() => new Map(usuarios.map((usuario) => [usuario.id, usuario.nome])), [usuarios]);
 
@@ -43,6 +47,9 @@ export function EscalasTable({
           <tbody>
             {escalas.map((escala) => {
               const nomes = escala.usuarioIds.map((id) => nomesPorId.get(id)).filter((nome): nome is string => Boolean(nome));
+              const podeAdicionarMusicas = escala.funcoesUsuarios.some(
+                ({ usuarioId, funcao }) => usuarioId === currentUserId && funcao.split(",").includes("voz-principal")
+              );
               return (
                 <tr
                   key={escala.id}
@@ -60,6 +67,11 @@ export function EscalasTable({
                   <td data-label="Escala" className="px-4 py-3.5">
                     <strong className="db-schedule-row-title block">{escala.titulo}</strong>
                     <span className="db-schedule-row-hint mt-1 block">Clique para ver equipe e repertório</span>
+                    {podeAdicionarMusicas && (
+                      <button type="button" onClick={(event) => { event.stopPropagation(); setEscalaParaMusicas(escala); }} className="db-btn-sm mt-3 text-xs">
+                        <Plus size={14} /> Adicionar músicas
+                      </button>
+                    )}
                   </td>
                   <td data-label="Data" className="px-4 py-3.5">
                     <span className="db-schedule-cell"><CalendarDays size={15} /> {formatarData(escala.dataEscala)}</span>
@@ -80,8 +92,17 @@ export function EscalasTable({
       </div>
 
       {selecionada && (
-        <EscalaDetailsDialog escala={selecionada} usuarios={usuarios} onClose={() => setSelecionada(null)} />
+        <EscalaDetailsDialog
+          escala={selecionada}
+          usuarios={usuarios}
+          onClose={() => setSelecionada(null)}
+          onAddMusicas={selecionada.funcoesUsuarios.some(
+            ({ usuarioId, funcao }) => usuarioId === currentUserId && funcao.split(",").includes("voz-principal")
+          ) ? () => { setSelecionada(null); setEscalaParaMusicas(selecionada); } : undefined}
+        />
       )}
+
+      {escalaParaMusicas && <EscalaMusicasDialog escala={escalaParaMusicas} onClose={() => setEscalaParaMusicas(null)} />}
     </>
   );
 }
