@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { criarEscalaAction, atualizarEscalaAction } from "@/lib/actions/escalas";
@@ -35,9 +35,28 @@ export function EscalaForm({
   const [state, formAction, pending] = useActionState(action, null);
   const [erroAberto, setErroAberto] = useState(false);
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const valoresAntesDoEnvio = useRef<Map<string, string[]>>(new Map());
 
   useEffect(() => {
-    if (state?.error) setErroAberto(true);
+    if (!state?.error) return;
+    setErroAberto(true);
+
+    // Server Actions resetam controles não controlados após a execução.
+    // Reaplica os valores capturados antes do envio quando houve erro.
+    const valores = valoresAntesDoEnvio.current;
+    const restaurar = () => {
+      formRef.current?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea").forEach((campo) => {
+        if (!campo.name || campo.type === "hidden") return;
+        const salvos = valores.get(campo.name) ?? [];
+        if (campo instanceof HTMLInputElement && campo.type === "checkbox") {
+          campo.checked = salvos.includes(campo.value);
+        } else {
+          campo.value = salvos[0] ?? "";
+        }
+      });
+    };
+    requestAnimationFrame(restaurar);
   }, [state]);
 
   const [usuarioIds, setUsuarioIds] = useState<Set<string>>(new Set(escala?.usuarioIds ?? []));
@@ -108,7 +127,20 @@ export function EscalaForm({
   }
 
   return (
-    <form action={formAction} className="db-panel db-scale-form flex w-full max-w-2xl flex-col gap-5 p-4 text-left sm:gap-6 sm:p-8">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={(event) => {
+        const valores = new Map<string, string[]>();
+        new FormData(event.currentTarget).forEach((valor, nome) => {
+          const atuais = valores.get(nome) ?? [];
+          atuais.push(String(valor));
+          valores.set(nome, atuais);
+        });
+        valoresAntesDoEnvio.current = valores;
+      }}
+      className="db-panel db-scale-form flex w-full max-w-2xl flex-col gap-5 p-4 text-left sm:gap-6 sm:p-8"
+    >
       {escala && <input type="hidden" name="id" value={escala.id} />}
 
       <div className="flex flex-col gap-4">
