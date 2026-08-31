@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { TONALIDADES_VALIDAS, isTonalidadeValida } from "@/lib/music/tonalidades";
+import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import type { Escala, Ministerio, Musica, StatusEscala, Usuario } from "@/types/domain";
 
 const STATUS_OPTIONS: { value: StatusEscala; label: string }[] = [
@@ -289,8 +289,7 @@ export function EscalaForm({
             </span>
             <div className="flex flex-wrap gap-2">
               {musicasSelecionadas.map((m) => {
-                const tonalidadeSugerida = tonalidadeAtual(m.id) || m.tonalidade || "";
-                const tonalidadeInicial = isTonalidadeValida(tonalidadeSugerida) ? tonalidadeSugerida : "";
+                const tonalidadeInicial = tomParaSelecao(tonalidadeAtual(m.id) || m.tonalidade);
                 return (
                   <div key={m.id} className="flex items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.06] py-1.5 pl-3 pr-1.5">
                     <span className="min-w-0 text-sm text-paper/90">
@@ -305,7 +304,7 @@ export function EscalaForm({
                         className="px-2 py-1 text-xs"
                         options={[
                           { value: "", label: "Tom" },
-                          ...TONALIDADES_VALIDAS.map((tonalidade) => ({
+                          ...TONALIDADES_MAIORES.map((tonalidade) => ({
                             value: tonalidade,
                             label: tonalidade,
                           })),
