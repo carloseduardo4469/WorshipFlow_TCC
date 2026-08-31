@@ -643,6 +643,12 @@ body {
   overflow: visible;
 }
 
+/* Keep an open custom select above adjacent cards/rows. */
+.db-card:has(.db-select-menu) {
+  position: relative;
+  z-index: 50;
+}
+
 .db-panel, .db-card, .db-section-panel, .db-overview {
   backdrop-filter: blur(14px);
 }
