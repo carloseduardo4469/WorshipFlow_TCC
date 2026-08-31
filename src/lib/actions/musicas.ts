@@ -8,6 +8,7 @@ import { invalidateDataCache } from "@/lib/db/cache";
 import { gerarLinkCifraClub, resolverTomOriginal } from "@/lib/music/cifraclub";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
+import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
 
 export type ActionState = { error?: string } | null;
 
@@ -21,19 +22,28 @@ export type BuscarMusicasInput = {
 /** Busca paginada de músicas para listas e seletores com rolagem infinita. */
 export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]> {
   await requireAuth();
+  const busca = String(input?.busca ?? "").trim();
+  if (busca.length > FORM_LIMITS.busca) throw new Error("Busca muito longa.");
+  const offset = Number.isFinite(input?.offset) ? Math.max(0, Math.floor(input.offset)) : 0;
+  const limit = Number.isFinite(input?.limit) ? Math.min(100, Math.max(1, Math.floor(input.limit))) : 20;
+  const campo = (["titulo", "artista", "tonalidade"] as const).includes(input?.campo as never)
+    ? input.campo
+    : undefined;
   const repos = await getRepositories();
   return repos.musicas.search({
-    busca: input.busca,
-    campo: input.campo,
-    offset: Math.max(0, Math.floor(input.offset)),
-    limit: Math.min(100, Math.max(1, Math.floor(input.limit))),
+    busca,
+    campo,
+    offset,
+    limit,
   });
 }
 
 /** Retorna as músicas já vinculadas (ids) para exibir como chips no seletor. */
 export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
   await requireAuth();
-  const idsLimpos = [...new Set(ids)].filter((id) => Number.isInteger(id));
+  const idsLimpos = [...new Set(Array.isArray(ids) ? ids : [])]
+    .filter((id) => Number.isInteger(id) && id > 0)
+    .slice(0, FORM_LIMITS.selecoes);
   if (idsLimpos.length === 0) return [];
   const repos = await getRepositories();
   return repos.musicas.getByIds(idsLimpos);
@@ -66,10 +76,17 @@ async function readMusicaForm(formData: FormData) {
 
 export async function criarMusicaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAuth();
+  const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
+  if (tituloError) return { error: tituloError };
+  const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
+  if (artistaError) return { error: artistaError };
   const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (data.tonalidade && !isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+  if (data.ministerioId !== null && (!Number.isInteger(data.ministerioId) || data.ministerioId <= 0)) {
+    return { error: "Ministério inválido." };
+  }
   const repos = await getRepositories();
   await repos.musicas.create(data);
 
@@ -85,6 +102,11 @@ export async function atualizarMusicaAction(
 ): Promise<ActionState> {
   await requireAuth();
   const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id <= 0) return { error: "Música inválida." };
+  const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
+  if (tituloError) return { error: tituloError };
+  const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
+  if (artistaError) return { error: artistaError };
   const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
@@ -102,6 +124,7 @@ export async function atualizarMusicaAction(
 export async function removerMusicaAction(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id <= 0) throw new Error("Música inválida.");
 
   const repos = await getRepositories();
   await repos.musicas.remove(id);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import type { RefCallback, RefObject } from "react";
 
 /**
  * Hook de paginação com "janela deslizante" para listas que vêm do banco.
@@ -35,8 +35,8 @@ export interface OpcoesPaginacao<T> {
 }
 
 export interface PaginacaoDeslizante<T> {
-  containerRef: RefObject<HTMLDivElement | null>;
-  sentinelaRef: RefObject<HTMLDivElement | null>;
+  containerRef: RefObject<HTMLDivElement>;
+  sentinelaRef: RefCallback<HTMLElement>;
   itensVisiveis: T[];
   topoAltura: number;
   fundoAltura: number;
@@ -71,8 +71,11 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
   const [erro, setErro] = useState(false);
   const [roleiDaLista, setRoleiDaLista] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const sentinelaRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelaElementoRef = useRef<HTMLElement | null>(null);
+  const sentinelaRef = useCallback((elemento: HTMLElement | null) => {
+    sentinelaElementoRef.current = elemento;
+  }, []);
   const alturasRef = useRef(new Map<string | number, number>());
   const itensRef = useRef<T[]>([]);
   const inicioRef = useRef(0);
@@ -113,6 +116,7 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
   useEffect(() => {
     const geracao = ++geracaoRef.current;
     itensRef.current = [];
+    setItens([]);
     alturasRef.current = new Map();
     definirInicio(0);
     definirTopo(0);
@@ -217,11 +221,11 @@ const aoRolar = useCallback(() => {
   // Infinite scroll: quando a sentinela (fim da lista) aparece, busca a próxima página.
   useEffect(() => {
     const container = containerRef.current;
-    const sentinela = sentinelaRef.current;
+    const sentinela = sentinelaElementoRef.current;
     if (!container || !sentinela) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!entries[0]?.isIntersecting) return;
+        if (!entries[0]?.isIntersecting || carregando) return;
         const chegouNoFim = inicioRef.current + limiteDom >= itensRef.current.length;
         if (chegouNoFim && temMais && !carregandoRef.current) carregarMais();
       },
@@ -230,7 +234,7 @@ const aoRolar = useCallback(() => {
     observer.observe(sentinela);
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [carregarMais, temMais, limiteDom]);
+  }, [carregarMais, temMais, limiteDom, carregando]);
 
   const refLinha = useCallback(
     (item: T) => (elemento: HTMLElement | null) => {
@@ -245,3 +249,58 @@ const aoRolar = useCallback(() => {
     },
     [chaveDeItem]
   );
+
+  const voltarAoTopo = useCallback(() => {
+    containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const removerItem = useCallback(
+    (item: T) => {
+      const chave = chaveDeItem(item);
+      const indice = itensRef.current.findIndex((atual) => chaveDeItem(atual) === chave);
+      if (indice === -1) return -1;
+
+      const proximos = itensRef.current.filter((_, itemIndice) => itemIndice !== indice);
+      itensRef.current = proximos;
+      setItens(proximos);
+
+      if (indice < inicioRef.current) {
+        const novoInicio = Math.max(0, inicioRef.current - 1);
+        definirInicio(novoInicio);
+        definirTopo(Math.max(0, topoRef.current - alturaDeRef.current(item)));
+      }
+      return indice;
+    },
+    [chaveDeItem, definirInicio, definirTopo]
+  );
+
+  const restaurarItem = useCallback(
+    (item: T, indiceOriginal: number) => {
+      if (itensRef.current.some((atual) => chaveDeItem(atual) === chaveDeItem(item))) return;
+      const indice = Math.min(Math.max(0, indiceOriginal), itensRef.current.length);
+      const proximos = [...itensRef.current];
+      proximos.splice(indice, 0, item);
+      itensRef.current = proximos;
+      setItens(proximos);
+    },
+    [chaveDeItem]
+  );
+
+  return {
+    containerRef,
+    sentinelaRef,
+    itensVisiveis,
+    topoAltura,
+    fundoAltura,
+    carregando,
+    carregandoMais,
+    temMais,
+    erro,
+    totalCarregado: itens.length,
+    roleiDaLista,
+    refLinha,
+    voltarAoTopo,
+    removerItem,
+    restaurarItem,
+  };
+}

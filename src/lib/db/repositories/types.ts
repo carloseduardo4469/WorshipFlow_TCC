@@ -60,6 +60,8 @@ export interface RepertoriosRepository {
 
 export interface UsuariosRepository {
   list(ministerioId?: number): Promise<Usuario[]>;
+  search(params: { offset?: number; limit?: number; ministerioId?: number }): Promise<Usuario[]>;
+  getByIds(ids: string[]): Promise<Usuario[]>;
   count(ministerioId?: number, statusMinisterio?: Usuario["statusMinisterio"]): Promise<number>;
   getById(id: string): Promise<Usuario | null>;
   getByEmail(email: string): Promise<Usuario | null>;

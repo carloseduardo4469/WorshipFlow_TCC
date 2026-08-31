@@ -7,6 +7,13 @@ import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PerfilUsuario, StatusMinisterio, Usuario } from "@/types/domain";
+import {
+  FORM_LIMITS,
+  normalizePersonName,
+  normalizePhone,
+  validatePersonName,
+  validatePhone,
+} from "@/lib/validation/forms";
 
 export type ActionState = { error?: string; success?: boolean } | null;
 
@@ -26,21 +33,51 @@ export async function listarUsuariosComPresenca(): Promise<Usuario[]> {
   return repos.usuarios.list();
 }
 
+/** Busca uma página de usuários para seletores roláveis, sem carregar a tabela inteira. */
+export async function buscarUsuarios(offset: number, limit: number): Promise<Usuario[]> {
+  await requireAuth();
+  const offsetSeguro = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
+  const limiteSeguro = Number.isFinite(limit) ? Math.min(100, Math.max(1, Math.floor(limit))) : 20;
+  const repos = await getRepositories();
+  return repos.usuarios.search({ offset: offsetSeguro, limit: limiteSeguro });
+}
+
+export async function buscarUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
+  await requireAuth();
+  const idsLimpos = [...new Set(Array.isArray(ids) ? ids.map(String).filter(Boolean) : [])]
+    .slice(0, FORM_LIMITS.selecoes);
+  if (idsLimpos.length === 0) return [];
+  const repos = await getRepositories();
+  return repos.usuarios.getByIds(idsLimpos);
+}
+
 export async function atualizarPerfilAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   const { profile } = await requireAuth();
 
-  const nome = String(formData.get("nome") ?? "").trim();
-  const telefone = String(formData.get("telefone") ?? "").trim();
+  const nomeRaw = String(formData.get("nome") ?? "");
+  const nome = normalizePersonName(nomeRaw).trim();
+  const telefoneRaw = String(formData.get("telefone") ?? "").trim();
+  const telefone = normalizePhone(telefoneRaw);
   const fotoPerfil = formData.get("fotoPerfil");
   const habilidades = formData
     .getAll("habilidades")
     .map((habilidade) => String(habilidade).trim())
     .filter(Boolean);
 
-  if (!nome) return { error: "Informe seu nome." };
+  const nomeError = validatePersonName(nomeRaw);
+  if (nomeError) return { error: nomeError };
+  const telefoneError = validatePhone(telefoneRaw);
+  if (telefoneError) return { error: telefoneError };
+
+  const habilidadesPermitidas = new Set([
+    "violao", "guitarra", "bateria", "teclado", "baixo", "voz-principal", "voz-secundaria",
+  ]);
+  if (habilidades.length > 7 || habilidades.some((habilidade) => !habilidadesPermitidas.has(habilidade))) {
+    return { error: "Seleção de instrumentos inválida." };
+  }
 
   let fotoPerfilUrl: string | undefined;
   if (fotoPerfil instanceof File && fotoPerfil.size > 0) {
@@ -87,6 +124,14 @@ export async function atualizarUsuarioAdminAction(
   const isSuspended = formData.get("isSuspended") === "true";
   const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
+  if (!id) return { error: "Usuário inválido." };
+  if (!(["MEMBRO", "ADMIN"] as string[]).includes(perfil)) return { error: "Perfil inválido." };
+  if (!(["ATIVO", "INATIVO"] as string[]).includes(statusMinisterio)) return { error: "Status inválido." };
+  const ministerioId = ministerioIdRaw ? Number(ministerioIdRaw) : null;
+  if (ministerioId !== null && (!Number.isInteger(ministerioId) || ministerioId <= 0)) {
+    return { error: "Ministério inválido." };
+  }
+
   const repos = await getRepositories();
   if (id === current.authId && isSuspended) {
     return { error: "Você não pode suspender a própria conta." };
@@ -95,7 +140,7 @@ export async function atualizarUsuarioAdminAction(
     perfil,
     statusMinisterio,
     isSuspended,
-    ministerioId: ministerioIdRaw ? Number(ministerioIdRaw) : null,
+    ministerioId,
   });
 
   invalidateDataCache("usuarios");
@@ -112,6 +157,10 @@ export async function excluirMinhaContaAction(
 ): Promise<ActionState> {
   const { authId } = await requireAuth();
   const confirmacao = String(formData.get("confirmacao") ?? "").trim();
+
+  if (confirmacao.length > FORM_LIMITS.confirmacaoExclusao) {
+    return { error: "Confirmação inválida." };
+  }
 
   if (confirmacao !== "excluirminhaconta") {
     return { error: 'Digite "excluirminhaconta" para confirmar.' };

@@ -65,16 +65,14 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
   if (!nome || !email || !senha || !telefone) {
     return { error: "Preencha todos os campos." };
   }
-  if (nomeRaw.trim() !== nome) return { error: "Use apenas letras e espacos no nome." };
-  const nomeError = validatePersonName(nome);
+  const nomeError = validatePersonName(nomeRaw);
   if (nomeError) return { error: nomeError };
   const emailLengthError = validateMaxLength(email, FORM_LIMITS.email, "Email");
   if (emailLengthError) return { error: emailLengthError };
   if (senha.length < 8) return { error: "A senha precisa ter pelo menos 8 caracteres." };
   const senhaLengthError = validateMaxLength(senha, FORM_LIMITS.senha, "Senha");
   if (senhaLengthError) return { error: senhaLengthError };
-  if (telefoneRaw !== telefone) return { error: "Use apenas numeros no telefone." };
-  const telefoneError = validatePhone(telefone, true);
+  const telefoneError = validatePhone(telefoneRaw, true);
   if (telefoneError) return { error: telefoneError };
   if (telefone.length !== 11) {
     return { error: "Telefone inválido — informe DDD + número, com 11 dígitos." };
@@ -157,6 +155,8 @@ export async function redefinirSenhaAction(
 
   const senhaLengthError = validateMaxLength(senha, FORM_LIMITS.senha, "Senha");
   if (senhaLengthError) return { error: senhaLengthError };
+  const confirmacaoLengthError = validateMaxLength(confirmarSenha, FORM_LIMITS.senha, "Confirmação da senha");
+  if (confirmacaoLengthError) return { error: confirmacaoLengthError };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: senha });

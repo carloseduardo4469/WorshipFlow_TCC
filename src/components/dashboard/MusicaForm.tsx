@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
+import { FORM_LIMITS } from "@/lib/validation/forms";
 
 export function MusicaForm({
   musica,
@@ -26,8 +27,8 @@ export function MusicaForm({
     <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       {musica && <input type="hidden" name="id" value={musica.id} />}
 
-      <Input label="Título" name="titulo" defaultValue={musica?.titulo} required />
-      <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} required />
+      <Input label="Título" name="titulo" defaultValue={musica?.titulo} maxLength={FORM_LIMITS.musicaTitulo} required />
+      <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} maxLength={FORM_LIMITS.artista} required />
 
       <div className="flex w-full flex-col gap-2 sm:w-48">
         <label htmlFor="tonalidade" className="db-label">

@@ -6,6 +6,7 @@ import { buscarMusicas, removerMusicaAction } from "@/lib/actions/musicas";
 import { MusicaForm } from "./MusicaForm";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Musica } from "@/types/domain";
+import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 
 type CampoFiltro = "titulo" | "artista" | "tonalidade";
 
@@ -111,7 +112,8 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
                 <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                 <input
                   value={busca}
-                  onChange={(event) => setBusca(event.target.value)}
+                  onChange={(event) => setBusca(normalizeSearch(event.target.value))}
+                  maxLength={FORM_LIMITS.busca}
                   placeholder="Buscar música..."
                   className="db-input w-full !pl-10"
                   aria-label="Pesquisar músicas"
@@ -210,7 +212,7 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
                           <div className="db-row-actions">
                             <button type="button" onClick={() => setMusicaAberta(musica)} className="db-btn-sm"><Pencil size={14} />Editar</button>
                             {isAdmin && (
-                              <button type="button" onClick={() => excluirMusica(musica.id, musica.titulo)} className="text-xs font-semibold text-red-400 hover:text-red-300">
+                              <button type="button" onClick={() => excluirMusica(musica.id, musica.titulo)} className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300">
                                 Excluir
                               </button>
                             )}

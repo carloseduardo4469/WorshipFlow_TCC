@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, inArray } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import { usuarios as usuariosTable } from "@/lib/db/local/schema";
@@ -83,6 +83,18 @@ function createLocalRepository(): UsuariosRepository {
         : await localDb.select().from(usuariosTable);
       return rows.map(mapLocalRow).sort((a, b) => a.nome.localeCompare(b.nome));
     },
+    async search({ offset = 0, limit = 50, ministerioId }) {
+      const query = localDb.select().from(usuariosTable);
+      const rows = ministerioId
+        ? await query.where(eq(usuariosTable.ministerioId, ministerioId)).orderBy(asc(usuariosTable.nome)).limit(limit).offset(offset)
+        : await query.orderBy(asc(usuariosTable.nome)).limit(limit).offset(offset);
+      return rows.map(mapLocalRow);
+    },
+    async getByIds(ids) {
+      if (ids.length === 0) return [];
+      const rows = await localDb.select().from(usuariosTable).where(inArray(usuariosTable.id, ids));
+      return rows.map(mapLocalRow);
+    },
     async getById(id) {
       const rows = await localDb.select().from(usuariosTable).where(eq(usuariosTable.id, id));
       return rows[0] ? mapLocalRow(rows[0]) : null;
@@ -127,6 +139,19 @@ function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository 
       let query = supabase.from("profiles").select("*").order("nome");
       if (ministerioId) query = query.eq("ministerio_id", ministerioId);
       const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []).map(mapSupabaseRow);
+    },
+    async search({ offset = 0, limit = 50, ministerioId }) {
+      let query = supabase.from("profiles").select("*").order("nome").range(offset, offset + limit - 1);
+      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []).map(mapSupabaseRow);
+    },
+    async getByIds(ids) {
+      if (ids.length === 0) return [];
+      const { data, error } = await supabase.from("profiles").select("*").in("id", ids);
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);
     },

@@ -10,7 +10,8 @@ export const FORM_LIMITS = {
   descricao: 240,
   observacoes: 240,
   busca: 80,
-  confirmacaoExclusao: 18,
+  confirmacaoExclusao: 17,
+  selecoes: 500,
 } as const;
 
 export const NAME_ALLOWED_PATTERN = "[\\p{L} ]+";
@@ -26,6 +27,10 @@ export function normalizePhone(value: string) {
 
 export function normalizeLimitedText(value: string, limit: number) {
   return value.trim().slice(0, limit);
+}
+
+export function normalizeSearch(value: string) {
+  return value.slice(0, FORM_LIMITS.busca);
 }
 
 export function validatePersonName(nome: string) {

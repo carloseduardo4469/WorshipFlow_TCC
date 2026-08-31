@@ -5,6 +5,7 @@ import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { criarEscalaAction, atualizarEscalaAction } from "@/lib/actions/escalas";
 import { buscarMusicas, buscarMusicasPorIds } from "@/lib/actions/musicas";
+import { buscarUsuarios, buscarUsuariosPorIds } from "@/lib/actions/usuarios";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +13,7 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Escala, Ministerio, Musica, StatusEscala, Usuario } from "@/types/domain";
+import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 
 const STATUS_OPTIONS: { value: StatusEscala; label: string }[] = [
   { value: "PUBLICADA", label: "Publicada" },
@@ -44,6 +46,9 @@ export function EscalaForm({
   const router = useRouter();
 
   const [usuarioIds, setUsuarioIds] = useState<Set<string>>(new Set(escala?.usuarioIds ?? []));
+  const [usuariosSelecionados, setUsuariosSelecionados] = useState<Usuario[]>(
+    usuarios.filter((usuario) => escala?.usuarioIds.includes(usuario.id))
+  );
   const [musicaIds, setMusicaIds] = useState<Set<number>>(new Set(escala?.musicaIds ?? []));
   const [musicasSelecionadas, setMusicasSelecionadas] = useState<Musica[]>([]);
   const [musicaBusca, setMusicaBusca] = useState("");
@@ -59,6 +64,31 @@ export function EscalaForm({
     (offset: number, limite: number) => buscarMusicas({ busca: musicaTermo, offset, limit: limite }),
     [musicaTermo]
   );
+
+  const buscaUsuariosPaginada = useCallback(
+    (offset: number, limite: number) => buscarUsuarios(offset, limite),
+    []
+  );
+
+  const {
+    containerRef: usuariosListaRef,
+    sentinelaRef: usuariosSentinelaRef,
+    itensVisiveis: usuariosVisiveis,
+    topoAltura: usuariosTopoAltura,
+    fundoAltura: usuariosFundoAltura,
+    carregando: usuariosCarregando,
+    carregandoMais: usuariosCarregandoMais,
+    temMais: usuariosTemMais,
+    erro: usuariosErro,
+    totalCarregado: usuariosTotalCarregado,
+    refLinha: refLinhaUsuario,
+  } = usePaginacaoDeslizante<Usuario>({
+    chaveDeItem: (usuario) => usuario.id,
+    buscaPorPagina: buscaUsuariosPaginada,
+    tamanhoPagina: 20,
+    limiteDom: 40,
+    alturaPadraoLinha: 36,
+  });
 
   const {
     containerRef: listaRef,
@@ -109,10 +139,34 @@ export function EscalaForm({
     };
   }, [escala]);
 
-  function toggleUsuario(id: string) {
+  useEffect(() => {
+    const ids = escala?.usuarioIds ?? [];
+    if (ids.length === 0) return;
+    const conhecidos = new Set(usuarios.map((usuario) => usuario.id));
+    const idsFaltantes = ids.filter((id) => !conhecidos.has(id));
+    if (idsFaltantes.length === 0) return;
+    let ativo = true;
+    buscarUsuariosPorIds(idsFaltantes)
+      .then((resultado) => {
+        if (!ativo) return;
+        const ordem = new Map(ids.map((id, indice) => [id, indice]));
+        setUsuariosSelecionados((atuais) => [...atuais, ...resultado]
+          .sort((a, b) => (ordem.get(a.id) ?? 0) - (ordem.get(b.id) ?? 0)));
+      })
+      .catch(() => {});
+    return () => { ativo = false; };
+  }, [escala, usuarios]);
+
+  function toggleUsuario(usuario: Usuario) {
     setUsuarioIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(usuario.id)) {
+        next.delete(usuario.id);
+        setUsuariosSelecionados((atuais) => atuais.filter((atual) => atual.id !== usuario.id));
+      } else {
+        next.add(usuario.id);
+        setUsuariosSelecionados((atuais) => atuais.some((atual) => atual.id === usuario.id) ? atuais : [...atuais, usuario]);
+      }
       return next;
     });
   }
@@ -138,7 +192,7 @@ export function EscalaForm({
       {escala && <input type="hidden" name="id" value={escala.id} />}
 
       <div className="flex flex-col gap-4">
-        <Input label="Título" name="titulo" defaultValue={escala?.titulo} required />
+        <Input label="Título" name="titulo" defaultValue={escala?.titulo} maxLength={FORM_LIMITS.nomeGenerico} required />
 
         <div className="flex flex-col gap-4 sm:flex-row">
           <Input
@@ -188,35 +242,26 @@ export function EscalaForm({
           </div>
         </div>
 
-        <Input label="Observações" name="observacoes" defaultValue={escala?.observacoes ?? ""} />
+        <Input label="Observações" name="observacoes" defaultValue={escala?.observacoes ?? ""} maxLength={FORM_LIMITS.observacoes} />
       </div>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="db-label mb-1">Equipe escalada</legend>
-        <div className="db-card max-h-72 space-y-1 overflow-y-auto p-3">
-          {usuarios.length === 0 && <p className="text-sm text-muted">Nenhum membro cadastrado.</p>}
-          {usuarios.map((u) => {
-            const checked = usuarioIds.has(u.id);
-            const funcoes = (u.habilidades ?? "")
-              .split(",")
-              .map((funcao) => funcao.trim())
-              .filter(Boolean);
-            const funcoesSelecionadas = new Set(funcaoAtual(u.id).split(",").map((funcao) => funcao.trim()).filter(Boolean));
-            return (
-              <div key={u.id} className="flex flex-col gap-2 py-1.5 sm:flex-row sm:items-start sm:gap-3">
-                <label className="flex flex-1 items-center gap-2 text-sm text-paper/80">
-                  <input
-                    type="checkbox"
-                    name="usuarioIds"
-                    value={u.id}
-                    checked={checked}
-                    onChange={() => toggleUsuario(u.id)}
-                    className="h-4 w-4 db-checkbox"
-                  />
-                  {u.nome}
-                </label>
-                {checked && (
-                  <div className="db-function-options flex flex-wrap gap-x-3 gap-y-1.5 sm:w-48">
+        {[...usuarioIds].map((id) => <input key={id} type="hidden" name="usuarioIds" value={id} />)}
+
+        {usuariosSelecionados.length > 0 && (
+          <div className="mb-2 flex flex-col gap-2">
+            <span className="db-label text-xs text-cyan-300">Selecionados ({usuariosSelecionados.length})</span>
+            {usuariosSelecionados.map((u) => {
+              const funcoes = (u.habilidades ?? "").split(",").map((funcao) => funcao.trim()).filter(Boolean);
+              const funcoesSelecionadas = new Set(funcaoAtual(u.id).split(",").map((funcao) => funcao.trim()).filter(Boolean));
+              return (
+                <div key={u.id} className="rounded-xl border border-cyan-300/25 bg-cyan-300/[0.05] p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="min-w-0 truncate text-sm font-semibold text-paper/90">{u.nome}</span>
+                    <button type="button" onClick={() => toggleUsuario(u)} aria-label={`Remover ${u.nome}`} className="db-icon-button h-7 w-7 shrink-0"><X size={14} /></button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5">
                     {funcoes.length > 0 ? funcoes.map((funcao) => (
                       <label key={funcao} className="flex items-center gap-1.5 text-xs text-paper/80">
                         <input type="checkbox" name={`funcao_${u.id}`} value={funcao} defaultChecked={funcoesSelecionadas.has(funcao)} className="h-3.5 w-3.5 db-checkbox" />
@@ -224,10 +269,41 @@ export function EscalaForm({
                       </label>
                     )) : <span className="text-xs text-muted">Nenhuma função cadastrada.</span>}
                   </div>
-                )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div ref={usuariosListaRef} className="db-card max-h-72 space-y-1 overflow-y-auto p-3">
+          {usuariosCarregando && usuariosTotalCarregado === 0 ? (
+            <p className="text-sm text-muted">Carregando membros...</p>
+          ) : usuariosErro ? (
+            <p className="text-sm text-red-400">Não foi possível carregar os membros.</p>
+          ) : usuariosTotalCarregado === 0 ? (
+            <p className="text-sm text-muted">Nenhum membro cadastrado.</p>
+          ) : null}
+          {usuariosTopoAltura > 0 && <div aria-hidden="true" style={{ height: usuariosTopoAltura }} />}
+          {usuariosVisiveis.map((u) => {
+            const checked = usuarioIds.has(u.id);
+            return (
+              <div key={u.id} ref={refLinhaUsuario(u)} className="py-1.5">
+                <label className="flex flex-1 items-center gap-2 text-sm text-paper/80">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleUsuario(u)}
+                    className="h-4 w-4 db-checkbox"
+                  />
+                  {u.nome}
+                </label>
               </div>
             );
           })}
+          {usuariosFundoAltura > 0 && <div aria-hidden="true" style={{ height: usuariosFundoAltura }} />}
+          <div ref={usuariosSentinelaRef} className="h-px" aria-hidden="true" />
+          {usuariosCarregandoMais && <p className="py-2 text-center text-xs text-muted">Carregando mais...</p>}
+          {!usuariosCarregandoMais && !usuariosTemMais && usuariosTotalCarregado > 0 && <p className="py-2 text-center text-xs text-muted">Todos os membros foram carregados.</p>}
         </div>
       </fieldset>
 
@@ -287,7 +363,8 @@ export function EscalaForm({
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
             value={musicaBusca}
-            onChange={(event) => setMusicaBusca(event.target.value)}
+            onChange={(event) => setMusicaBusca(normalizeSearch(event.target.value))}
+            maxLength={FORM_LIMITS.busca}
             placeholder="Pesquisar músicas..."
             className="db-input w-full !pl-10"
             aria-label="Pesquisar músicas para a escala"

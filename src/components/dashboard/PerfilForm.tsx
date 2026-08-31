@@ -7,6 +7,12 @@ import { Input, CheckboxGroup } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import type { Usuario } from "@/types/domain";
+import {
+  FORM_LIMITS,
+  NAME_ALLOWED_PATTERN,
+  normalizePersonName,
+  normalizePhone,
+} from "@/lib/validation/forms";
 
 const OPCOES_HABILIDADES = [
   { value: "violao", label: "Violão" },
@@ -120,8 +126,31 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
           <p className="db-hint mt-1">JPG, PNG ou WebP, com até 1 MB.</p>
         </div>
       </div>
-      <Input label="Nome" name="nome" defaultValue={usuario.nome} required />
-      <Input label="Telefone" name="telefone" defaultValue={usuario.telefone ?? ""} />
+      <Input
+        label="Nome"
+        name="nome"
+        defaultValue={usuario.nome}
+        required
+        maxLength={FORM_LIMITS.nomePessoa}
+        pattern={NAME_ALLOWED_PATTERN}
+        onInput={(event) => {
+          event.currentTarget.value = normalizePersonName(event.currentTarget.value);
+        }}
+      />
+      <Input
+        label="Telefone"
+        name="telefone"
+        type="tel"
+        inputMode="numeric"
+        autoComplete="tel-national"
+        maxLength={FORM_LIMITS.telefone}
+        pattern="[0-9]{11}"
+        title="Informe DDD + número, com 11 dígitos."
+        defaultValue={usuario.telefone ?? ""}
+        onInput={(event) => {
+          event.currentTarget.value = normalizePhone(event.currentTarget.value);
+        }}
+      />
       <CheckboxGroup
         label="Instrumentos"
         name="habilidades"
@@ -146,7 +175,7 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
         <h2 className="font-semibold text-paper">Excluir conta</h2>
         <p className="db-hint mt-1">Essa ação é permanente e remove seu acesso ao WorshipFlow.</p>
       </div>
-      <Input label='Digite "excluirminhaconta" para confirmar' name="confirmacao" autoComplete="off" required />
+      <Input label='Digite "excluirminhaconta" para confirmar' name="confirmacao" autoComplete="off" maxLength={FORM_LIMITS.confirmacaoExclusao} required />
       {deleteState?.error && <FormAlert>{deleteState.error}</FormAlert>}
       <Button type="submit" disabled={deletePending} className="!bg-red-500/80 hover:!bg-red-500">
         {deletePending ? "Excluindo..." : "Excluir minha conta"}

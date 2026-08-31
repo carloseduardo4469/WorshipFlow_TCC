@@ -6,11 +6,12 @@ import { EscalasManager } from "@/components/dashboard/EscalasManager";
 export default async function RegistrosEscalasPage() {
   await requireAdmin();
   const repos = await getRepositories();
-  const [escalas, usuarios, ministerios] = await Promise.all([
+  const [escalas, ministerios] = await Promise.all([
     cachedData("escalas:list", () => repos.escalas.list()),
-    cachedData("usuarios:list", () => repos.usuarios.list()),
     cachedData("ministerios:list", () => repos.ministerios.list()),
   ]);
+  const usuarioIds = [...new Set(escalas.flatMap((escala) => escala.usuarioIds))];
+  const usuarios = await repos.usuarios.getByIds(usuarioIds);
 
   return (
     <div className="mx-auto max-w-[1240px]">

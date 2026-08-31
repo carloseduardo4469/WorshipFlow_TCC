@@ -206,6 +206,16 @@ body {
 
 .auth-theme.light .af-btn-pill {
   background: rgba(18, 24, 27, 0.03);
+  border-color: rgba(18, 24, 27, 0.34);
+}
+
+.auth-theme.light .af-btn-primary {
+  border: 1px solid rgba(76, 51, 3, 0.55);
+}
+
+.auth-theme.light .af-btn-underline,
+.auth-theme.light .af-theme-toggle {
+  border-color: rgba(18, 24, 27, 0.34);
 }
 
 .af-btn-pill:hover {
@@ -318,6 +328,7 @@ body {
   justify-content: center;
   gap: 0.5rem;
   border-radius: 9999px;
+  border: 1px solid rgba(101, 72, 12, 0.45);
   padding: 0.72rem 1.6rem;
   font-size: 0.85rem;
   font-weight: 700;
@@ -360,6 +371,7 @@ body {
   justify-content: center;
   gap: 0.35rem;
   border-radius: 9999px;
+  border: 1px solid rgba(101, 72, 12, 0.45);
   padding: 0.4rem 1rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -376,6 +388,18 @@ body {
 .db-btn-sm:disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.db-danger-button {
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  border-radius: 0.6rem;
+  padding: 0.38rem 0.65rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.db-danger-button:hover {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(248, 113, 113, 0.08);
 }
 
 /* Input del dashboard: fondo oscuro, foco ámbar */
@@ -877,6 +901,21 @@ html[data-dashboard-theme="light"] .db-hero .db-mini-stat-label { color:#e2f3ff 
 html[data-dashboard-theme="light"] .db-hero .db-mini-stat-value { color:#ffffff !important; }
 .db-member-modal { border:1px solid rgba(86,222,244,.42); border-radius:24px; background:linear-gradient(135deg,rgba(12,39,63,.98),rgba(24,21,69,.98)); box-shadow:0 32px 90px -30px #000,0 0 44px -24px rgba(55,215,235,.86); }
 html[data-dashboard-theme="light"] .db-member-modal { border-color:rgba(36,130,181,.35); background:linear-gradient(135deg,#fff,#e8f7ff); box-shadow:0 28px 80px -35px rgba(18,64,110,.58); }
+html[data-dashboard-theme="light"] .db-icon-button,
+html[data-dashboard-theme="light"] .db-profile-button,
+html[data-dashboard-theme="light"] .db-ghost,
+html[data-dashboard-theme="light"] button.db-select,
+html[data-dashboard-theme="light"] .db-status-toggle {
+  border-color: rgba(27, 73, 112, 0.48) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 1px 3px rgba(25,67,104,.12);
+}
+html[data-dashboard-theme="light"] .db-icon-button,
+html[data-dashboard-theme="light"] .db-profile-button,
+html[data-dashboard-theme="light"] .db-ghost { background-color: rgba(255,255,255,.76); }
+html[data-dashboard-theme="light"] .db-btn-sm,
+html[data-dashboard-theme="light"] .db-cta { border-color: rgba(93, 62, 0, .58); }
+html[data-dashboard-theme="light"] .db-danger-button { border-color: rgba(180, 35, 24, .52); background: rgba(180,35,24,.035); }
+html[data-dashboard-theme="light"] .db-file-button { border-color: rgba(21, 85, 126, .52); }
 html[data-dashboard-theme="light"] .db-member-modal .text-paper { color:#172d48 !important; }
 .db-profile-page { display:flex; min-height:calc(100vh - 9rem); flex-direction:column; justify-content:center; }
 .db-profile-form { width:100%; }

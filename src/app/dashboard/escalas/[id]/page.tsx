@@ -9,12 +9,12 @@ export default async function EditarEscalaPage({ params }: { params: Promise<{ i
   const { id } = await params;
 
   const repos = await getRepositories();
-  const [escala, usuarios, ministerios] = await Promise.all([
+  const [escala, ministerios] = await Promise.all([
     repos.escalas.getById(Number(id)),
-    repos.usuarios.list(),
     repos.ministerios.list(),
   ]);
   if (!escala) notFound();
+  const usuarios = await repos.usuarios.getByIds(escala.usuarioIds);
 
   return (
     <div className="mx-auto max-w-[860px] lg:mx-0">

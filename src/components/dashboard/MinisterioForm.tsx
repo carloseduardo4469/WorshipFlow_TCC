@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import type { Ministerio } from "@/types/domain";
+import { FORM_LIMITS } from "@/lib/validation/forms";
 
 export function MinisterioForm({ ministerio }: { ministerio?: Ministerio }) {
   const action = ministerio ? atualizarMinisterioAction : criarMinisterioAction;
@@ -17,8 +18,8 @@ export function MinisterioForm({ ministerio }: { ministerio?: Ministerio }) {
     <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       {ministerio && <input type="hidden" name="id" value={ministerio.id} />}
 
-      <Input label="Nome" name="nome" defaultValue={ministerio?.nome} required />
-      <Input label="Descrição" name="descricao" defaultValue={ministerio?.descricao ?? ""} />
+      <Input label="Nome" name="nome" defaultValue={ministerio?.nome} maxLength={FORM_LIMITS.ministerioNome} required />
+      <Input label="Descrição" name="descricao" defaultValue={ministerio?.descricao ?? ""} maxLength={FORM_LIMITS.descricao} />
 
       {ministerio && (
         <label className="flex items-center gap-2 text-sm text-paper/80">

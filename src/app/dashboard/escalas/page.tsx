@@ -20,10 +20,9 @@ function formatDate(iso: string | null) {
 export default async function EscalasPage() {
   await requireAuth();
   const repos = await getRepositories();
-  const [escalas, usuarios] = await Promise.all([
-    cachedData("escalas:list", () => repos.escalas.list()),
-    cachedData("usuarios:list", () => repos.usuarios.list()),
-  ]);
+  const escalas = await cachedData("escalas:list", () => repos.escalas.list());
+  const usuarioIds = [...new Set(escalas.flatMap((escala) => escala.usuarioIds))];
+  const usuarios = await repos.usuarios.getByIds(usuarioIds);
   const isAdmin = false;
 
   const nomesPorId = new Map(usuarios.map((u) => [u.id, u.nome]));
@@ -65,7 +64,7 @@ export default async function EscalasPage() {
                   </Link>
                   <form action={removerEscalaAction}>
                     <input type="hidden" name="id" value={e.id} />
-                    <button type="submit" className="text-xs font-semibold text-red-400 hover:text-red-300">
+                    <button type="submit" className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300">
                       Excluir
                     </button>
                   </form>

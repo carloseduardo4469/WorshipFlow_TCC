@@ -44,7 +44,7 @@ export function UsuarioRow({ usuario }: { usuario: Usuario }) {
             className="peer sr-only"
           />
           <span
-            className={`relative h-5 w-9 shrink-0 rounded-full border transition-colors ${
+            className={`db-status-toggle relative h-5 w-9 shrink-0 rounded-full border transition-colors ${
               isSuspended
                 ? "border-amber-300/60 bg-amber-300/25"
                 : "border-white/15 bg-white/10"

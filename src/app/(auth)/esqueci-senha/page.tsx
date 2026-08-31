@@ -13,6 +13,7 @@ import {
   PrimaryButton,
 } from "@/components/auth/AuthUi";
 import { AuthFooterCard } from "@/components/auth/AuthFooterCard";
+import { FORM_LIMITS } from "@/lib/validation/forms";
 
 export default function EsqueciSenhaPage() {
   const [state, formAction, pending] = useActionState(esqueciSenhaAction, null);
@@ -58,6 +59,7 @@ export default function EsqueciSenhaPage() {
               type="email"
               placeholder="Digite seu e-mail"
               autoComplete="email"
+              maxLength={FORM_LIMITS.email}
               required
             />
 

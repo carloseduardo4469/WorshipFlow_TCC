@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Ministerio, Musica, Repertorio } from "@/types/domain";
+import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 
 export function RepertorioForm({
   repertorio,
@@ -98,8 +99,8 @@ return (
     <form action={formAction} className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8">
       {repertorio && <input type="hidden" name="id" value={repertorio.id} />}
 
-      <Input label="Nome" name="nome" defaultValue={repertorio?.nome} required />
-      <Input label="Descrição" name="descricao" defaultValue={repertorio?.descricao ?? ""} />
+      <Input label="Nome" name="nome" defaultValue={repertorio?.nome} maxLength={FORM_LIMITS.nomeGenerico} required />
+      <Input label="Descrição" name="descricao" defaultValue={repertorio?.descricao ?? ""} maxLength={FORM_LIMITS.descricao} />
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="ministerioId" className="db-label">
@@ -161,7 +162,8 @@ return (
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
             value={musicaBusca}
-            onChange={(event) => setMusicaBusca(event.target.value)}
+            onChange={(event) => setMusicaBusca(normalizeSearch(event.target.value))}
+            maxLength={FORM_LIMITS.busca}
             placeholder="Pesquisar músicas..."
             className="db-input w-full !pl-10"
             aria-label="Pesquisar músicas para o repertório"

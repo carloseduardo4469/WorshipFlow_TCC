@@ -7,10 +7,14 @@ import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { FuncaoUsuario, StatusEscala, TonalidadeMusica } from "@/types/domain";
+import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
 
 export type ActionState = { error?: string } | null;
 
 const STATUS_VALIDOS: StatusEscala[] = ["RASCUNHO", "PUBLICADA", "CONCLUIDA", "CANCELADA"];
+const FUNCOES_VALIDAS = new Set([
+  "violao", "guitarra", "bateria", "teclado", "baixo", "voz-principal", "voz-secundaria",
+]);
 
 function dataEscalaValida(dataEscala: string | null) {
   if (!dataEscala) return true;
@@ -40,14 +44,18 @@ function readEscalaForm(formData: FormData) {
   const observacoes = String(formData.get("observacoes") ?? "").trim();
   const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
-  const usuarioIds = formData.getAll("usuarioIds").map(String);
-  const musicaIds = formData.getAll("musicaIds").map((v) => Number(v));
+  const usuarioIdsRaw = [...new Set(formData.getAll("usuarioIds").map(String).filter(Boolean))];
+  const usuarioIds = usuarioIdsRaw
+    .slice(0, FORM_LIMITS.selecoes);
+  const musicaIds = [...new Set(formData.getAll("musicaIds").map((v) => Number(v)))]
+    .filter((id) => Number.isInteger(id) && id > 0)
+    .slice(0, FORM_LIMITS.selecoes);
 
   // funcoes[usuarioId] = "Vocal" | "Guitarra" | ...
   const funcoesUsuarios: FuncaoUsuario[] = usuarioIds
     .map((usuarioId) => ({
       usuarioId,
-      funcao: formData.getAll(`funcao_${usuarioId}`).map(String).map((funcao) => funcao.trim()).filter(Boolean).join(","),
+      funcao: formData.getAll(`funcao_${usuarioId}`).map(String).map((funcao) => funcao.trim()).filter((funcao) => FUNCOES_VALIDAS.has(funcao)).join(","),
     }))
     .filter((f) => f.funcao);
 
@@ -76,13 +84,29 @@ function readEscalaForm(formData: FormData) {
     usuarioIds,
     musicaIds,
     tonalidadeValida,
+    usuarioIdsValidos: usuarioIdsRaw.length <= FORM_LIMITS.selecoes
+      && usuarioIds.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)),
   };
+}
+
+function validarEscala(data: ReturnType<typeof readEscalaForm>): string | null {
+  if (!data.titulo) return "Informe o título da escala.";
+  const tituloError = validateMaxLength(data.titulo, FORM_LIMITS.nomeGenerico, "Título");
+  if (tituloError) return tituloError;
+  const observacoesError = validateMaxLength(data.observacoes ?? "", FORM_LIMITS.observacoes, "Observações");
+  if (observacoesError) return observacoesError;
+  if (data.ministerioId !== null && (!Number.isInteger(data.ministerioId) || data.ministerioId <= 0)) {
+    return "Ministério inválido.";
+  }
+  if (!data.usuarioIdsValidos) return "Seleção de usuários inválida.";
+  return null;
 }
 
 export async function criarEscalaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
   const data = readEscalaForm(formData);
-  if (!data.titulo) return { error: "Informe o título da escala." };
+  const escalaError = validarEscala(data);
+  if (escalaError) return { error: escalaError };
   if (!dataEscalaValida(data.dataEscala)) return { error: "Informe uma data válida a partir de hoje." };
   if (!data.tonalidadeValida) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
@@ -112,8 +136,10 @@ export async function atualizarEscalaAction(
 ): Promise<ActionState> {
   await requireAdmin();
   const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id <= 0) return { error: "Escala inválida." };
   const data = readEscalaForm(formData);
-  if (!data.titulo) return { error: "Informe o título da escala." };
+  const escalaError = validarEscala(data);
+  if (escalaError) return { error: escalaError };
   if (!dataEscalaValida(data.dataEscala)) return { error: "Informe uma data válida a partir de hoje." };
   if (!data.tonalidadeValida) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
@@ -140,6 +166,7 @@ export async function atualizarEscalaAction(
 export async function removerEscalaAction(formData: FormData) {
   await requireAdmin();
   const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id <= 0) throw new Error("Escala inválida.");
 
   const repos = await getRepositories();
   await repos.escalas.remove(id);

@@ -16,6 +16,7 @@ import {
   PrimaryButton,
 } from "@/components/auth/AuthUi";
 import { AuthMiniFooter } from "@/components/auth/AuthMiniFooter";
+import { FORM_LIMITS } from "@/lib/validation/forms";
 
 const CADASTRO_MESSAGES: Record<string, string> = {
   "confirme-email": "Conta criada! Confira seu email para confirmar o cadastro.",
@@ -130,6 +131,7 @@ export function LoginForm() {
               type="email"
               placeholder="Digite seu e-mail"
               autoComplete="email"
+              maxLength={FORM_LIMITS.email}
               required
             />
             <AuthField
@@ -138,6 +140,7 @@ export function LoginForm() {
               type="password"
               placeholder="Digite sua senha"
               autoComplete="current-password"
+              maxLength={FORM_LIMITS.senha}
               required
             />
 

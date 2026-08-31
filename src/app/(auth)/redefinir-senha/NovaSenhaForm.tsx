@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { redefinirSenhaAction } from "@/lib/actions/auth";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { AuthField, PrimaryButton } from "@/components/auth/AuthUi";
+import { FORM_LIMITS } from "@/lib/validation/forms";
 
 export function NovaSenhaForm() {
   const [state, formAction, pending] = useActionState(redefinirSenhaAction, null);
@@ -17,6 +18,7 @@ export function NovaSenhaForm() {
         placeholder="Mínimo de 8 caracteres"
         autoComplete="new-password"
         minLength={8}
+        maxLength={FORM_LIMITS.senha}
         required
       />
       <AuthField
@@ -26,6 +28,7 @@ export function NovaSenhaForm() {
         placeholder="Repita a nova senha"
         autoComplete="new-password"
         minLength={8}
+        maxLength={FORM_LIMITS.senha}
         required
       />
 

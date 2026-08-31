@@ -113,7 +113,7 @@ export function EscalasManager({
                     </button>
                     <form action={removerEscalaAction}>
                       <input type="hidden" name="id" value={escala.id} />
-                      <button type="submit" className="text-xs font-semibold text-red-400 hover:text-red-300">Excluir</button>
+                      <button type="submit" className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300">Excluir</button>
                     </form>
                   </div>
                 </td>
