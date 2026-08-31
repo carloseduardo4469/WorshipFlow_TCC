@@ -6,7 +6,7 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { PerfilUsuario, StatusMinisterio, Usuario } from "@/types/domain";
+import type { PerfilUsuario, Usuario } from "@/types/domain";
 import {
   FORM_LIMITS,
   normalizePersonName,
@@ -120,17 +120,10 @@ export async function atualizarUsuarioAdminAction(
 
   const id = String(formData.get("id"));
   const perfil = String(formData.get("perfil")) as PerfilUsuario;
-  const statusMinisterio = String(formData.get("statusMinisterio")) as StatusMinisterio;
   const isSuspended = formData.get("isSuspended") === "true";
-  const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
   if (!id) return { error: "Usuário inválido." };
   if (!(["MEMBRO", "ADMIN"] as string[]).includes(perfil)) return { error: "Perfil inválido." };
-  if (!(["ATIVO", "INATIVO"] as string[]).includes(statusMinisterio)) return { error: "Status inválido." };
-  const ministerioId = ministerioIdRaw ? Number(ministerioIdRaw) : null;
-  if (ministerioId !== null && (!Number.isInteger(ministerioId) || ministerioId <= 0)) {
-    return { error: "Ministério inválido." };
-  }
 
   const repos = await getRepositories();
   if (id === current.authId && isSuspended) {
@@ -138,9 +131,7 @@ export async function atualizarUsuarioAdminAction(
   }
   await repos.usuarios.update(id, {
     perfil,
-    statusMinisterio,
     isSuspended,
-    ministerioId,
   });
 
   invalidateDataCache("usuarios");

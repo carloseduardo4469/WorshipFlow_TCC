@@ -33,7 +33,7 @@ export function UsuarioRow({ usuario }: { usuario: Usuario }) {
           <option value="ADMIN">Admin</option>
         </Select>
 
-        <label className="relative flex w-[100px] shrink-0 cursor-pointer items-center gap-2 text-xs font-semibold text-muted transition-colors hover:text-paper">
+        <label className="relative flex w-[116px] shrink-0 cursor-pointer items-center gap-2 text-xs font-semibold text-muted transition-colors hover:text-paper">
           <input
             type="checkbox"
             name="isSuspended"
@@ -55,18 +55,8 @@ export function UsuarioRow({ usuario }: { usuario: Usuario }) {
               isSuspended ? "translate-x-4 bg-amber-200" : ""
             }`}
           />
-          <span className="w-[52px]">{isSuspended ? "Suspensa" : "Ativa"}</span>
+          <span className="w-[68px]">{isSuspended ? "Suspensa" : "Liberada"}</span>
         </label>
-
-        <Select
-          name="statusMinisterio"
-          defaultValue={usuario.statusMinisterio}
-          className="db-select w-28"
-          aria-label={`Status do ministério de ${usuario.nome}`}
-        >
-          <option value="ATIVO">Ativo</option>
-          <option value="INATIVO">Inativo</option>
-        </Select>
 
         <button type="submit" disabled={pending} className="db-btn-sm">
           {pending ? "..." : "Salvar"}
