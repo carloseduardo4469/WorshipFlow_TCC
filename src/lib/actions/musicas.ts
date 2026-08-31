@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
-import { gerarLinkCifraClub } from "@/lib/music/cifraclub";
+import { gerarLinkCifraClub, resolverTomOriginal } from "@/lib/music/cifraclub";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
 
@@ -37,7 +37,7 @@ export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
   return repos.musicas.getByIds(idsLimpos);
 }
 
-function readMusicaForm(formData: FormData) {
+async function readMusicaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const artista = String(formData.get("artista") ?? "").trim();
   const tonalidade = String(formData.get("tonalidade") ?? "").trim();
@@ -45,10 +45,15 @@ function readMusicaForm(formData: FormData) {
   const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
   const bpm = bpmRaw ? Number(bpmRaw) : null;
+
+  // Detecta o tom original no CifraClub para abrir a cifra na relativa menor
+  // quando a música é de tom menor (funciona para qualquer música).
+  const tomOriginal = tonalidade ? await resolverTomOriginal({ titulo, artista }) : null;
   const linkCifra = gerarLinkCifraClub({
     titulo,
     artista: artista || null,
     tonalidade: tonalidade || null,
+    tomOriginal,
   });
 
   return {
@@ -63,7 +68,7 @@ function readMusicaForm(formData: FormData) {
 
 export async function criarMusicaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
-  const data = readMusicaForm(formData);
+  const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (data.tonalidade && !isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
@@ -83,7 +88,7 @@ export async function atualizarMusicaAction(
 ): Promise<ActionState> {
   await requireAdmin();
   const id = Number(formData.get("id"));
-  const data = readMusicaForm(formData);
+  const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (data.tonalidade && !isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
