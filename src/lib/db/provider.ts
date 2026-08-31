@@ -6,8 +6,8 @@ import type { Backend } from "./repositories/types";
  * (fallback em SQLite, para dev em rede que bloqueia a conexão direta ao
  * Postgres/proxy do Supabase).
  *
- * DB_MODE no .env força um dos dois. Sem ele, o desenvolvimento usa sempre
- * SQLite local; produção tenta Supabase e só usa o fallback fora da Vercel.
+ * DB_MODE no .env força um dos dois; sem ele, tenta Supabase primeiro e
+ * cai pro local automaticamente se a checagem falhar ou der timeout.
  * O resultado fica em cache por CACHE_MS pra não bater no Supabase a cada
  * requisição em dev.
  */
@@ -48,10 +48,6 @@ export async function resolveBackend(): Promise<Backend> {
   const mode = (process.env.DB_MODE ?? "auto").toLowerCase();
   if (mode === "supabase") return "supabase";
   if (mode === "local") return "local";
-
-  // `npm run dev` deve ser isolado do banco online: dados criados ou apagados
-  // localmente ficam exclusivamente em .data/local.db.
-  if (process.env.NODE_ENV === "development") return "local";
 
   // Em serverless (Vercel) o filesystem é read-only: o fallback pro SQLite
   // nunca pode acontecer lá, senão toda request quebra. Força Supabase —

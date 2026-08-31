@@ -15,32 +15,6 @@ export interface CurrentUser {
 // requireAuth()/getCurrentUser() na mesma request — sem memoização, cada
 // navegação faria duas chamadas ao Auth do Supabase e duas queries de profile.
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
-  const repos = await getRepositories();
-
-  // O desenvolvimento local é totalmente independente do Supabase. Mantém
-  // um administrador fixo no SQLite para permitir testar todas as telas.
-  if (process.env.NODE_ENV === "development" && repos.backend === "local") {
-    const authId = "00000000-0000-4000-8000-000000000001";
-    let profile = await repos.usuarios.getById(authId);
-    if (!profile) {
-      profile = await repos.usuarios.createLocal({
-        id: authId,
-        nome: "Administrador local",
-        email: "admin@local.test",
-        telefone: null,
-        instrumentoPrincipal: null,
-        habilidades: null,
-        statusMinisterio: "ATIVO",
-        isSuspended: false,
-        perfil: "ADMIN",
-        fotoPerfilUrl: null,
-        ministerioId: null,
-        ultimaAtividade: null,
-      });
-    }
-    return { authId, email: profile.email, profile };
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,6 +22,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   if (!user) return null;
 
+  const repos = await getRepositories();
   let profile = await repos.usuarios.getById(user.id);
 
   // Modo local: o trigger que cria o profile automaticamente só existe no

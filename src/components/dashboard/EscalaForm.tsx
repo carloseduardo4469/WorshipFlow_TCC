@@ -98,8 +98,8 @@ export function EscalaForm({
   } = usePaginacaoDeslizante<Musica>({
     chaveDeItem: (musica) => musica.id,
     buscaPorPagina: buscaMusicasPaginada,
-    tamanhoPagina: 15,
-    limiteDom: 45,
+    tamanhoPagina: 10,
+    limiteDom: 30,
     alturaPadraoLinha: 28,
     reiniciarAo: musicaTermo,
   });
@@ -324,7 +324,7 @@ export function EscalaForm({
           />
         </label>
 
-        <div ref={listaRef} className="db-card db-music-scroll db-scale-picker db-scale-music-list max-h-64 overflow-y-auto overscroll-contain p-3 pb-5">
+        <div ref={listaRef} className="db-card db-music-scroll db-scale-picker db-scale-music-list h-64 overflow-y-scroll overscroll-contain p-3 pb-5 sm:h-80">
           {carregando && totalCarregado === 0 ? (
             <p className="text-sm text-muted">Carregando músicas...</p>
           ) : erroCarregar ? (
@@ -356,7 +356,10 @@ export function EscalaForm({
               })}
               {fundoAltura > 0 && <div aria-hidden="true" style={{ height: fundoAltura }} />}
               <div ref={sentinelaRef} className="h-px" aria-hidden="true" />
-              {carregandoMais && <p className="py-2 text-center text-xs text-muted">Carregando mais...</p>}
+              {carregandoMais && <p className="py-2 text-center text-xs text-muted" aria-live="polite">Carregando próxima página...</p>}
+              {!carregandoMais && temMais && (
+                <p className="py-2 text-center text-xs text-muted">Role para carregar mais músicas</p>
+              )}
               {!carregandoMais && !temMais && (
                 <p className="py-2 text-center text-xs text-muted">Todas as músicas foram carregadas.</p>
               )}

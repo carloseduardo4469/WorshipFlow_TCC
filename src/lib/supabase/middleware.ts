@@ -23,10 +23,6 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { pathname } = request.nextUrl;
 
-  // Em `npm run dev`, autenticação e dados são locais; não exige cookies nem
-  // credenciais do Supabase.
-  if (process.env.NODE_ENV === "development") return response;
-
   if (isPublicPath(pathname) || pathname === "/") {
     return response;
   }
