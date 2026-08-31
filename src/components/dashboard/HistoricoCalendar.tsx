@@ -87,9 +87,13 @@ export function HistoricoCalendar({
             <p className="db-label">Calendário de escalas</p>
             <h2 className="db-history-month mt-1">{tituloMes(mesVisivel.ano, mesVisivel.mes)}</h2>
           </div>
-          <button type="button" onClick={() => mudarMes(1)} className="db-icon-button" aria-label="Próximo mês">
-            <ChevronRight size={19} />
-          </button>
+          {mesLimiteAtingido ? (
+            <span className="h-10 w-10" aria-hidden="true" />
+          ) : (
+            <button type="button" onClick={() => mudarMes(1)} className="db-icon-button" aria-label="Próximo mês">
+              <ChevronRight size={19} />
+            </button>
+          )}
         </header>
 
         <div className="db-history-weekdays" aria-hidden="true">
