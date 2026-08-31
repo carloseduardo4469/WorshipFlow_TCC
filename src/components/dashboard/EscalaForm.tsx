@@ -7,10 +7,8 @@ import { criarEscalaAction, atualizarEscalaAction } from "@/lib/actions/escalas"
 import { buscarMusicas, buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { buscarUsuarios, buscarUsuariosPorIds } from "@/lib/actions/usuarios";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Escala, Musica, Usuario } from "@/types/domain";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
@@ -21,7 +19,7 @@ const NOMES_FUNCOES: Record<string, string> = {
   bateria: "Bateria",
   teclado: "Teclado",
   baixo: "Baixo",
-  "voz-principal": "Voz principal",
+  "voz-principal": "Cantor(a) principal",
   "voz-secundaria": "Voz secundária",
 };
 
@@ -36,7 +34,12 @@ export function EscalaForm({
 }) {
   const action = escala ? atualizarEscalaAction : criarEscalaAction;
   const [state, formAction, pending] = useActionState(action, null);
+  const [erroAberto, setErroAberto] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (state?.error) setErroAberto(true);
+  }, [state]);
 
   const [usuarioIds, setUsuarioIds] = useState<Set<string>>(new Set(escala?.usuarioIds ?? []));
   const [usuariosSelecionados, setUsuariosSelecionados] = useState<Usuario[]>(
@@ -109,8 +112,6 @@ export function EscalaForm({
 
   const funcaoAtual = (usuarioId: string) =>
     escala?.funcoesUsuarios.find((f) => f.usuarioId === usuarioId)?.funcao ?? "";
-  const tonalidadeAtual = (musicaId: number) =>
-    escala?.tonalidadesMusicas.find((t) => t.musicaId === musicaId)?.tonalidade ?? "";
 
   // Músicas já vinculadas à escala aparecem como chips fora da busca, para não
   // ocuparem o espaço dos resultados da pesquisa.
@@ -273,28 +274,12 @@ export function EscalaForm({
             </span>
             <div className="flex flex-wrap gap-2">
               {musicasSelecionadas.map((m) => {
-                const tonalidadeInicial = tomParaSelecao(tonalidadeAtual(m.id) || m.tonalidade);
                 return (
-                  <div key={m.id} className="db-scale-selected-song flex items-center gap-2 rounded-xl py-1.5 pl-3 pr-1.5">
-                    <span className="min-w-0 text-sm text-paper/90">
+                  <div key={m.id} className="db-scale-selected-song flex items-center justify-between gap-3 rounded-xl py-1.5 pl-3 pr-1.5">
+                    <span className="db-scale-song-name min-w-0 flex-1 text-sm text-paper/90">
                       {m.titulo}
                       {m.artista && <span className="block text-[11px] text-muted">{m.artista}</span>}
                     </span>
-                    <div className="w-24 shrink-0">
-                      <Select
-                        name={`tonalidade_${m.id}`}
-                        defaultValue={tonalidadeInicial}
-                        aria-label={`Tom de ${m.titulo}`}
-                        className="px-2 py-1 text-xs"
-                        options={[
-                          { value: "", label: "Tom" },
-                          ...TONALIDADES_MAIORES.map((tonalidade) => ({
-                            value: tonalidade,
-                            label: tonalidade,
-                          })),
-                        ]}
-                      />
-                    </div>
                     <button
                       type="button"
                       onClick={() => toggleMusica(m)}
@@ -368,8 +353,6 @@ export function EscalaForm({
         </div>
       </fieldset>
 
-      {state?.error && <FormAlert>{state.error}</FormAlert>}
-
       <div className="db-form-actions flex gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando..." : "Salvar"}
@@ -378,6 +361,38 @@ export function EscalaForm({
           Cancelar
         </Button>
       </div>
+
+      {state?.error && erroAberto && (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020817]/70 p-4 backdrop-blur-sm"
+          onMouseDown={() => setErroAberto(false)}
+        >
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="erro-escala-titulo"
+            className="db-panel w-full max-w-md p-5 text-left shadow-2xl sm:p-7"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <p className="db-label text-amber-300">Verifique a escala</p>
+            <h2 id="erro-escala-titulo" className="db-title mt-2 text-2xl text-paper">
+              Não foi possível salvar
+            </h2>
+            <div className="mt-4">
+              <FormAlert>{state.error}</FormAlert>
+            </div>
+            <button
+              type="button"
+              onClick={() => setErroAberto(false)}
+              className="db-btn-sm mt-6 w-full px-4 py-2.5 text-sm font-semibold sm:w-auto"
+              autoFocus
+            >
+              Entendi
+            </button>
+          </section>
+        </div>
+      )}
     </form>
   );
 }

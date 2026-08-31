@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Church, ExternalLink, Loader2, Music2, Users, X } from "lucide-react";
+import { CalendarDays, ExternalLink, Loader2, Music2, Users, X } from "lucide-react";
 import { buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { normalizarEscala } from "@/lib/escalas/normalize";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { Escala, Ministerio, Musica, Usuario } from "@/types/domain";
+import type { Escala, Musica, Usuario } from "@/types/domain";
 
 const NOMES_FUNCOES: Record<string, string> = {
   violao: "Violão",
@@ -35,12 +35,10 @@ function formatarFuncoes(valor: string) {
 export function EscalaDetailsDialog({
   escala: escalaOriginal,
   usuarios,
-  ministerios,
   onClose,
 }: {
   escala: Escala;
   usuarios: Usuario[];
-  ministerios: Ministerio[];
   onClose: () => void;
 }) {
   const escala = useMemo(() => normalizarEscala(escalaOriginal), [escalaOriginal]);
@@ -52,7 +50,6 @@ export function EscalaDetailsDialog({
     () => new Map(usuarios.map((usuario) => [usuario.id, usuario.nome])),
     [usuarios]
   );
-  const ministerio = ministerios.find((item) => item.id === escala.ministerioId)?.nome ?? "Não informado";
   const funcoesPorUsuario = new Map(escala.funcoesUsuarios.map((item) => [item.usuarioId, item.funcao]));
   const tonsPorMusica = new Map(escala.tonalidadesMusicas.map((item) => [item.musicaId, item.tonalidade]));
 
@@ -120,10 +117,6 @@ export function EscalaDetailsDialog({
           <div className="db-schedule-fact">
             <dt><CalendarDays size={15} /> Data</dt>
             <dd>{formatarData(escala.dataEscala)}</dd>
-          </div>
-          <div className="db-schedule-fact">
-            <dt><Church size={15} /> Ministério</dt>
-            <dd>{ministerio}</dd>
           </div>
         </dl>
 

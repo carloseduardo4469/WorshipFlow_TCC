@@ -12,10 +12,7 @@ function hojeIso() {
 export default async function EscalasPage() {
   await requireAuth();
   const repos = await getRepositories();
-  const [escalas, ministerios] = await Promise.all([
-    cachedData("escalas:list", () => repos.escalas.list()),
-    cachedData("ministerios:list", () => repos.ministerios.list()),
-  ]);
+  const escalas = await cachedData("escalas:list", () => repos.escalas.list());
   const hoje = hojeIso();
   const proximasEscalas = escalas.filter((escala) =>
     escala.status === "PUBLICADA" && (!escala.dataEscala || escala.dataEscala >= hoje)
@@ -27,7 +24,7 @@ export default async function EscalasPage() {
       <PageHeader title="Escalas" description="Próximas equipes publicadas para cultos e compromissos." />
       {proximasEscalas.length === 0
         ? <div className="db-empty db-empty-modern">Nenhuma próxima escala publicada.</div>
-        : <EscalasTable escalas={proximasEscalas} usuarios={usuarios} ministerios={ministerios} />}
+        : <EscalasTable escalas={proximasEscalas} usuarios={usuarios} />}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { CalendarDays, Music2, Users } from "lucide-react";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { Escala, Ministerio, Usuario } from "@/types/domain";
+import type { Escala, Usuario } from "@/types/domain";
 
 function formatarData(iso: string | null) {
   if (!iso) return "Não informada";
@@ -19,11 +19,9 @@ function formatarData(iso: string | null) {
 export function EscalasTable({
   escalas: escalasOriginais,
   usuarios,
-  ministerios,
 }: {
   escalas: Escala[];
   usuarios: Usuario[];
-  ministerios: Ministerio[];
 }) {
   const [selecionada, setSelecionada] = useState<Escala | null>(null);
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
@@ -82,7 +80,7 @@ export function EscalasTable({
       </div>
 
       {selecionada && (
-        <EscalaDetailsDialog escala={selecionada} usuarios={usuarios} ministerios={ministerios} onClose={() => setSelecionada(null)} />
+        <EscalaDetailsDialog escala={selecionada} usuarios={usuarios} onClose={() => setSelecionada(null)} />
       )}
     </>
   );

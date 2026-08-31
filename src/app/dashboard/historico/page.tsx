@@ -16,10 +16,7 @@ function hojeIso() {
 export default async function HistoricoPage() {
   await requireAuth();
   const repos = await getRepositories();
-  const [escalas, ministerios] = await Promise.all([
-    cachedData("escalas:list", () => repos.escalas.list()),
-    cachedData("ministerios:list", () => repos.ministerios.list()),
-  ]);
+  const escalas = await cachedData("escalas:list", () => repos.escalas.list());
   const limite = hojeIso();
   const historico = escalas.filter(
     (escala) => escala.status === "CONCLUIDA" || Boolean(escala.dataEscala && escala.dataEscala < limite)
@@ -32,7 +29,7 @@ export default async function HistoricoPage() {
       <PageHeader title="Histórico" description="Escalas concluídas ou que já passaram da data programada." />
       {historico.length === 0
         ? <div className="db-empty db-empty-modern">Nenhuma escala concluída ou passada ainda.</div>
-        : <EscalasTable escalas={historico} usuarios={usuarios} ministerios={ministerios} />}
+        : <EscalasTable escalas={historico} usuarios={usuarios} />}
     </div>
   );
 }

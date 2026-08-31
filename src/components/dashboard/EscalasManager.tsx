@@ -7,7 +7,7 @@ import { EscalaForm } from "./EscalaForm";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
-import type { Escala, Ministerio, Usuario } from "@/types/domain";
+import type { Escala, Usuario } from "@/types/domain";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -21,14 +21,13 @@ function formatDate(iso: string | null) {
 export function EscalasManager({
   escalas: escalasOriginais,
   usuarios,
-  ministerios,
 }: {
   escalas: Escala[];
   usuarios: Usuario[];
-  ministerios: Ministerio[];
 }) {
   const [escalaAberta, setEscalaAberta] = useState<Escala | "nova" | null>(null);
   const [detalhe, setDetalhe] = useState<Escala | null>(null);
+  const [escalaParaExcluir, setEscalaParaExcluir] = useState<Escala | null>(null);
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
   const nomesPorId = useMemo(() => new Map(usuarios.map((usuario) => [usuario.id, usuario.nome])), [usuarios]);
 
@@ -82,10 +81,13 @@ export function EscalasManager({
                       <Pencil size={14} />
                       Editar
                     </button>
-                    <form action={removerEscalaAction} onSubmit={(event) => { if (!window.confirm(`Excluir a escala “${escala.titulo}”?`)) event.preventDefault(); }}>
-                      <input type="hidden" name="id" value={escala.id} />
-                      <button type="submit" className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300">Excluir</button>
-                    </form>
+                    <button
+                      type="button"
+                      onClick={() => setEscalaParaExcluir(escala)}
+                      className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300"
+                    >
+                      Excluir
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -95,7 +97,7 @@ export function EscalasManager({
         {escalas.length === 0 && <div className="db-empty db-empty-modern">Nenhuma escala cadastrada ainda.</div>}
       </div>
 
-      {detalhe && <EscalaDetailsDialog escala={detalhe} usuarios={usuarios} ministerios={ministerios} onClose={() => setDetalhe(null)} />}
+      {detalhe && <EscalaDetailsDialog escala={detalhe} usuarios={usuarios} onClose={() => setDetalhe(null)} />}
 
       {escalaAberta && (
         <div role="presentation" className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-4" onMouseDown={() => setEscalaAberta(null)}>
@@ -114,6 +116,46 @@ export function EscalasManager({
                 usuarios={usuarios}
                 onCancel={() => setEscalaAberta(null)}
               />
+            </div>
+          </section>
+        </div>
+      )}
+
+      {escalaParaExcluir && (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#020817]/70 p-4 backdrop-blur-sm"
+          onMouseDown={() => setEscalaParaExcluir(null)}
+        >
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirmar-exclusao-titulo"
+            aria-describedby="confirmar-exclusao-descricao"
+            className="db-panel w-full max-w-md p-5 text-left shadow-2xl sm:p-7"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <p className="db-label text-red-300">Confirmação</p>
+            <h2 id="confirmar-exclusao-titulo" className="db-title mt-2 text-2xl text-paper">
+              Excluir escala?
+            </h2>
+            <p id="confirmar-exclusao-descricao" className="mt-3 text-sm leading-6 text-muted">
+              A escala <strong className="text-paper">“{escalaParaExcluir.titulo}”</strong> será removida permanentemente.
+            </p>
+            <div className="db-form-actions mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setEscalaParaExcluir(null)}
+                className="db-ghost px-4 py-2 text-sm font-semibold"
+              >
+                Cancelar
+              </button>
+              <form action={removerEscalaAction} onSubmit={() => setEscalaParaExcluir(null)}>
+                <input type="hidden" name="id" value={escalaParaExcluir.id} />
+                <button type="submit" className="db-danger-button w-full px-4 py-2 text-sm font-semibold text-red-400 hover:text-red-300">
+                  Sim, excluir
+                </button>
+              </form>
             </div>
           </section>
         </div>

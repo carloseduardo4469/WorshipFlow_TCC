@@ -86,6 +86,12 @@ function validarEscala(data: ReturnType<typeof readEscalaForm>): string | null {
   if (tituloError) return tituloError;
   const observacoesError = validateMaxLength(data.observacoes ?? "", FORM_LIMITS.observacoes, "Observações");
   if (observacoesError) return observacoesError;
+  const temVozPrincipal = data.funcoesUsuarios.some(({ funcao }) =>
+    funcao.split(",").includes("voz-principal")
+  );
+  if (!temVozPrincipal) {
+    return "Escolha pelo menos uma pessoa como cantor(a) principal para publicar a escala.";
+  }
   if (!data.usuarioIdsValidos) return "Seleção de usuários inválida.";
   return null;
 }
