@@ -1,9 +1,8 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useActionState, useEffect, useRef, useState } from "react";
-import { LogOut, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { atualizarPerfilAction, excluirMinhaContaAction } from "@/lib/actions/usuarios";
-import { logoutAction } from "@/lib/actions/auth";
 import { Input, CheckboxGroup } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
@@ -204,12 +203,6 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
           {pending ? "Salvando..." : "Salvar alterações"}
         </Button>
       </div>
-      </form>
-      <form action={logoutAction} className="mt-5 max-w-lg">
-        <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/35 bg-red-500/85 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-300">
-          <LogOut size={18} />
-          Sair da conta
-        </button>
       </form>
       <form action={deleteAction} className="db-panel mt-5 flex max-w-lg flex-col gap-4 border border-red-300/20 p-6 text-left sm:p-8">
       <div>
