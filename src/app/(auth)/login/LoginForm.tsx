@@ -15,7 +15,6 @@ import {
   GhostUnderlineLink,
   PrimaryButton,
 } from "@/components/auth/AuthUi";
-import { AuthMiniFooter } from "@/components/auth/AuthMiniFooter";
 import { FORM_LIMITS } from "@/lib/validation/forms";
 
 const CADASTRO_MESSAGES: Record<string, string> = {
@@ -39,7 +38,10 @@ export function LoginForm() {
 
   const cadastroMsg = searchParams.get("cadastro");
   const resetMsg = searchParams.get("reset");
-  const oauthError = searchParams.get("error");
+  const authError = searchParams.get("error");
+  const oauthError = authError === "google" || authError === "suspended" ? authError : null;
+  const verificationError = authError === "verification";
+  const callbackError = authError === "callback";
   const accountMsg = searchParams.get("account");
 
   // O Supabase anexa o detalhe do erro de OAuth no fragment (#error=...),
@@ -107,6 +109,16 @@ export function LoginForm() {
           {accountMsg && ACCOUNT_MESSAGES[accountMsg] && (
             <div className="mb-5">
               <FormAlert kind="success">{ACCOUNT_MESSAGES[accountMsg]}</FormAlert>
+            </div>
+          )}
+          {verificationError && (
+            <div className="mb-5">
+              <FormAlert>Não foi possível confirmar seu email. O link pode ter expirado ou já ter sido usado. Solicite um novo email de confirmação.</FormAlert>
+            </div>
+          )}
+          {callbackError && (
+            <div className="mb-5">
+              <FormAlert>Não foi possível concluir a autenticação. Tente novamente.</FormAlert>
             </div>
           )}
           {oauthError === "suspended" && (
@@ -188,7 +200,6 @@ export function LoginForm() {
         </div>
       </AuthCard>
 
-      <AuthMiniFooter />
     </AuthShell>
   );
 }

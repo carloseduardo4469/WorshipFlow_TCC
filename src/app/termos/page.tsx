@@ -12,6 +12,15 @@ export default function TermosPage() {
           organização das atividades do ministério.
         </p>
         <p>Cada usuário é responsável por manter suas informações de acesso em segurança.</p>
+        <section id="contato" className="scroll-mt-8 border-t border-white/10 pt-5">
+          <h2 className="mb-2 font-display text-lg font-bold text-paper">Contato</h2>
+          <p>
+            Para dúvidas sobre os termos, privacidade ou uso do sistema, envie um email para{" "}
+            <a href="mailto:Lucasavilagodoi43@gmail.com" className="font-semibold text-cyan-300 underline decoration-cyan-300/40 underline-offset-4">
+              Lucasavilagodoi43@gmail.com
+            </a>.
+          </p>
+        </section>
       </div>
     </main>
   );

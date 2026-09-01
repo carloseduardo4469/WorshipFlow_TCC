@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/esqueci-senha",
   "/redefinir-senha",
   "/auth/callback",
+  "/auth/confirm",
   "/termos",
   "/privacidade",
   "/manifest.webmanifest",

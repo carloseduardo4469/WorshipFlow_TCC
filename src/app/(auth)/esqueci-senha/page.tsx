@@ -12,7 +12,6 @@ import {
   GhostPillLink,
   PrimaryButton,
 } from "@/components/auth/AuthUi";
-import { AuthFooterCard } from "@/components/auth/AuthFooterCard";
 import { FORM_LIMITS } from "@/lib/validation/forms";
 
 export default function EsqueciSenhaPage() {
@@ -78,7 +77,6 @@ export default function EsqueciSenhaPage() {
         </div>
       </AuthCard>
 
-      <AuthFooterCard />
     </AuthShell>
   );
 }

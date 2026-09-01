@@ -86,7 +86,7 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
     password: senha,
     options: {
       data: { nome, telefone },
-      emailRedirectTo: `${siteUrl}/auth/callback`,
+      emailRedirectTo: `${siteUrl}/auth/callback?flow=signup`,
     },
   });
 
@@ -133,7 +133,7 @@ export async function esqueciSenhaAction(
   // Não revelamos se o email existe ou não — no caminho feliz a resposta é
   // sempre a mesma. Erro aqui só acontece com email malformado ou rate limit.
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha`,
+    redirectTo: `${siteUrl}/auth/callback?flow=recovery&next=/redefinir-senha`,
   });
 
   if (error) {
@@ -183,7 +183,7 @@ export async function loginComGoogleAction(formData: FormData) {
     provider: "google",
     options: {
       queryParams: { prompt: "select_account" },
-      redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
+      redirectTo: `${siteUrl}/auth/callback?flow=google&next=${encodeURIComponent(next)}`,
     },
   });
 

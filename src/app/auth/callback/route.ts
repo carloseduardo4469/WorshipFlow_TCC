@@ -15,6 +15,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next"));
+  const flow = searchParams.get("flow");
 
   if (code) {
     const supabase = await createClient();
@@ -29,9 +30,11 @@ export async function GET(request: Request) {
 
   // Link de recovery expirado/já usado: manda pra mensagem certa em vez do
   // erro genérico de OAuth ("Não foi possível entrar com o Google").
-  if (next.startsWith("/redefinir-senha")) {
+  if (flow === "recovery" || next.startsWith("/redefinir-senha")) {
     return NextResponse.redirect(`${origin}/login?reset=link-expirado`);
   }
 
+  if (flow === "google") return NextResponse.redirect(`${origin}/login?error=google`);
+  if (flow === "signup") return NextResponse.redirect(`${origin}/login?error=verification`);
   return NextResponse.redirect(`${origin}/login?error=callback`);
 }

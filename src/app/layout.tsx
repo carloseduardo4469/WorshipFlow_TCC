@@ -6,6 +6,7 @@ import {
 import "./globals.css";
 import { appConfig } from "@/content/app-config";
 import { PwaRegister } from "@/components/PwaRegister";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -78,6 +79,7 @@ export default function RootLayout({
       <body>
         <PwaRegister />
         {children}
+        <SiteFooter />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -14,7 +14,6 @@ import {
   GhostUnderlineLink,
   PrimaryButton,
 } from "@/components/auth/AuthUi";
-import { AuthMiniFooter } from "@/components/auth/AuthMiniFooter";
 import {
   FORM_LIMITS,
   NAME_ALLOWED_PATTERN,
@@ -158,7 +157,6 @@ export default function CadastroPage() {
         </div>
       </AuthCard>
 
-      <AuthMiniFooter />
     </AuthShell>
   );
 }
