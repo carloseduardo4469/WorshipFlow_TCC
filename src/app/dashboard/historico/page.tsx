@@ -5,15 +5,15 @@ import { HistoricoCalendar } from "@/components/dashboard/HistoricoCalendar";
 import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-automatico";
 
 export default async function HistoricoPage() {
-  await requireAuth();
+  const { profile } = await requireAuth();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list());
+  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list(profile.ministerioId ?? -1));
   const limite = hojeEmSaoPaulo();
   const historico = escalas.filter((escala) =>
     escala.status === "CONCLUIDA" && Boolean(escala.dataEscala && escala.dataEscala < limite)
   );
   const usuarioIds = [...new Set(historico.flatMap((escala) => escala.usuarioIds))];
-  const usuarios = await repos.usuarios.getByIds(usuarioIds);
+  const usuarios = (await repos.usuarios.getByIds(usuarioIds)).filter((usuario) => usuario.ministerioId === profile.ministerioId);
 
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">

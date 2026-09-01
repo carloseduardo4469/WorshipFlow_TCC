@@ -8,6 +8,7 @@ import { buscarMusicas, buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { Select } from "@/components/ui/Select";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
@@ -25,6 +26,7 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const router = useRouter();
+  const dialogRef = useDialogA11y(true, onClose);
 
   useEffect(() => {
     const timer = setTimeout(() => setTermo(busca.trim()), 250);
@@ -99,7 +101,7 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
   return (
     <>
     <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-5" onMouseDown={onClose}>
-      <section role="dialog" aria-modal="true" aria-labelledby="musicas-escala-titulo" className="db-member-modal relative my-auto max-h-[calc(100dvh-1rem)] w-full max-w-2xl overflow-y-auto p-4 sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="musicas-escala-titulo" className="db-member-modal relative my-auto max-h-[calc(100dvh-1rem)] w-full max-w-2xl overflow-y-auto p-4 sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
         <button type="button" onClick={onClose} className="db-icon-button absolute right-4 top-4 h-9 w-9" aria-label="Fechar"><X size={17} /></button>
         <p className="db-label text-cyan-300">Repertório da escala</p>
         <h2 id="musicas-escala-titulo" className="db-title mt-2 pr-12 text-2xl text-paper sm:text-3xl">Adicionar músicas</h2>

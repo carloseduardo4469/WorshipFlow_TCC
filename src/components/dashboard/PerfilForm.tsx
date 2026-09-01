@@ -58,7 +58,6 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [state, formAction, pending] = useActionState(atualizarPerfilAction, null);
   const [deleteState, deleteAction, deletePending] = useActionState(excluirMinhaContaAction, null);
   const [preview, setPreview] = useState(usuario.fotoPerfilUrl);
-  const [fileName, setFileName] = useState("");
   const [bottomMessage, setBottomMessage] = useState("");
   const [confirmandoExcluirConta, setConfirmandoExcluirConta] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
@@ -81,7 +80,6 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
 
   function clearSelectedFile(input: HTMLInputElement) {
     input.value = "";
-    setFileName("");
     setPreview(usuario.fotoPerfilUrl);
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current);
@@ -122,7 +120,6 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     const objectUrl = URL.createObjectURL(fotoOtimizada);
     previewUrlRef.current = objectUrl;
-    setFileName(file.name);
     setPreview(objectUrl);
   }
 

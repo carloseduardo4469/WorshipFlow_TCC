@@ -5,13 +5,13 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { EscalaForm } from "@/components/dashboard/EscalaForm";
 
 export default async function EditarEscalaPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   const { id } = await params;
 
   const repos = await getRepositories();
   const escala = await repos.escalas.getById(Number(id));
-  if (!escala) notFound();
-  const usuarios = await repos.usuarios.getByIds(escala.usuarioIds);
+  if (!escala || profile.ministerioId === null || escala.ministerioId !== profile.ministerioId) notFound();
+  const usuarios = (await repos.usuarios.getByIds(escala.usuarioIds)).filter((usuario) => usuario.ministerioId === profile.ministerioId);
 
   return (
     <div className="mx-auto max-w-[860px] lg:mx-0">

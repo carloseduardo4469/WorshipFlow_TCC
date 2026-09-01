@@ -35,7 +35,7 @@ export interface OpcoesPaginacao<T> {
 }
 
 export interface PaginacaoDeslizante<T> {
-  containerRef: RefObject<HTMLDivElement>;
+  containerRef: RefObject<HTMLDivElement | null>;
   sentinelaRef: RefCallback<HTMLElement>;
   itensVisiveis: T[];
   topoAltura: number;
@@ -70,13 +70,13 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
   const [temMais, setTemMais] = useState(true);
   const [erro, setErro] = useState(false);
   const [roleiDaLista, setRoleiDaLista] = useState(false);
+  const [alturas, setAlturas] = useState(new Map<string | number, number>());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelaElementoRef = useRef<HTMLElement | null>(null);
   const sentinelaRef = useCallback((elemento: HTMLElement | null) => {
     sentinelaElementoRef.current = elemento;
   }, []);
-  const alturasRef = useRef(new Map<string | number, number>());
   const itensRef = useRef<T[]>([]);
   const inicioRef = useRef(0);
   const topoRef = useRef(0);
@@ -100,12 +100,9 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
   }, []);
 
   const alturaDe = useCallback(
-    (item: T): number => alturasRef.current.get(chaveDeItem(item)) ?? alturaPadraoLinha,
-    [chaveDeItem, alturaPadraoLinha]
+    (item: T): number => alturas.get(chaveDeItem(item)) ?? alturaPadraoLinha,
+    [alturas, chaveDeItem, alturaPadraoLinha]
   );
-
-  const alturaDeRef = useRef(alturaDe);
-  alturaDeRef.current = alturaDe;
 
   const fim = Math.min(inicio + limiteDom, itens.length);
   const itensVisiveis = itens.slice(inicio, fim);
@@ -115,20 +112,19 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
 // Carrega a primeira página sempre que a busca/filtro mudar.
   useEffect(() => {
     const geracao = ++geracaoRef.current;
-    itensRef.current = [];
-    setItens([]);
-    alturasRef.current = new Map();
-    definirInicio(0);
-    definirTopo(0);
-    setTemMais(true);
-    setErro(false);
-    setRoleiDaLista(false);
-    definirCarregandoMais(false);
-    setCarregando(true);
-    containerRef.current?.scrollTo({ top: 0 });
-
     let ativo = true;
     const timer = setTimeout(async () => {
+      itensRef.current = [];
+      setItens([]);
+      setAlturas(new Map());
+      definirInicio(0);
+      definirTopo(0);
+      setTemMais(true);
+      setErro(false);
+      setRoleiDaLista(false);
+      definirCarregandoMais(false);
+      setCarregando(true);
+      containerRef.current?.scrollTo({ top: 0 });
       try {
         const resultado = await buscaPorPagina(0, tamanhoPagina + 1);
         if (!ativo || geracao !== geracaoRef.current) return;
@@ -179,7 +175,7 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
 
     // Desce: linhas que já passaram (com folga) do viewport saem do DOM.
     while (novoInicio < atual.length) {
-      const h = alturaDeRef.current(atual[novoInicio]);
+      const h = alturaDe(atual[novoInicio]);
       if (novaTopo + h > scrollTop - OVERSAN) break;
       novaTopo += h;
       novoInicio++;
@@ -187,7 +183,7 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
 
     // Sobe: ao voltar, as linhas re-entram no DOM.
     while (novoInicio > 0) {
-      const h = alturaDeRef.current(atual[novoInicio - 1]);
+      const h = alturaDe(atual[novoInicio - 1]);
       if (novaTopo - h <= scrollTop - OVERSAN) break;
       novaTopo -= h;
       novoInicio--;
@@ -195,7 +191,7 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
 
     if (novoInicio !== inicioRef.current) definirInicio(novoInicio);
     if (novaTopo !== topoRef.current) definirTopo(novaTopo);
-  }, [definirInicio, definirTopo]);
+  }, [alturaDe, definirInicio, definirTopo]);
 const aoRolar = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -241,7 +237,6 @@ const aoRolar = useCallback(() => {
     );
     observer.observe(sentinela);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carregarMais, temMais, limiteDom, carregando]);
 
   const refLinha = useCallback(
@@ -253,7 +248,14 @@ const aoRolar = useCallback(() => {
       // linha inclui o gap — sem isso o spacer desincroniza ao descartar linhas.
       const pai = elemento.parentElement;
       const gap = pai ? Number.parseFloat(getComputedStyle(pai).rowGap) || 0 : 0;
-      alturasRef.current.set(chaveDeItem(item), alturaReal + gap);
+      const chave = chaveDeItem(item);
+      const proximaAltura = alturaReal + gap;
+      setAlturas((atuais) => {
+        if (atuais.get(chave) === proximaAltura) return atuais;
+        const proximas = new Map(atuais);
+        proximas.set(chave, proximaAltura);
+        return proximas;
+      });
     },
     [chaveDeItem]
   );
@@ -275,11 +277,11 @@ const aoRolar = useCallback(() => {
       if (indice < inicioRef.current) {
         const novoInicio = Math.max(0, inicioRef.current - 1);
         definirInicio(novoInicio);
-        definirTopo(Math.max(0, topoRef.current - alturaDeRef.current(item)));
+        definirTopo(Math.max(0, topoRef.current - alturaDe(item)));
       }
       return indice;
     },
-    [chaveDeItem, definirInicio, definirTopo]
+    [alturaDe, chaveDeItem, definirInicio, definirTopo]
   );
 
   const restaurarItem = useCallback(

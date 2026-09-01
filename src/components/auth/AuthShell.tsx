@@ -1,36 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
-
-type ThemeMode = "dark" | "light";
-
-const STORAGE_KEY = "wf-auth-theme";
+import { applyTheme, setTheme, useThemeMode } from "@/lib/theme/client";
 
 /**
  * Estrutura das telas de autenticação: fundo navy com grade quadriculada,
  * toggle de tema fixo no canto superior direito e conteúdo centralizado.
  */
 export function AuthShell({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>("dark");
+  const mode = useThemeMode();
 
   // Recupera a preferência salva depois da hidratação (evita mismatch de SSR).
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    const next = saved === "light" ? "light" : "dark";
-    setMode(next);
-    document.documentElement.dataset.authTheme = next;
-    return () => { delete document.documentElement.dataset.authTheme; };
-  }, []);
+    applyTheme(mode);
+  }, [mode]);
 
-  const toggleMode = useCallback(() => {
-    setMode((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      window.localStorage.setItem(STORAGE_KEY, next);
-      document.documentElement.dataset.authTheme = next;
-      return next;
-    });
-  }, []);
+  function toggleMode() {
+    setTheme(mode === "dark" ? "light" : "dark");
+  }
 
   return (
     <div

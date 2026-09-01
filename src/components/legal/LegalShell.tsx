@@ -2,26 +2,19 @@
 
 import Link from "next/link";
 import { ArrowLeft, Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
-
-type ThemeMode = "dark" | "light";
-const STORAGE_KEY = "wf-legal-theme";
+import { useEffect } from "react";
+import { applyTheme, setTheme, useThemeMode } from "@/lib/theme/client";
 
 export function LegalShell({ children, currentPage }: { children: React.ReactNode; currentPage: "termos" | "privacidade" }) {
-  const [mode, setMode] = useState<ThemeMode>("dark");
+  const mode = useThemeMode();
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    const next = saved === "light" ? "light" : "dark";
-    setMode(next);
-    document.documentElement.dataset.legalTheme = next;
-  }, []);
+    applyTheme(mode);
+  }, [mode]);
 
   function toggleTheme() {
     const next = mode === "dark" ? "light" : "dark";
-    window.localStorage.setItem(STORAGE_KEY, next);
-    document.documentElement.dataset.legalTheme = next;
-    setMode(next);
+    setTheme(next);
   }
 
   return (

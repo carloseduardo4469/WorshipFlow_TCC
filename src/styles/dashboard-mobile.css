@@ -1,0 +1,51 @@
+/* Navegação sólida no dashboard: evita que o conteúdo atravesse a barra. */
+[class~="bg-[#070d1a]/75"],
+[class~="bg-[#07101e]/90"],
+[class~="bg-[#071525]/95"],
+[class~="bg-[#07101e]/95"] {
+  background-color: #070d1a !important;
+  backdrop-filter: none !important;
+}
+
+/* Footer compacto e navegação inferior sempre legível no dashboard mobile. */
+.db-mobile-nav { border-color: rgba(246,198,83,.42); background: #07101e; box-shadow: 0 -12px 34px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,222,121,.08); }
+.db-mobile-nav-link { display:flex; min-width:0; min-height:3.25rem; flex-direction:column; align-items:center; justify-content:center; gap:.25rem; margin:.32rem .12rem; border:1px solid transparent; border-radius:.85rem; color:#c1cad8; font-size:.62rem; font-weight:750; transition:color .18s ease, background-color .18s ease, transform .18s ease; }
+.db-mobile-nav-link-active { border-color:rgba(246,198,83,.62); background:rgba(246,198,83,.14); color:#ffe17a; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 1px rgba(246,198,83,.08); transform:translateY(-2px); }
+html[data-dashboard-theme="light"] .db-mobile-nav { border-color:rgba(167,105,8,.32); background:#f9fcfe; box-shadow:0 -10px 28px rgba(40,66,91,.2); }
+html[data-dashboard-theme="light"] .db-mobile-nav-link { color:#40536a; }
+html[data-dashboard-theme="light"] .db-mobile-nav-link-active { border-color:rgba(180,112,6,.48); background:#fff0bd; color:#714900; }
+
+@media (max-width: 639px) {
+  .site-footer-dashboard { padding-top:1rem; }
+  .site-footer-dashboard > div { gap:.75rem; }
+  .site-footer-dashboard nav { gap:.35rem .85rem; }
+  .site-footer-dashboard nav a { padding:.2rem 0; color:#bdc7d5; font-size:.66rem; }
+  .site-footer-dashboard p { font-size:.66rem; }
+}
+
+/* Modais longos terminam antes da navegação fixa e continuam roláveis no iOS. */
+@media (max-width: 1023px) {
+  .db-mobile-header {
+    height:calc(64px + env(safe-area-inset-top));
+    padding-top:env(safe-area-inset-top);
+  }
+  .db-mobile-drawer { padding-top:calc(1.25rem + env(safe-area-inset-top)); }
+  .db-dashboard-main { padding-top:calc(5rem + env(safe-area-inset-top)); }
+  .db-dashboard-modal-layer {
+    top: calc(64px + env(safe-area-inset-top));
+    bottom: calc(70px + env(safe-area-inset-bottom));
+    align-items: flex-start;
+  }
+  .db-dashboard-modal-scroll {
+    width: 100%;
+    max-height: calc(100dvh - 64px - env(safe-area-inset-top) - 70px - env(safe-area-inset-bottom) - 1rem);
+    margin-block: .5rem;
+    padding-bottom: 2rem !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
+.db-schedule-song-list { max-height:min(21rem,42dvh); overflow-y:auto; overscroll-behavior:contain; padding:.15rem .3rem .75rem 0; scroll-padding-bottom:.75rem; scrollbar-width:thin; scrollbar-color:rgba(244,190,76,.58) transparent; -webkit-overflow-scrolling:touch; }
+.db-schedule-song-list::-webkit-scrollbar { width:5px; }
+.db-schedule-song-list::-webkit-scrollbar-thumb { border-radius:999px; background:rgba(244,190,76,.58); }

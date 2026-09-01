@@ -1,3 +1,4 @@
+import "@/styles/legal.css";
 import { Database, Eye, Mail, ShieldCheck, Trash2, UserRoundCheck } from "lucide-react";
 import { LegalShell } from "@/components/legal/LegalShell";
 

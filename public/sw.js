@@ -3,9 +3,8 @@
  * Estratégia:
  *  - App Shell (HTML, JS, CSS, fontes, logo): cache-first, instalação
  *    imediata na primeira visita (PRECACHE).
- *  - Navegações (document): network-first com fallback em cache — se a rede
- *    estiver disponível busca o HTML novo (dados sempre frescos), se cair
- *    serve a última página visitada (offline).
+ *  - Navegações públicas: network-first com fallback em cache.
+ *  - Navegações autenticadas: sempre pela rede e nunca no Cache Storage.
  *  - Recursos de imagem/fonte: stale-while-revalidate (cache imediato +
  *    atualização em segundo plano).
  *
@@ -14,14 +13,12 @@
  * e são adicionados ao cache.
  */
 
-const PRECACHE = "worshipflow-shell-v1";
-const DYNAMIC_CACHE = "worshipflow-pages-v1";
-const IMAGES_CACHE = "worshipflow-images-v1";
+const PRECACHE = "worshipflow-shell-v2";
+const DYNAMIC_CACHE = "worshipflow-public-pages-v2";
+const IMAGES_CACHE = "worshipflow-images-v2";
 
 const PRECACHE_URLS = [
-  "/",
   "/login",
-  "/dashboard",
   "/manifest.webmanifest",
   "/favicon.ico",
   "/icon.webp",
@@ -29,6 +26,13 @@ const PRECACHE_URLS = [
 ];
 
 const CACHEABLE_EXT = /\.(?:js|css|woff2?|webp|svg|ico|png)$/;
+const PUBLIC_NAVIGATION_PATHS = new Set([
+  "/login",
+  "/cadastro",
+  "/esqueci-senha",
+  "/termos",
+  "/privacidade",
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -79,25 +83,31 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) {
-    // Imagens remotas (ex.: Unsplash) — nunca bloquear a navegação por elas.
-    if (CACHEABLE_EXT.test(url.pathname)) {
-      event.respondWith(staleWhileRevalidate(request, IMAGES_CACHE));
-    }
+    // Fotos de perfil e outros recursos remotos podem ser privados. O cache
+    // HTTP normal do navegador continua disponível, mas o SW não os persiste.
     return;
   }
 
-  // Navegação entre telas: network-first (dados sempre frescos), fallback em
-  // cache para funcionar offline.
+  // Navegação pública: network-first com fallback offline.
   if (request.mode === "navigate") {
+    // Páginas autenticadas nunca entram no Cache Storage. Isso impede que
+    // dados de uma conta reapareçam offline depois do logout ou em aparelho
+    // compartilhado.
+    if (!PUBLIC_NAVIGATION_PATHS.has(url.pathname)) {
+      event.respondWith(fetch(request));
+      return;
+    }
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, copy));
+          if (response.ok && response.type === "basic") {
+            const copy = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match("/"))
+          caches.match(request).then((cached) => cached || caches.match("/login"))
         )
     );
     return;

@@ -64,7 +64,11 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#07101e",
+  viewportFit: "cover" as const,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#07101e" },
+  ],
 };
 
 export default function RootLayout({
@@ -79,7 +83,7 @@ export default function RootLayout({
       <body>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try { var legalTheme = localStorage.getItem("wf-legal-theme"); if (legalTheme === "light" || legalTheme === "dark") document.documentElement.dataset.legalTheme = legalTheme; } catch (_) {}`,
+            __html: `try { var wfTheme = localStorage.getItem("wf-theme") || localStorage.getItem("wf-dashboard-theme") || localStorage.getItem("wf-auth-theme") || localStorage.getItem("wf-legal-theme"); wfTheme = wfTheme === "light" ? "light" : "dark"; document.documentElement.dataset.theme = wfTheme; document.documentElement.dataset.authTheme = wfTheme; document.documentElement.dataset.dashboardTheme = wfTheme; document.documentElement.dataset.legalTheme = wfTheme; var themeMeta = document.querySelector('meta[name="theme-color"]'); if (themeMeta) themeMeta.setAttribute("content", wfTheme === "light" ? "#f6f8f5" : "#07101e"); } catch (_) {}`,
           }}
         />
         <PwaRegister />

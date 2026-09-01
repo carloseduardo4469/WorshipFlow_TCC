@@ -99,7 +99,8 @@ function validarEscala(data: ReturnType<typeof readEscalaForm>): string | null {
 
 async function validarVinculos(
   repos: Awaited<ReturnType<typeof getRepositories>>,
-  data: ReturnType<typeof readEscalaForm>
+  data: ReturnType<typeof readEscalaForm>,
+  ministerioId: number
 ): Promise<string | null> {
   const [usuarios, musicas] = await Promise.all([
     repos.usuarios.getByIds(data.usuarioIds),
@@ -107,11 +108,14 @@ async function validarVinculos(
   ]);
   if (usuarios.length !== data.usuarioIds.length) return "Um ou mais membros selecionados não existem mais.";
   if (musicas.length !== data.musicaIds.length) return "Uma ou mais músicas selecionadas não existem mais.";
+  if (usuarios.some((usuario) => usuario.ministerioId !== ministerioId)) return "Um ou mais membros pertencem a outro ministério.";
+  if (musicas.some((musica) => musica.ministerioId !== ministerioId)) return "Uma ou mais músicas pertencem a outro ministério.";
   return null;
 }
 
 export async function criarEscalaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdmin();
+  const current = await requireAdmin();
+  if (current.profile.ministerioId === null) return { error: "Seu perfil não está vinculado a um ministério." };
   const data = readEscalaForm(formData);
   const escalaError = validarEscala(data);
   if (escalaError) return { error: escalaError };
@@ -119,19 +123,25 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   if (!data.tonalidadeValida) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
   const repos = await getRepositories();
-  const vinculosError = await validarVinculos(repos, data);
+  const vinculosError = await validarVinculos(repos, data, current.profile.ministerioId);
   if (vinculosError) return { error: vinculosError };
   const escala = await repos.escalas.create({
     titulo: data.titulo,
     dataEscala: data.dataEscala,
     status: "PUBLICADA",
     observacoes: data.observacoes,
-    ministerioId: null,
+    ministerioId: current.profile.ministerioId,
     funcoesUsuarios: data.funcoesUsuarios,
     tonalidadesMusicas: data.tonalidadesMusicas,
   });
-  await repos.escalas.setUsuarios(escala.id, data.usuarioIds);
-  await repos.escalas.setMusicas(escala.id, data.musicaIds);
+  try {
+    await repos.escalas.setUsuarios(escala.id, data.usuarioIds);
+    await repos.escalas.setMusicas(escala.id, data.musicaIds);
+  } catch (error) {
+    await repos.escalas.remove(escala.id).catch(() => {});
+    console.error("Falha ao vincular dados da nova escala:", error);
+    return { error: "Não foi possível concluir o cadastro da escala. Nenhuma escala incompleta foi mantida." };
+  }
 
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
@@ -144,7 +154,8 @@ export async function atualizarEscalaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin();
+  const current = await requireAdmin();
+  if (current.profile.ministerioId === null) return { error: "Seu perfil não está vinculado a um ministério." };
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) return { error: "Escala inválida." };
   const data = readEscalaForm(formData);
@@ -154,20 +165,35 @@ export async function atualizarEscalaAction(
 
   const repos = await getRepositories();
   const escalaAtual = await repos.escalas.getById(id);
-  if (!escalaAtual) return { error: "Escala não encontrada." };
+  if (!escalaAtual || escalaAtual.ministerioId !== current.profile.ministerioId) return { error: "Escala não encontrada." };
   if (!dataEscalaValida(data.dataEscala) && data.dataEscala !== escalaAtual.dataEscala) {
     return { error: "A nova data precisa ser válida e não pode estar no passado." };
   }
-  const vinculosError = await validarVinculos(repos, data);
+  const vinculosError = await validarVinculos(repos, data, current.profile.ministerioId);
   if (vinculosError) return { error: vinculosError };
-  await repos.escalas.update(id, {
-    titulo: data.titulo,
-    dataEscala: data.dataEscala,
-    observacoes: data.observacoes,
-    funcoesUsuarios: data.funcoesUsuarios,
-    // Músicas não são mais editadas neste formulário; preserve as existentes.
-  });
-  await repos.escalas.setUsuarios(id, data.usuarioIds);
+  try {
+    await repos.escalas.update(id, {
+      titulo: data.titulo,
+      dataEscala: data.dataEscala,
+      observacoes: data.observacoes,
+      funcoesUsuarios: data.funcoesUsuarios,
+      // Músicas não são mais editadas neste formulário; preserve as existentes.
+    });
+    await repos.escalas.setUsuarios(id, data.usuarioIds);
+  } catch (error) {
+    await repos.escalas.update(id, {
+      titulo: escalaAtual.titulo,
+      dataEscala: escalaAtual.dataEscala,
+      status: escalaAtual.status,
+      observacoes: escalaAtual.observacoes,
+      funcoesUsuarios: escalaAtual.funcoesUsuarios,
+      tonalidadesMusicas: escalaAtual.tonalidadesMusicas,
+      ministerioId: escalaAtual.ministerioId,
+    }).catch(() => {});
+    await repos.escalas.setUsuarios(id, escalaAtual.usuarioIds).catch(() => {});
+    console.error("Falha ao atualizar escala:", error);
+    return { error: "Não foi possível salvar a escala. Os dados anteriores foram preservados." };
+  }
 
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
@@ -177,11 +203,14 @@ export async function atualizarEscalaAction(
 }
 
 export async function removerEscalaAction(formData: FormData) {
-  await requireAdmin();
+  const current = await requireAdmin();
+  if (current.profile.ministerioId === null) throw new Error("Perfil sem ministério.");
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) throw new Error("Escala inválida.");
 
   const repos = await getRepositories();
+  const escala = await repos.escalas.getById(id);
+  if (!escala || escala.ministerioId !== current.profile.ministerioId) throw new Error("Escala não encontrada.");
   await repos.escalas.remove(id);
 
   invalidateDataCache("escalas");
@@ -195,6 +224,7 @@ export async function adicionarMusicasNaEscalaAction(
   formData: FormData
 ): Promise<ActionState> {
   const current = await requireAuth();
+  if (current.profile.ministerioId === null) return { error: "Seu perfil não está vinculado a um ministério." };
   const escalaId = Number(formData.get("escalaId"));
   if (!Number.isInteger(escalaId) || escalaId <= 0) return { error: "Escala inválida." };
 
@@ -215,7 +245,7 @@ export async function adicionarMusicasNaEscalaAction(
 
   const repos = await getRepositories();
   const escala = await repos.escalas.getById(escalaId);
-  if (!escala) return { error: "Escala não encontrada." };
+  if (!escala || escala.ministerioId !== current.profile.ministerioId) return { error: "Escala não encontrada." };
 
   const cantorPrincipal = escala.funcoesUsuarios.some(
     ({ usuarioId, funcao }) =>
@@ -228,6 +258,9 @@ export async function adicionarMusicasNaEscalaAction(
   const musicas = await repos.musicas.getByIds(musicaIds);
   if (musicas.length !== musicaIds.length) {
     return { error: "Uma ou mais músicas selecionadas não existem mais." };
+  }
+  if (musicas.some((musica) => musica.ministerioId !== current.profile.ministerioId)) {
+    return { error: "Uma ou mais músicas pertencem a outro ministério." };
   }
 
   try {
@@ -258,6 +291,23 @@ export async function adicionarMusicasNaEscalaAction(
       await repos.escalas.update(escalaId, { tonalidadesMusicas });
     }
   } catch {
+    try {
+      if (repos.backend === "supabase") {
+        const admin = createAdminClient();
+        await admin.from("escala_musicas").delete().eq("escala_id", escalaId);
+        if (escala.musicaIds.length > 0) {
+          await admin.from("escala_musicas").insert(
+            escala.musicaIds.map((musicaId) => ({ escala_id: escalaId, musica_id: musicaId }))
+          );
+        }
+        await admin.from("escalas").update({ tonalidades_musicas: escala.tonalidadesMusicas }).eq("id", escalaId);
+      } else {
+        await repos.escalas.setMusicas(escalaId, escala.musicaIds);
+        await repos.escalas.update(escalaId, { tonalidadesMusicas: escala.tonalidadesMusicas });
+      }
+    } catch (rollbackError) {
+      console.error("Falha ao restaurar músicas da escala:", rollbackError);
+    }
     return { error: "Não foi possível salvar as músicas da escala. Tente novamente." };
   }
   invalidateDataCache("escalas");

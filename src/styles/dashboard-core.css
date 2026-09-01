@@ -1,0 +1,357 @@
+/* ==========================================================================
+   Área autenticada (dashboard y pantallas de gestión)
+   Reutiliza la paleta navy oscuro de las pantallas de acceso para que toda
+   la aplicación se sienta del mismo "sistema": paneles, tipografía serif
+   para títulos, CTA en ámbar y etiquetas mono espaciadas.
+   ========================================================================== */
+.db-bg {
+  background-color: #0a1122;
+}
+
+/* Retícula sutil derivada del fondo de las pantallas de acceso */
+.db-grid {
+  background-image: linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Panel/card base del dashboard */
+.db-panel {
+  background-color: #0e1730;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px -30px rgba(2, 6, 23, 0.8);
+}
+
+.db-card {
+  background-color: #0c1428;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+}
+
+/* Etiqueta mono, mayúscula y espaciada (ESTADÍSTICA, ACCIÓN…) */
+.db-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #97a3bd;
+}
+
+.db-title {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+/* Enlace/botón pill ámbar (CTA) */
+.db-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(101, 72, 12, 0.45);
+  padding: 0.72rem 1.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #241b04;
+  background-image: linear-gradient(180deg, #f7d06b, #efbc41);
+  box-shadow: 0 14px 32px -10px rgba(240, 190, 70, 0.45);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.db-cta:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* Botón ghost pill para acciones secundarias / cancelar */
+.db-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 0.68rem 1.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f4f1e9;
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.25s ease;
+}
+
+.db-ghost:hover {
+  border-color: rgba(232, 163, 61, 0.55);
+  transform: translateY(-1px);
+}
+
+/* Botão ámbar compacto (ações de linha / salvar inline) */
+.db-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(101, 72, 12, 0.45);
+  padding: 0.4rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #241b04;
+  background-color: #efbc41;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.db-btn-sm:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.db-btn-sm:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.db-danger-button {
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  border-radius: 0.6rem;
+  padding: 0.38rem 0.65rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.db-danger-button:hover {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+/* Input del dashboard: fondo oscuro, foco ámbar */
+.db-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background-color: #0e1730;
+  padding: 0.72rem 0.9rem;
+  font-size: 0.9rem;
+  color: #f4f1e9;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.db-input::placeholder {
+  color: #5d6a85;
+}
+
+.db-date-input {
+  min-height: 42px;
+  padding-right: 2.75rem;
+  color-scheme: dark;
+}
+
+.db-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+  filter: invert(82%) sepia(20%) saturate(680%) hue-rotate(158deg);
+}
+
+.db-input:focus {
+  outline: none;
+  border-color: rgba(232, 163, 61, 0.6);
+  box-shadow: 0 0 0 3px rgba(232, 163, 61, 0.14);
+}
+
+/* Select oscuro consistente con .db-input */
+.db-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background-color: #0e1730;
+  padding: 0.66rem 0.9rem;
+  font-size: 0.85rem;
+  color: #f4f1e9;
+  color-scheme: dark;
+  transition: border-color 0.2s ease;
+}
+
+.db-select option {
+  background: #0b1b30;
+  color: #dce8f2;
+}
+
+.db-select:focus {
+  outline: none;
+  border-color: rgba(232, 163, 61, 0.6);
+}
+
+.db-select-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 40;
+  overflow-y: auto;
+  max-height: min(16rem, 60vh);
+  border: 1px solid rgba(83, 217, 235, 0.42);
+  border-radius: 12px;
+  background: #0b1b30;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  padding: 0.3rem;
+}
+
+.db-select-option {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  color: #dce8f2;
+  font-size: 0.85rem;
+}
+
+.db-select-option:hover,
+.db-select-option[aria-selected="true"] {
+  background: rgba(83, 217, 235, 0.16);
+  color: #ffffff;
+}
+
+@media (max-width: 767px) {
+  .db-select-menu {
+    max-height: min(14rem, 60vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Tabla del dashboard con cabecera mono en mayúsculas */
+.db-table {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.db-table thead th {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #97a3bd;
+  white-space: nowrap;
+}
+
+.db-table tbody tr + tr {
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Acento ámbar suave al pasar por una fila */
+.db-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.db-table tbody tr:hover {
+  background: rgba(232, 163, 61, 0.04);
+}
+
+/* Badge de estado pill */
+.db-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.db-badge::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Variantes cromáticas para estado de escala */
+.db-badge-muted {
+  color: #97a3bd;
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.db-badge-teal {
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.12);
+}
+
+.db-badge-amber {
+  color: #f2c14e;
+  background: rgba(242, 193, 78, 0.12);
+}
+
+.db-badge-red {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.db-badge-green {
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.12);
+}
+
+.db-user-account { transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+.db-user-account-active { border-color:rgba(74,222,128,.38); box-shadow:inset 3px 0 0 rgba(74,222,128,.72); }
+.db-user-account-suspended { border-color:rgba(251,146,60,.48); box-shadow:inset 3px 0 0 rgba(251,146,60,.82); }
+html[data-dashboard-theme="light"] .db-user-account-active { border-color:rgba(22,163,74,.4); background:#f2fbf5; box-shadow:inset 3px 0 0 #22a653; }
+html[data-dashboard-theme="light"] .db-user-account-suspended { border-color:rgba(234,88,12,.42); background:#fff7ed; box-shadow:inset 3px 0 0 #ea7217; }
+html[data-dashboard-theme="light"] .db-user-account-active label { color:#08753d; }
+html[data-dashboard-theme="light"] .db-user-account-suspended label { color:#a74408; }
+
+/* Checkbox con accent ámbar */
+.db-checkbox {
+  accent-color: #e8a33d;
+}
+
+/* Mensaje de estado vacío */
+.db-empty {
+  border: 1.5px dashed rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 2.8rem 1rem;
+  text-align: center;
+  color: #8a94ad;
+}
+
+/* Divisor vertical/delgado con acento */
+.db-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+/* Paquete de texto secundario del panel */
+.db-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a94ad;
+}
+
+.db-icon-button { @apply flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-[#e4e8ef] transition hover:border-cyan-300/45 hover:bg-white/[0.08]; }
+.db-page-header { margin-bottom: 1.75rem; padding: 1.25rem 0 1.4rem; border-bottom: 1px solid rgba(148, 163, 184, .16); }
+.db-panel { border-color: rgba(121, 164, 198, .27); border-radius: 22px; background: linear-gradient(135deg, rgba(13, 34, 57, .97), rgba(9, 23, 43, .97)); box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 28px 55px -40px #000; }
+.db-panel > .mt-2.flex { flex-wrap: wrap; }
+.db-card { border-color: rgba(121, 164, 198, .25); border-radius: 20px; background: #0b1b30; box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 22px 45px -38px #000; }
+.db-input, .db-select { border-color: rgba(148, 181, 208, .25); border-radius: 14px; background: rgba(3, 15, 32, .72); }.db-input:focus, .db-select:focus { border-color: rgba(83, 217, 235, .7); box-shadow: 0 0 0 3px rgba(83,217,235,.12); }
+.db-cta { border-radius: 14px; padding: .78rem 1.05rem; background-image: linear-gradient(135deg, #f6df81, #d9aa39); box-shadow: 0 15px 30px -15px rgba(241, 201, 74, .55); white-space: nowrap; }.db-btn-sm { border-radius: 10px; background: #e3bc50; }.db-ghost { border-radius: 14px; }
+.db-empty-modern { border-color: rgba(83, 217, 235, .25); background: rgba(8, 28, 48, .58); padding: 3.5rem 1.25rem; }.db-data-table { scrollbar-color: #34728d transparent; }.db-data-table .db-table thead th { color: #a9bdce; }.db-data-table .db-table tbody tr:hover { background: rgba(83, 217, 235, .045); }
+.db-nav-link { @apply flex items-center gap-3 rounded-2xl px-3.5 py-3 text-[15px] font-semibold text-[#bcc7d7] transition hover:bg-white/[0.055] hover:text-[#f4f5f1]; }
+.db-nav-link-active { color: #fff3b4; border: 1px solid rgba(242, 210, 94, 0.42); background: linear-gradient(90deg, rgba(205,169,49,.27), rgba(177,167,54,.11)); box-shadow: inset 0 1px 0 rgba(255,244,166,.12), 0 12px 28px -18px rgba(242,210,94,.55); }
+.db-hero { border: 2px solid rgba(243, 189, 78, .68); border-radius: 31px; min-height: 420px; background: linear-gradient(105deg, #08202a 0%, #071524 48%, #151033 100%); box-shadow: inset 0 1px 0 rgba(255,229,149,.09), 0 26px 70px -40px #000, 0 18px 38px -32px rgba(244,184,66,.72); }
+.db-hero-light { position:absolute; width:270px; height:530px; border-radius:999px; filter:blur(70px); opacity:.42; pointer-events:none; }.db-hero-light-left { left:18%; top:-34%; background:#0a9fb7; }.db-hero-light-right { right:-5%; bottom:-50%; background:#652fa6; }
+.db-hero-accent { color:#ffe17a; text-shadow:0 0 24px rgba(244,184,66,.2); }
+.db-profile-nudge { border:1px solid rgba(55,210,234,.45); border-radius:18px; padding:.95rem 1rem; background:linear-gradient(110deg,rgba(18,64,84,.92),rgba(14,35,67,.9)); box-shadow:0 15px 35px -22px #3fc8e8; }
+.db-nudge-title { color: #fff3b7; }
+.db-nudge-copy { color: #c3cedb; }
+.db-file-button { display:inline-flex; align-items:center; gap:.4rem; border:1px solid rgba(83,217,235,.45); border-radius:.65rem; background:rgba(83,217,235,.12); padding:.45rem .7rem; color:#eafcff; font-size:.875rem; font-weight:700; cursor:pointer; transition:border-color .2s ease, background .2s ease; }
+.db-file-button:hover { border-color:rgba(83,217,235,.8); background:rgba(83,217,235,.2); }
+.db-file-name { min-width:0; color:#c9d4e1; font-size:.875rem; }
+.db-overview, .db-section-panel { border:1px solid rgba(145,169,197,.28); border-radius:22px; background:#0b1b30; box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 22px 45px -36px black; transition:transform .2s ease,border-color .2s ease; }.db-overview { min-height:164px; padding:1.5rem 1.2rem; overflow:hidden; position:relative; }.db-overview:hover,.db-section-panel:hover { transform:translateY(-2px); border-color:rgba(77,215,235,.5); }.db-overview::after { content:""; position:absolute; top:-75px; right:-40px; width:160px; height:200px; background:#17b8d1; filter:blur(50px); opacity:.15; }.db-overview-purple::after { background:#9170df; opacity:.19; }.db-overview-blue::after { background:#2177b8; opacity:.15; }.db-section-panel { padding:1.5rem; min-height:220px; }
+@media (max-width:1023px) { .db-hero { border-radius:24px; min-height:auto; } }
+@media (max-width:639px) { .db-page-header { margin-bottom: 1.25rem; padding-top: .6rem; }.db-panel { padding: 1.25rem !important; }.db-cta { min-height: 42px; }.db-data-table { margin-inline: -0.15rem; } }
+

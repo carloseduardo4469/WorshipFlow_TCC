@@ -8,6 +8,7 @@ import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 
 type CampoFiltro = "titulo" | "artista" | "tonalidade";
 
@@ -27,6 +28,7 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
   const [erroExclusao, setErroExclusao] = useState<string | null>(null);
   const filtroRef = useRef<HTMLDivElement>(null);
   const exclusoesRef = useRef(new Map<number, { item: Musica; indiceOriginal: number }>());
+  const formDialogRef = useDialogA11y(Boolean(musicaAberta), () => setMusicaAberta(null));
 
   // Busca com debounce: só consulta o banco quando o usuário para de digitar.
   useEffect(() => {
@@ -66,16 +68,11 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
   });
 
   useEffect(() => {
-    function fecharComEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setMusicaAberta(null);
-    }
-    window.addEventListener("keydown", fecharComEscape);
     function fecharFiltroFora(event: MouseEvent) {
       if (filtroRef.current && !filtroRef.current.contains(event.target as Node)) setFiltroAberto(false);
     }
     document.addEventListener("mousedown", fecharFiltroFora);
     return () => {
-      window.removeEventListener("keydown", fecharComEscape);
       document.removeEventListener("mousedown", fecharFiltroFora);
     };
   }, []);
@@ -265,6 +262,8 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
           onMouseDown={() => setMusicaAberta(null)}
         >
           <section
+            ref={formDialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="musica-dialog-title"

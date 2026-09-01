@@ -8,6 +8,7 @@ import { buscarUsuarios, buscarUsuariosPorIds } from "@/lib/actions/usuarios";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Escala, Usuario } from "@/types/domain";
 import { FORM_LIMITS } from "@/lib/validation/forms";
@@ -33,15 +34,16 @@ export function EscalaForm({
 }) {
   const action = escala ? atualizarEscalaAction : criarEscalaAction;
   const [state, formAction, pending] = useActionState(action, null);
-  const [erroAberto, setErroAberto] = useState(false);
+  const [erroDispensado, setErroDispensado] = useState<typeof state>(null);
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const valoresAntesDoEnvio = useRef<Map<string, string[]>>(new Map());
+  const erroAberto = Boolean(state?.error && state !== erroDispensado);
+  const fecharErro = () => setErroDispensado(state);
+  const errorDialogRef = useDialogA11y(erroAberto, fecharErro);
 
   useEffect(() => {
     if (!state?.error) return;
-    setErroAberto(true);
-
     // Server Actions resetam controles não controlados após a execução.
     // Reaplica os valores capturados antes do envio quando houve erro.
     const valores = valoresAntesDoEnvio.current;
@@ -234,9 +236,11 @@ export function EscalaForm({
         <div
           role="presentation"
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020817]/70 p-4 backdrop-blur-sm"
-          onMouseDown={() => setErroAberto(false)}
+          onMouseDown={fecharErro}
         >
           <section
+            ref={errorDialogRef}
+            tabIndex={-1}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="erro-escala-titulo"
@@ -252,7 +256,7 @@ export function EscalaForm({
             </div>
             <button
               type="button"
-              onClick={() => setErroAberto(false)}
+              onClick={fecharErro}
               className="db-btn-sm mt-6 w-full px-4 py-2.5 text-sm font-semibold sm:w-auto"
               autoFocus
             >

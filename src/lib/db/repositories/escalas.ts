@@ -12,7 +12,21 @@ import type { Escala, NewEscala, UpdateEscala } from "@/types/domain";
 import type { Backend, EscalasRepository } from "./types";
 import { normalizarEscala } from "@/lib/escalas/normalize";
 
-function mapSupabaseRow(row: any): Escala {
+type SupabaseEscalaRow = {
+  id: number;
+  titulo: string;
+  data_escala: string | null;
+  status: Escala["status"];
+  observacoes: string | null;
+  funcoes_usuarios: Escala["funcoesUsuarios"] | null;
+  tonalidades_musicas: Escala["tonalidadesMusicas"] | null;
+  ministerio_id: number | null;
+  escala_usuarios?: Array<{ usuario_id: string }> | null;
+  escala_musicas?: Array<{ musica_id: number }> | null;
+  created_at: string;
+};
+
+function mapSupabaseRow(row: SupabaseEscalaRow): Escala {
   return normalizarEscala({
     id: row.id,
     titulo: row.titulo,
@@ -22,8 +36,8 @@ function mapSupabaseRow(row: any): Escala {
     funcoesUsuarios: row.funcoes_usuarios ?? [],
     tonalidadesMusicas: row.tonalidades_musicas ?? [],
     ministerioId: row.ministerio_id ?? null,
-    usuarioIds: (row.escala_usuarios ?? []).map((r: any) => r.usuario_id),
-    musicaIds: (row.escala_musicas ?? []).map((r: any) => r.musica_id),
+    usuarioIds: (row.escala_usuarios ?? []).map((relation) => relation.usuario_id),
+    musicaIds: (row.escala_musicas ?? []).map((relation) => relation.musica_id),
     createdAt: row.created_at,
   });
 }
@@ -172,18 +186,9 @@ function createSupabaseRepository(supabase: SupabaseClient): EscalasRepository {
     },
     async remove(id) {
       const admin = createAdminClient();
-      const { error: usuariosError } = await admin
-        .from("escala_usuarios")
-        .delete()
-        .eq("escala_id", id);
-      if (usuariosError) throw usuariosError;
-
-      const { error: musicasError } = await admin
-        .from("escala_musicas")
-        .delete()
-        .eq("escala_id", id);
-      if (musicasError) throw musicasError;
-
+      // Uma única exclusão mantém atomicidade. As relações devem usar
+      // ON DELETE CASCADE; se a constraint estiver incorreta, a operação
+      // falha sem apagar parcialmente os vínculos.
       const { error } = await admin.from("escalas").delete().eq("id", id);
       if (error) throw error;
     },

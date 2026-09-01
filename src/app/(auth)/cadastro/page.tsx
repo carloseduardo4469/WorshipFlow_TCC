@@ -87,11 +87,10 @@ export default function CadastroPage() {
                 pattern={PHONE_ALLOWED_PATTERN}
                 maxLength={FORM_LIMITS.telefone}
                 autoComplete="tel-national"
-                required
                 onChange={(event) => {
                   event.currentTarget.value = normalizePhone(event.currentTarget.value);
                 }}
-                hint="DDD + numero, com 11 digitos."
+                hint="Opcional. Se informar, use DDD + numero, com 11 digitos."
               />
             </div>
 

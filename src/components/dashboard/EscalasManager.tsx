@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Pencil, Plus, X } from "lucide-react";
 import { removerEscalaAction } from "@/lib/actions/escalas";
 import { EscalaForm } from "./EscalaForm";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
 import type { Escala, Usuario } from "@/types/domain";
 
@@ -29,19 +30,9 @@ export function EscalasManager({
   const [escalaAberta, setEscalaAberta] = useState<Escala | "nova" | null>(null);
   const [detalhe, setDetalhe] = useState<Escala | null>(null);
   const [escalaParaExcluir, setEscalaParaExcluir] = useState<Escala | null>(null);
+  const formDialogRef = useDialogA11y(Boolean(escalaAberta), () => setEscalaAberta(null));
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
   const nomesPorId = useMemo(() => new Map(usuarios.map((usuario) => [usuario.id, usuario.nome])), [usuarios]);
-
-  useEffect(() => {
-    function fecharComEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setEscalaAberta(null);
-        setDetalhe(null);
-      }
-    }
-    window.addEventListener("keydown", fecharComEscape);
-    return () => window.removeEventListener("keydown", fecharComEscape);
-  }, []);
 
   return (
     <>
@@ -68,7 +59,7 @@ export function EscalasManager({
           </thead>
           <tbody className="divide-y divide-[color:rgba(148,163,184,0.1)]">
             {escalas.map((escala) => (
-              <tr key={escala.id} role="button" tabIndex={0} onClick={() => setDetalhe(escala)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setDetalhe(escala); } }} className="db-responsive-row db-schedule-row cursor-pointer">
+              <tr key={escala.id} role="button" tabIndex={0} onClick={() => setDetalhe(escala)} onKeyDown={(event) => { if (event.target !== event.currentTarget) return; if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setDetalhe(escala); } }} className="db-responsive-row db-schedule-row cursor-pointer">
                 <td data-label="Título" className="px-4 py-3.5"><strong className="db-schedule-row-title">{escala.titulo}</strong></td>
                 <td data-label="Data" className="px-4 py-3.5"><span className="db-schedule-cell">{formatDate(escala.dataEscala)}</span></td>
                 <td data-label="Status" className="px-4 py-3.5"><StatusBadge status={escala.status} /></td>
@@ -102,7 +93,7 @@ export function EscalasManager({
 
       {escalaAberta && (
         <div role="presentation" className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-4" onMouseDown={() => setEscalaAberta(null)}>
-          <section role="dialog" aria-modal="true" aria-labelledby="escala-dialog-title" className="db-member-modal relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto overscroll-contain touch-pan-y pb-4" onMouseDown={(event) => event.stopPropagation()}>
+          <section ref={formDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="escala-dialog-title" className="db-member-modal relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto overscroll-contain touch-pan-y pb-4" onMouseDown={(event) => event.stopPropagation()}>
             <button type="button" onClick={() => setEscalaAberta(null)} aria-label="Fechar formulário" className="db-icon-button absolute right-4 top-4 z-10 h-9 w-9">
               <X size={18} />
             </button>

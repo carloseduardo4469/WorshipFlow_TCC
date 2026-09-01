@@ -6,7 +6,15 @@ import { ministerios as ministeriosTable } from "@/lib/db/local/schema";
 import type { Ministerio, NewMinisterio, UpdateMinisterio } from "@/types/domain";
 import type { Backend, MinisteriosRepository } from "./types";
 
-function mapSupabaseRow(row: any): Ministerio {
+type SupabaseMinisterioRow = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  ativo: boolean;
+  created_at: string;
+};
+
+function mapSupabaseRow(row: SupabaseMinisterioRow): Ministerio {
   return {
     id: row.id,
     nome: row.nome,

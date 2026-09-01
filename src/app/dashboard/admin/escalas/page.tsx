@@ -4,11 +4,11 @@ import { EscalasManager } from "@/components/dashboard/EscalasManager";
 import { concluirEscalasVencidas } from "@/lib/escalas/status-automatico";
 
 export default async function RegistrosEscalasPage() {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list());
+  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list(profile.ministerioId ?? -1));
   const usuarioIds = [...new Set(escalas.flatMap((escala) => escala.usuarioIds))];
-  const usuarios = await repos.usuarios.getByIds(usuarioIds);
+  const usuarios = (await repos.usuarios.getByIds(usuarioIds)).filter((usuario) => usuario.ministerioId === profile.ministerioId);
 
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">

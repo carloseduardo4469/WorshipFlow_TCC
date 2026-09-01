@@ -1,3 +1,8 @@
+import "@/styles/dashboard-core.css";
+import "@/styles/dashboard-components.css";
+import "@/styles/dashboard-schedules.css";
+import "@/styles/dashboard-mobile.css";
+import "@/styles/dialogs.css";
 import { requireAuth } from "@/lib/auth/session";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { TopNavbar } from "@/components/dashboard/TopNavbar";
@@ -14,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="relative lg:pl-[278px]">
         <TopNavbar usuario={profile} />
-        <main className="min-h-screen px-4 pb-24 pt-20 sm:px-6 lg:px-7 lg:py-8">
+        <main className="db-dashboard-main min-h-screen px-4 pb-24 pt-20 sm:px-6 lg:px-7 lg:py-8">
           {children}
         </main>
       </div>

@@ -1,13 +1,12 @@
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
-import { cachedData } from "@/lib/db/cache";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EquipeTable } from "@/components/dashboard/EquipeTable";
 
 export default async function EquipePage() {
-  await requireAuth();
+  const { profile } = await requireAuth();
   const repos = await getRepositories();
-  const usuarios = await cachedData("usuarios:list", () => repos.usuarios.list());
+  const usuarios = await repos.usuarios.list(profile.ministerioId ?? -1);
 
   return (
     <div className="mx-auto max-w-[1240px]">

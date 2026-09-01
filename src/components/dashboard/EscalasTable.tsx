@@ -57,6 +57,7 @@ export function EscalasTable({
                   tabIndex={0}
                   onClick={() => setSelecionada(escala)}
                   onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget) return;
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
                       setSelecionada(escala);

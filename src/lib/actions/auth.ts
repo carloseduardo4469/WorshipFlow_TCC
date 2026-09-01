@@ -16,9 +16,20 @@ import {
 export type ActionState = { error?: string } | null;
 
 async function getSiteUrl() {
-  const h = await headers();
-  const origin = h.get("origin");
-  return origin ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) return new URL(configured).origin;
+
+  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+  if (vercelHost) return new URL(`https://${vercelHost}`).origin;
+
+  // Em desenvolvimento aceitamos apenas origens locais conhecidas. Nunca use
+  // um Origin arbitrário para montar links enviados por email ou OAuth.
+  const origin = (await headers()).get("origin");
+  if (origin) {
+    const parsed = new URL(origin);
+    if (["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname)) return parsed.origin;
+  }
+  return "http://localhost:3000";
 }
 
 /** Só aceita caminhos relativos internos ("/x"), bloqueando open redirect ("https://…", "//…"). */
@@ -62,8 +73,8 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
   const telefoneRaw = String(formData.get("telefone") ?? "").trim();
   const telefone = normalizePhone(telefoneRaw);
 
-  if (!nome || !email || !senha || !telefone) {
-    return { error: "Preencha todos os campos." };
+  if (!nome || !email || !senha) {
+    return { error: "Preencha nome, email e senha." };
   }
   const nomeError = validatePersonName(nomeRaw);
   if (nomeError) return { error: nomeError };
@@ -72,11 +83,8 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
   if (senha.length < 8) return { error: "A senha precisa ter pelo menos 8 caracteres." };
   const senhaLengthError = validateMaxLength(senha, FORM_LIMITS.senha, "Senha");
   if (senhaLengthError) return { error: senhaLengthError };
-  const telefoneError = validatePhone(telefoneRaw, true);
+  const telefoneError = validatePhone(telefoneRaw);
   if (telefoneError) return { error: telefoneError };
-  if (telefone.length !== 11) {
-    return { error: "Telefone inválido — informe DDD + número, com 11 dígitos." };
-  }
 
   const supabase = await createClient();
   const siteUrl = await getSiteUrl();
@@ -85,7 +93,7 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
     email,
     password: senha,
     options: {
-      data: { nome, telefone },
+      data: { nome, telefone: telefone || null },
       emailRedirectTo: `${siteUrl}/auth/callback?flow=signup`,
     },
   });

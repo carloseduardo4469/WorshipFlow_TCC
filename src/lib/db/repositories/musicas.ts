@@ -7,7 +7,17 @@ import { musicas as musicasTable } from "@/lib/db/local/schema";
 import type { Musica, NewMusica, UpdateMusica } from "@/types/domain";
 import type { Backend, MusicasRepository } from "./types";
 
-function mapSupabaseRow(row: any): Musica {
+type SupabaseMusicaRow = {
+  id: number;
+  titulo: string;
+  artista: string | null;
+  tonalidade: string | null;
+  link_cifra: string | null;
+  ministerio_id: number | null;
+  created_at: string;
+};
+
+function mapSupabaseRow(row: SupabaseMusicaRow): Musica {
   return {
     id: row.id,
     titulo: row.titulo,

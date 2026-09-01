@@ -1,6 +1,5 @@
 import "server-only";
 
-import { invalidateDataCache } from "@/lib/db/cache";
 import type { Repositories } from "@/lib/db/repositories";
 import type { Escala } from "@/types/domain";
 
@@ -19,10 +18,11 @@ export function hojeEmSaoPaulo(): string {
 
 /**
  * À meia-noite seguinte à data da escala, troca PUBLICADA por CONCLUIDA.
- * A atualização é persistida e o retorno já contém os novos status.
+ * O status é derivado durante a leitura. Não grava no banco nem exige que um
+ * membro comum tenha permissão de UPDATE apenas para abrir o dashboard.
  */
 export async function concluirEscalasVencidas(
-  repos: Repositories,
+  _repos: Repositories,
   escalas: Escala[]
 ): Promise<Escala[]> {
   const hoje = hojeEmSaoPaulo();
@@ -34,10 +34,6 @@ export async function concluirEscalasVencidas(
 
   if (vencidas.length === 0) return escalas;
 
-  await Promise.all(
-    vencidas.map((escala) => repos.escalas.update(escala.id, { status: "CONCLUIDA" }))
-  );
-  invalidateDataCache("escalas");
   const ids = new Set(vencidas.map((escala) => escala.id));
   return escalas.map((escala) =>
     ids.has(escala.id) ? { ...escala, status: "CONCLUIDA" as const } : escala

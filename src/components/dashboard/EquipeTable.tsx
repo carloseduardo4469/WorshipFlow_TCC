@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Mail, Music4, Phone, X } from "lucide-react";
 import { listarUsuariosComPresenca } from "@/lib/actions/usuarios";
 import type { Usuario } from "@/types/domain";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 
 const nomesHabilidades: Record<string, string> = {
   violao: "Violão",
@@ -42,7 +43,6 @@ function Avatar({ usuario, className = "" }: { usuario: Usuario; className?: str
     .join("");
 
   if (usuario.fotoPerfilUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
     return <img src={usuario.fotoPerfilUrl} alt={`Foto de ${usuario.nome}`} loading="lazy" className={`shrink-0 rounded-full object-cover ${className}`} />;
   }
 
@@ -65,21 +65,19 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
   const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciais);
   const [selecionado, setSelecionado] = useState<Usuario | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
-
-  useEffect(() => {
-    function fecharComEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setSelecionado(null);
-    }
-    window.addEventListener("keydown", fecharComEscape);
-    return () => window.removeEventListener("keydown", fecharComEscape);
-  }, []);
+  const dialogRef = useDialogA11y(Boolean(selecionado), () => setSelecionado(null));
 
   // Atualiza a presença (quem está online/offline) e reavalia o relógio.
   useEffect(() => {
     const timer = window.setInterval(() => {
       setAgora(Date.now());
       listarUsuariosComPresenca()
-        .then((lista) => setUsuarios(lista))
+        .then((presencas) => {
+          const porId = new Map(presencas.map((presenca) => [presenca.id, presenca.ultimaAtividade]));
+          setUsuarios((atuais) => atuais.map((usuario) => porId.has(usuario.id)
+            ? { ...usuario, ultimaAtividade: porId.get(usuario.id) ?? null }
+            : usuario));
+        })
         .catch(() => {});
     }, 30_000);
     return () => window.clearInterval(timer);
@@ -153,6 +151,8 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
           onMouseDown={() => setSelecionado(null)}
         >
           <section
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="perfil-equipe-titulo"

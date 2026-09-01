@@ -9,13 +9,22 @@ import {
 import type { NewRepertorio, Repertorio, UpdateRepertorio } from "@/types/domain";
 import type { Backend, RepertoriosRepository } from "./types";
 
-function mapSupabaseRow(row: any): Repertorio {
+type SupabaseRepertorioRow = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  ministerio_id: number | null;
+  repertorio_musicas?: Array<{ musica_id: number }> | null;
+  created_at: string;
+};
+
+function mapSupabaseRow(row: SupabaseRepertorioRow): Repertorio {
   return {
     id: row.id,
     nome: row.nome,
     descricao: row.descricao ?? null,
     ministerioId: row.ministerio_id ?? null,
-    musicaIds: (row.repertorio_musicas ?? []).map((r: any) => r.musica_id),
+    musicaIds: (row.repertorio_musicas ?? []).map((relation) => relation.musica_id),
     createdAt: row.created_at,
   };
 }

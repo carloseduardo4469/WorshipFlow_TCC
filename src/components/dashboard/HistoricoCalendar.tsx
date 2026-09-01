@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Users, X } from "lucide-react";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
 import type { Escala, Usuario } from "@/types/domain";
@@ -45,6 +46,7 @@ export function HistoricoCalendar({
   const [mesVisivel, setMesVisivel] = useState({ ano: anoHoje, mes: mesHoje - 1 });
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
   const [escalaSelecionada, setEscalaSelecionada] = useState<Escala | null>(null);
+  const dayDialogRef = useDialogA11y(Boolean(diaSelecionado), () => setDiaSelecionado(null));
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
   const mesLimiteAtingido = mesVisivel.ano > anoHoje || (mesVisivel.ano === anoHoje && mesVisivel.mes >= mesHoje - 1);
 
@@ -133,8 +135,8 @@ export function HistoricoCalendar({
       </section>
 
       {diaSelecionado && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#020817]/70 p-3 backdrop-blur-sm sm:p-6" onMouseDown={() => setDiaSelecionado(null)}>
-          <section role="dialog" aria-modal="true" aria-labelledby="historico-dia-titulo" className="db-member-modal db-history-day-dialog relative w-full max-w-lg p-5 sm:p-7" onMouseDown={(evento) => evento.stopPropagation()}>
+        <div className="db-history-day-layer fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-3 backdrop-blur-sm sm:p-6" onMouseDown={() => setDiaSelecionado(null)}>
+          <section ref={dayDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="historico-dia-titulo" className="db-member-modal db-history-day-dialog relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain p-5 sm:p-7" onMouseDown={(evento) => evento.stopPropagation()}>
             <button type="button" onClick={() => setDiaSelecionado(null)} className="db-icon-button absolute right-4 top-4 h-9 w-9" aria-label="Fechar">
               <X size={17} />
             </button>

@@ -1,8 +1,8 @@
 "use client";
 
 import { AlertTriangle, X } from "lucide-react";
-import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useDialogA11y } from "./useDialogA11y";
 
 export function DeleteConfirmDialog({ open, title, description, onCancel, children }: {
   open: boolean;
@@ -11,18 +11,13 @@ export function DeleteConfirmDialog({ open, title, description, onCancel, childr
   onCancel: () => void;
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    if (!open) return;
-    function closeOnEscape(event: KeyboardEvent) { if (event.key === "Escape") onCancel(); }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [open, onCancel]);
+  const dialogRef = useDialogA11y(open, onCancel);
 
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
     <div className="delete-confirm-backdrop" role="presentation" onMouseDown={onCancel}>
-      <section role="alertdialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-description" className="delete-confirm-dialog" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={dialogRef} tabIndex={-1} role="alertdialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-description" className="delete-confirm-dialog" onMouseDown={(event) => event.stopPropagation()}>
         <button type="button" onClick={onCancel} className="delete-confirm-close" aria-label="Fechar confirmação"><X size={17} /></button>
         <span className="delete-confirm-icon"><AlertTriangle size={22} /></span>
         <p className="delete-confirm-eyebrow">Confirmação necessária</p>

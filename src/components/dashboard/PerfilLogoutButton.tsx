@@ -1,20 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LogOut, X } from "lucide-react";
 import { logoutAction } from "@/lib/actions/auth";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 
 export function PerfilLogoutButton() {
   const [aberto, setAberto] = useState(false);
-
-  useEffect(() => {
-    if (!aberto) return;
-    function fecharComEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setAberto(false);
-    }
-    window.addEventListener("keydown", fecharComEscape);
-    return () => window.removeEventListener("keydown", fecharComEscape);
-  }, [aberto]);
+  const dialogRef = useDialogA11y(aberto, () => setAberto(false));
 
   return (
     <>
@@ -30,7 +23,7 @@ export function PerfilLogoutButton() {
 
       {aberto && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#020817]/75 p-4 backdrop-blur-sm" onMouseDown={() => setAberto(false)}>
-          <section role="alertdialog" aria-modal="true" aria-labelledby="sair-conta-titulo" aria-describedby="sair-conta-descricao" className="db-member-modal relative w-full max-w-sm p-5 text-left sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
+          <section ref={dialogRef} tabIndex={-1} role="alertdialog" aria-modal="true" aria-labelledby="sair-conta-titulo" aria-describedby="sair-conta-descricao" className="db-member-modal relative w-full max-w-sm p-5 text-left sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
             <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="db-icon-button absolute right-4 top-4 h-9 w-9"><X size={16} /></button>
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/15 text-red-400"><LogOut size={20} /></div>
             <h2 id="sair-conta-titulo" className="db-title mt-4 pr-10 text-2xl text-paper">Sair da conta?</h2>

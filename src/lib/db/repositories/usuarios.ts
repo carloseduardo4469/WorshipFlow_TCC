@@ -7,7 +7,23 @@ import { usuarios as usuariosTable } from "@/lib/db/local/schema";
 import type { Usuario, UpdateUsuario } from "@/types/domain";
 import type { Backend, UsuariosRepository } from "./types";
 
-function mapSupabaseRow(row: any): Usuario {
+type SupabaseUsuarioRow = {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string | null;
+  instrumento_principal: string | null;
+  habilidades: string | null;
+  status_ministerio: Usuario["statusMinisterio"];
+  is_suspended: boolean | null;
+  perfil: Usuario["perfil"];
+  foto_perfil_url: string | null;
+  ministerio_id: number | null;
+  ultima_atividade: string | null;
+  created_at: string;
+};
+
+function mapSupabaseRow(row: SupabaseUsuarioRow): Usuario {
   return {
     id: row.id,
     nome: row.nome,

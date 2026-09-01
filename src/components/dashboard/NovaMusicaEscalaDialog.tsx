@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { TONALIDADES_MAIORES } from "@/lib/music/tonalidades";
 import { FORM_LIMITS } from "@/lib/validation/forms";
 import type { Musica } from "@/types/domain";
@@ -16,6 +17,7 @@ export function NovaMusicaEscalaDialog({ onClose, onCreated }: { onClose: () => 
   const [titulo, setTitulo] = useState("");
   const [artista, setArtista] = useState("");
   const [tonalidade, setTonalidade] = useState("");
+  const dialogRef = useDialogA11y(true, onClose);
 
   useEffect(() => {
     if (state?.success && state.musica) onCreated(state.musica);
@@ -23,7 +25,7 @@ export function NovaMusicaEscalaDialog({ onClose, onCreated }: { onClose: () => 
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-[#020817]/75 p-3 backdrop-blur-md" onMouseDown={onClose}>
-      <section role="dialog" aria-modal="true" aria-labelledby="nova-musica-escala-titulo" className="db-member-modal relative my-auto w-full max-w-lg p-5 sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="nova-musica-escala-titulo" className="db-member-modal relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto p-5 sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
         <button type="button" onClick={onClose} className="db-icon-button absolute right-4 top-4 h-9 w-9" aria-label="Fechar"><X size={17} /></button>
         <p className="db-label text-cyan-300">Catálogo de músicas</p>
         <h2 id="nova-musica-escala-titulo" className="db-title mt-2 pr-12 text-2xl text-paper">Nova música</h2>

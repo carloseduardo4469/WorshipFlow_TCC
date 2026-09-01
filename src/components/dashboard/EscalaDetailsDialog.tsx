@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ExternalLink, Loader2, Music2, Plus, Users, X } from "lucide-react";
 import { buscarMusicasPorIds } from "@/lib/actions/musicas";
+import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { normalizarEscala } from "@/lib/escalas/normalize";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { Escala, Musica, Usuario } from "@/types/domain";
@@ -47,6 +48,7 @@ export function EscalaDetailsDialog({
   const [musicas, setMusicas] = useState<Musica[]>([]);
   const [carregando, setCarregando] = useState(escala.musicaIds.length > 0);
   const [erro, setErro] = useState(false);
+  const dialogRef = useDialogA11y(true, onClose);
 
   const nomesPorId = useMemo(
     () => new Map(usuarios.map((usuario) => [usuario.id, usuario.nome])),
@@ -56,35 +58,28 @@ export function EscalaDetailsDialog({
   const tonsPorMusica = new Map(escala.tonalidadesMusicas.map((item) => [item.musicaId, item.tonalidade]));
 
   useEffect(() => {
-    function fecharComEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", fecharComEscape);
-    return () => window.removeEventListener("keydown", fecharComEscape);
-  }, [onClose]);
-
-  useEffect(() => {
-    if (escala.musicaIds.length === 0) {
-      setMusicas([]);
-      setCarregando(false);
-      return;
-    }
-
     let ativo = true;
-    setCarregando(true);
-    setErro(false);
-    buscarMusicasPorIds(escala.musicaIds)
-      .then((resultado) => {
+    async function carregarMusicas() {
+      if (escala.musicaIds.length === 0) {
+        setMusicas([]);
+        setCarregando(false);
+        return;
+      }
+
+      setCarregando(true);
+      setErro(false);
+      try {
+        const resultado = await buscarMusicasPorIds(escala.musicaIds);
         if (!ativo) return;
         const porId = new Map(resultado.map((musica) => [musica.id, musica]));
         setMusicas(escala.musicaIds.map((id) => porId.get(id)).filter((item): item is Musica => Boolean(item)));
-      })
-      .catch(() => {
+      } catch {
         if (ativo) setErro(true);
-      })
-      .finally(() => {
+      } finally {
         if (ativo) setCarregando(false);
-      });
+      }
+    }
+    void carregarMusicas();
     return () => { ativo = false; };
   }, [escala]);
 
@@ -95,6 +90,8 @@ export function EscalaDetailsDialog({
       onMouseDown={onClose}
     >
       <section
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="escala-detalhes-titulo"
