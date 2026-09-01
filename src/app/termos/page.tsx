@@ -3,7 +3,7 @@ import { LegalShell } from "@/components/legal/LegalShell";
 
 export default function TermosPage() {
   return (
-    <LegalShell>
+    <LegalShell currentPage="termos">
       <section className="legal-hero">
         <p className="legal-eyebrow"><Scale size={14} /> Documento institucional</p>
         <h1>Termos de uso</h1>

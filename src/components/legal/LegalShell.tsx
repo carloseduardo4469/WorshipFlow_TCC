@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 type ThemeMode = "dark" | "light";
 const STORAGE_KEY = "wf-legal-theme";
 
-export function LegalShell({ children }: { children: React.ReactNode }) {
+export function LegalShell({ children, currentPage }: { children: React.ReactNode; currentPage: "termos" | "privacidade" }) {
   const [mode, setMode] = useState<ThemeMode>("dark");
   const router = useRouter();
 
@@ -38,8 +38,8 @@ export function LegalShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="legal-brand">WorshipFlow</Link>
         </div>
         <nav aria-label="Páginas institucionais" className="legal-nav">
-          <Link href="/termos">Termos</Link>
-          <Link href="/privacidade">Privacidade</Link>
+          {currentPage !== "termos" && <Link href="/termos">Termos</Link>}
+          {currentPage !== "privacidade" && <Link href="/privacidade">Privacidade</Link>}
           <button type="button" onClick={toggleTheme} className="legal-theme-button" aria-label={mode === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}>
             {mode === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
