@@ -808,7 +808,7 @@ html[data-dashboard-theme="light"] .db-mobile-header,
 html[data-dashboard-theme="light"] .db-mobile-nav { background: rgba(245, 251, 255, .96) !important; color: #18253c; }
 html[data-dashboard-theme="light"] .db-brand-title { color: #16304d !important; text-shadow: none; }
 html[data-dashboard-theme="light"] .db-brand-subtitle { color: #0d6b96 !important; }
-html[data-dashboard-theme="light"] aside, html[data-dashboard-theme="light"] header, html[data-dashboard-theme="light"] nav.fixed { background-color: #f9fcfe !important; border-color: rgba(44, 104, 151, .18) !important; }
+html[data-dashboard-theme="light"] .db-bg aside, html[data-dashboard-theme="light"] .db-bg header, html[data-dashboard-theme="light"] .db-bg nav.fixed { background-color: #f9fcfe !important; border-color: rgba(44, 104, 151, .18) !important; }
 html[data-dashboard-theme="light"] .db-nav-link-active { color: #594000; background: linear-gradient(90deg, rgba(255, 206, 72, .5), rgba(160, 225, 255, .25)); }
 html[data-dashboard-theme="light"] .db-hero { border-color:rgba(194,125,15,.72); background: linear-gradient(115deg, #093d59 0%, #263272 53%, #703e8a 100%); }
 html[data-dashboard-theme="light"] .site-footer-dashboard { border-color:rgba(177,112,13,.25) !important; background:#f9fcfe !important; color:#526780 !important; }
@@ -830,12 +830,12 @@ html[data-dashboard-theme="light"] .db-card .text-paper\/80 { color: #263b57 !im
 html[data-dashboard-theme="light"] .db-checkbox-group { border-color: rgba(44, 104, 151, .28); background: rgba(255,255,255,.66); }
 html[data-dashboard-theme="light"] .db-nudge-title { color: #fff3b7; }
 html[data-dashboard-theme="light"] .db-nudge-copy { color: #d9e5f1; }
-html[data-dashboard-theme="light"] header [class*="text-["],
-html[data-dashboard-theme="light"] aside [class*="text-["],
-html[data-dashboard-theme="light"] nav.fixed [class*="text-["] { color: #1d3552; }
-html[data-dashboard-theme="light"] header .text-\[\#f4d25e\],
-html[data-dashboard-theme="light"] aside .text-\[\#f5d76e\],
-html[data-dashboard-theme="light"] nav.fixed .text-\[\#f5d76e\] { color: #8a5900; }
+html[data-dashboard-theme="light"] .db-bg header [class*="text-["],
+html[data-dashboard-theme="light"] .db-bg aside [class*="text-["],
+html[data-dashboard-theme="light"] .db-bg nav.fixed [class*="text-["] { color: #1d3552; }
+html[data-dashboard-theme="light"] .db-bg header .text-\[\#f4d25e\],
+html[data-dashboard-theme="light"] .db-bg aside .text-\[\#f5d76e\],
+html[data-dashboard-theme="light"] .db-bg nav.fixed .text-\[\#f5d76e\] { color: #8a5900; }
 
 @media (min-width: 1024px) {
   .db-profile-nudge::before { content:""; position:absolute; top:-9px; right:54px; width:17px; height:17px; transform:rotate(45deg); border-left:1px solid rgba(55,210,234,.45); border-top:1px solid rgba(55,210,234,.45); background:#124054; }
