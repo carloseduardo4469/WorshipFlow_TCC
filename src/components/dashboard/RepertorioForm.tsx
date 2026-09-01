@@ -6,19 +6,16 @@ import { criarRepertorioAction, atualizarRepertorioAction } from "@/lib/actions/
 import { buscarMusicas, buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
-import type { Ministerio, Musica, Repertorio } from "@/types/domain";
+import type { Musica, Repertorio } from "@/types/domain";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 
 export function RepertorioForm({
   repertorio,
-  ministerios,
 }: {
   repertorio?: Repertorio;
-  ministerios: Ministerio[];
 }) {
   const action = repertorio ? atualizarRepertorioAction : criarRepertorioAction;
   const [state, formAction, pending] = useActionState(action, null);
@@ -101,25 +98,6 @@ return (
 
       <Input label="Nome" name="nome" defaultValue={repertorio?.nome} maxLength={FORM_LIMITS.nomeGenerico} required />
       <Input label="Descrição" name="descricao" defaultValue={repertorio?.descricao ?? ""} maxLength={FORM_LIMITS.descricao} />
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="ministerioId" className="db-label">
-          Ministério
-        </label>
-        <Select
-          id="ministerioId"
-          name="ministerioId"
-          defaultValue={repertorio?.ministerioId ?? ""}
-          aria-label="Ministério"
-        >
-          <option value="">Nenhum</option>
-          {ministerios.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nome}
-            </option>
-          ))}
-        </Select>
-      </div>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="db-label mb-1">Músicas</legend>

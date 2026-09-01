@@ -9,20 +9,17 @@ export default async function EditarRepertorioPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   const { id } = await params;
 
   const repos = await getRepositories();
-  const [repertorio, ministerios] = await Promise.all([
-    repos.repertorios.getById(Number(id)),
-    repos.ministerios.list(),
-  ]);
-  if (!repertorio) notFound();
+  const repertorio = await repos.repertorios.getById(Number(id));
+  if (!repertorio || profile.ministerioId === null || repertorio.ministerioId !== profile.ministerioId) notFound();
 
   return (
     <div className="mx-auto max-w-[760px] lg:mx-0">
       <PageHeader title={`Editar: ${repertorio.nome}`} />
-      <RepertorioForm repertorio={repertorio} ministerios={ministerios} />
+      <RepertorioForm repertorio={repertorio} />
     </div>
   );
 }

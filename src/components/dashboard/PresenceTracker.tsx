@@ -10,14 +10,13 @@ import { registrarAtividade } from "@/lib/actions/usuarios";
 export function PresenceTracker() {
   useEffect(() => {
     function bater() {
+      if (document.visibilityState !== "visible") return;
       registrarAtividade().catch(() => {});
     }
 
     bater();
     const timer = window.setInterval(bater, 60_000);
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") bater();
-    };
+    const onVisibility = () => bater();
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {

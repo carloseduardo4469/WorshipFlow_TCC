@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Mail, Music4, Phone, X } from "lucide-react";
 import { listarUsuariosComPresenca } from "@/lib/actions/usuarios";
 import type { Usuario } from "@/types/domain";
@@ -65,11 +65,14 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
   const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciais);
   const [selecionado, setSelecionado] = useState<Usuario | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
+  const buscandoPresenca = useRef(false);
   const dialogRef = useDialogA11y(Boolean(selecionado), () => setSelecionado(null));
 
   // Atualiza a presença (quem está online/offline) e reavalia o relógio.
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    function atualizarPresencas() {
+      if (document.visibilityState !== "visible" || buscandoPresenca.current) return;
+      buscandoPresenca.current = true;
       setAgora(Date.now());
       listarUsuariosComPresenca()
         .then((presencas) => {
@@ -78,9 +81,16 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
             ? { ...usuario, ultimaAtividade: porId.get(usuario.id) ?? null }
             : usuario));
         })
-        .catch(() => {});
-    }, 30_000);
-    return () => window.clearInterval(timer);
+        .catch(() => {})
+        .finally(() => { buscandoPresenca.current = false; });
+    }
+
+    const timer = window.setInterval(atualizarPresencas, 30_000);
+    document.addEventListener("visibilitychange", atualizarPresencas);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", atualizarPresencas);
+    };
   }, []);
 
   return (

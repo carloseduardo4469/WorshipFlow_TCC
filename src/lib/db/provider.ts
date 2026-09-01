@@ -28,17 +28,18 @@ async function checkSupabaseHealth(): Promise<boolean> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), HEALTHCHECK_TIMEOUT_MS);
-
-    // Endpoint leve do GoTrue, não bate no banco — só confirma que dá
-    // pra alcançar o Supabase pela porta 443.
-    const res = await fetch(`${url}/auth/v1/health`, {
-      headers: { apikey: anonKey },
-      signal: controller.signal,
-      cache: "no-store",
-    });
-
-    clearTimeout(timeout);
-    return res.ok;
+    try {
+      // Endpoint leve do GoTrue, não bate no banco — só confirma que dá
+      // pra alcançar o Supabase pela porta 443.
+      const res = await fetch(`${url}/auth/v1/health`, {
+        headers: { apikey: anonKey },
+        signal: controller.signal,
+        cache: "no-store",
+      });
+      return res.ok;
+    } finally {
+      clearTimeout(timeout);
+    }
   } catch {
     return false;
   }
