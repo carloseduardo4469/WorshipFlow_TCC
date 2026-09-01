@@ -17,13 +17,17 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
   // Recupera a preferência salva depois da hidratação (evita mismatch de SSR).
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === "light" || saved === "dark") setMode(saved);
+    const next = saved === "light" ? "light" : "dark";
+    setMode(next);
+    document.documentElement.dataset.authTheme = next;
+    return () => { delete document.documentElement.dataset.authTheme; };
   }, []);
 
   const toggleMode = useCallback(() => {
     setMode((prev) => {
       const next = prev === "dark" ? "light" : "dark";
       window.localStorage.setItem(STORAGE_KEY, next);
+      document.documentElement.dataset.authTheme = next;
       return next;
     });
   }, []);
