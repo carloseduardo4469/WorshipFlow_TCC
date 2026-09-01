@@ -10,9 +10,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="db-bg relative min-h-screen">
       <div aria-hidden className="db-grid pointer-events-none fixed inset-0" />
       <PresenceTracker />
+      <DashboardNav perfil={profile.perfil} usuario={profile} />
 
       <div className="relative z-10 lg:pl-[278px]">
-        <DashboardNav perfil={profile.perfil} usuario={profile} />
         <TopNavbar usuario={profile} />
         <main className="min-h-screen px-4 pb-24 pt-20 sm:px-6 lg:px-7 lg:py-8">
           {children}

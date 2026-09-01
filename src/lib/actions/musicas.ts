@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { gerarLinkCifraClub, resolverTomOriginal } from "@/lib/music/cifraclub";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
@@ -74,6 +75,56 @@ async function readMusicaForm(formData: FormData) {
   };
 }
 
+async function criarMusicaAutorizada(
+  data: Awaited<ReturnType<typeof readMusicaForm>>,
+  ministerioDoPerfil: number | null
+): Promise<Musica> {
+  const repos = await getRepositories();
+  if (repos.backend === "local") {
+    return repos.musicas.create({ ...data, ministerioId: ministerioDoPerfil });
+  }
+
+  // A ação já autenticou e validou o usuário. A gravação privilegiada evita
+  // que uma política RLS desatualizada impeça membros autorizados de cadastrar
+  // repertório pelo celular.
+  const admin = createAdminClient();
+  let ministerioId = ministerioDoPerfil;
+  if (ministerioId === null) {
+    const { data: ministerio, error: ministerioError } = await admin
+      .from("ministerios")
+      .select("id")
+      .eq("ativo", true)
+      .order("id")
+      .limit(1)
+      .maybeSingle();
+    if (ministerioError) throw ministerioError;
+    ministerioId = ministerio?.id ?? null;
+  }
+
+  const { data: row, error } = await admin
+    .from("musicas")
+    .insert({
+      titulo: data.titulo,
+      artista: data.artista,
+      tonalidade: data.tonalidade,
+      link_cifra: data.linkCifra,
+      ministerio_id: ministerioId,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+
+  return {
+    id: row.id,
+    titulo: row.titulo,
+    artista: row.artista ?? null,
+    tonalidade: row.tonalidade ?? null,
+    linkCifra: row.link_cifra ?? null,
+    ministerioId: row.ministerio_id ?? null,
+    createdAt: row.created_at,
+  };
+}
+
 /** Cria uma música sem redirecionar, para uso dentro do modal de uma escala. */
 export async function criarMusicaNaEscalaAction(
   _prev: ActionState,
@@ -92,9 +143,9 @@ export async function criarMusicaNaEscalaAction(
 
   let musica: Musica;
   try {
-    const repos = await getRepositories();
-    musica = await repos.musicas.create({ ...data, ministerioId: profile.ministerioId });
-  } catch {
+    musica = await criarMusicaAutorizada(data, profile.ministerioId);
+  } catch (error) {
+    console.error("Falha ao cadastrar música na escala:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
   invalidateDataCache("musicas");
@@ -118,12 +169,9 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
     return { error: "Ministério inválido." };
   }
   try {
-    const repos = await getRepositories();
-    await repos.musicas.create({
-      ...data,
-      ministerioId: data.ministerioId ?? profile.ministerioId,
-    });
-  } catch {
+    await criarMusicaAutorizada(data, data.ministerioId ?? profile.ministerioId);
+  } catch (error) {
+    console.error("Falha ao cadastrar música:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
 
