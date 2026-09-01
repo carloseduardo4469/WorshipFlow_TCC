@@ -1,0 +1,44 @@
+"use client";
+
+import Link from "next/link";
+import { Moon, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
+
+type ThemeMode = "dark" | "light";
+const STORAGE_KEY = "wf-legal-theme";
+
+export function LegalShell({ children }: { children: React.ReactNode }) {
+  const [mode, setMode] = useState<ThemeMode>("dark");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    const next = saved === "light" ? "light" : "dark";
+    setMode(next);
+    document.documentElement.dataset.legalTheme = next;
+    return () => { delete document.documentElement.dataset.legalTheme; };
+  }, []);
+
+  function toggleTheme() {
+    const next = mode === "dark" ? "light" : "dark";
+    window.localStorage.setItem(STORAGE_KEY, next);
+    document.documentElement.dataset.legalTheme = next;
+    setMode(next);
+  }
+
+  return (
+    <div className={`legal-theme ${mode === "light" ? "legal-theme-light" : ""}`}>
+      <div aria-hidden className="legal-grid pointer-events-none fixed inset-0" />
+      <header className="legal-header">
+        <Link href="/" className="legal-brand">WorshipFlow</Link>
+        <nav aria-label="Páginas institucionais" className="legal-nav">
+          <Link href="/termos">Termos</Link>
+          <Link href="/privacidade">Privacidade</Link>
+          <button type="button" onClick={toggleTheme} className="legal-theme-button" aria-label={mode === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}>
+            {mode === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
+        </nav>
+      </header>
+      <main className="legal-main">{children}</main>
+    </div>
+  );
+}

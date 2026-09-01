@@ -91,14 +91,14 @@ export function EscalaDetailsDialog({
   return (
     <div
       role="presentation"
-      className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-3 backdrop-blur-sm sm:p-6"
+      className="db-dashboard-modal-layer fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-3 backdrop-blur-sm sm:p-6"
       onMouseDown={onClose}
     >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="escala-detalhes-titulo"
-        className="db-member-modal db-schedule-dialog relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto overscroll-contain p-5 sm:p-7"
+        className="db-member-modal db-schedule-dialog db-dashboard-modal-scroll relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-2xl touch-pan-y overflow-y-auto overscroll-contain p-5 sm:p-7"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <button type="button" onClick={onClose} aria-label="Fechar detalhes" className="db-icon-button absolute right-4 top-4 z-10 h-9 w-9">
@@ -162,7 +162,7 @@ export function EscalaDetailsDialog({
           ) : escala.musicaIds.length === 0 ? (
             <p className="mt-3">Nenhuma música adicionada.</p>
           ) : (
-            <ol className="mt-3 space-y-2">
+            <ol className="db-schedule-song-list mt-3 space-y-2">
               {musicas.map((musica, index) => (
                 <li key={musica.id} className="db-schedule-song">
                   <span className="db-schedule-song-index">{index + 1}</span>
@@ -181,6 +181,10 @@ export function EscalaDetailsDialog({
             </ol>
           )}
         </section>
+
+        <button type="button" onClick={onClose} className="db-outline-action mt-6">
+          <X size={15} /> Fechar detalhes
+        </button>
       </section>
     </div>
   );

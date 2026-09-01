@@ -6,6 +6,7 @@ import { atualizarPerfilAction, excluirMinhaContaAction } from "@/lib/actions/us
 import { Input, CheckboxGroup } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import type { Usuario } from "@/types/domain";
 import {
   FORM_LIMITS,
@@ -59,6 +60,7 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
   const [preview, setPreview] = useState(usuario.fotoPerfilUrl);
   const [fileName, setFileName] = useState("");
   const [bottomMessage, setBottomMessage] = useState("");
+  const [confirmandoExcluirConta, setConfirmandoExcluirConta] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -204,17 +206,27 @@ export function PerfilForm({ usuario }: { usuario: Usuario }) {
         </Button>
       </div>
       </form>
-      <form action={deleteAction} className="db-panel mt-5 flex max-w-lg flex-col gap-4 border border-red-300/20 p-6 text-left sm:p-8">
+      <form id="delete-account-form" action={deleteAction} className="db-panel mt-5 flex max-w-lg flex-col gap-4 border border-red-300/20 p-6 text-left sm:p-8">
       <div>
         <h2 className="font-semibold text-paper">Excluir conta</h2>
         <p className="db-hint mt-1">Essa ação é permanente e remove seu acesso ao WorshipFlow.</p>
       </div>
       <Input label='Digite "excluirminhaconta" para confirmar' name="confirmacao" autoComplete="off" maxLength={FORM_LIMITS.confirmacaoExclusao} required />
       {deleteState?.error && <FormAlert>{deleteState.error}</FormAlert>}
-      <Button type="submit" disabled={deletePending} className="!bg-red-500/80 hover:!bg-red-500">
+      <Button type="button" onClick={() => setConfirmandoExcluirConta(true)} disabled={deletePending} className="!bg-red-500/80 hover:!bg-red-500">
         {deletePending ? "Excluindo..." : "Excluir minha conta"}
       </Button>
       </form>
+      <DeleteConfirmDialog
+        open={confirmandoExcluirConta}
+        title="Excluir sua conta?"
+        description={<>Seu acesso e seus dados pessoais serão removidos permanentemente. Esta ação <strong>não poderá ser desfeita</strong>.</>}
+        onCancel={() => setConfirmandoExcluirConta(false)}
+      >
+        <button type="submit" form="delete-account-form" disabled={deletePending} onClick={() => setConfirmandoExcluirConta(false)} className="delete-confirm-danger">
+          {deletePending ? "Excluindo..." : "Sim, excluir conta"}
+        </button>
+      </DeleteConfirmDialog>
       {bottomMessage && (
         <div
           role="status"

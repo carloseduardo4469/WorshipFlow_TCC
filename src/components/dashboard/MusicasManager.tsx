@@ -7,6 +7,7 @@ import { MusicaForm } from "./MusicaForm";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 
 type CampoFiltro = "titulo" | "artista" | "tonalidade";
 
@@ -18,6 +19,7 @@ const FILTROS: { value: CampoFiltro; label: string }[] = [
 
 export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
   const [musicaAberta, setMusicaAberta] = useState<Musica | "nova" | null>(null);
+  const [musicaParaExcluir, setMusicaParaExcluir] = useState<Musica | null>(null);
   const [busca, setBusca] = useState("");
   const [buscaEfetiva, setBuscaEfetiva] = useState("");
   const [campoFiltro, setCampoFiltro] = useState<CampoFiltro>("titulo");
@@ -212,7 +214,7 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
                           <div className="db-row-actions">
                             <button type="button" onClick={() => setMusicaAberta(musica)} className="db-btn-sm"><Pencil size={14} />Editar</button>
                             {isAdmin && (
-                              <button type="button" onClick={() => excluirMusica(musica.id, musica.titulo)} className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300">
+                              <button type="button" onClick={() => setMusicaParaExcluir(musica)} className="db-danger-button text-xs font-semibold text-red-400 hover:text-red-300">
                                 Excluir
                               </button>
                             )}
@@ -284,6 +286,24 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
           </section>
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={Boolean(musicaParaExcluir)}
+        title="Excluir música?"
+        description={<>A música <strong>“{musicaParaExcluir?.titulo}”</strong> será removida da biblioteca permanentemente.</>}
+        onCancel={() => setMusicaParaExcluir(null)}
+      >
+        <button
+          type="button"
+          className="delete-confirm-danger"
+          onClick={() => {
+            if (musicaParaExcluir) excluirMusica(musicaParaExcluir.id, musicaParaExcluir.titulo);
+            setMusicaParaExcluir(null);
+          }}
+        >
+          Sim, excluir
+        </button>
+      </DeleteConfirmDialog>
     </>
   );
 }

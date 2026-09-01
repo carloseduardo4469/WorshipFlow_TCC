@@ -6,6 +6,7 @@ import { removerEscalaAction } from "@/lib/actions/escalas";
 import { EscalaForm } from "./EscalaForm";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
 import type { Escala, Usuario } from "@/types/domain";
 
@@ -121,45 +122,19 @@ export function EscalasManager({
         </div>
       )}
 
-      {escalaParaExcluir && (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#020817]/70 p-4 backdrop-blur-sm"
-          onMouseDown={() => setEscalaParaExcluir(null)}
-        >
-          <section
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="confirmar-exclusao-titulo"
-            aria-describedby="confirmar-exclusao-descricao"
-            className="db-panel w-full max-w-md p-5 text-left shadow-2xl sm:p-7"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <p className="db-label text-red-300">Confirmação</p>
-            <h2 id="confirmar-exclusao-titulo" className="db-title mt-2 text-2xl text-paper">
-              Excluir escala?
-            </h2>
-            <p id="confirmar-exclusao-descricao" className="mt-3 text-sm leading-6 text-muted">
-              A escala <strong className="text-paper">“{escalaParaExcluir.titulo}”</strong> será removida permanentemente.
-            </p>
-            <div className="db-form-actions mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setEscalaParaExcluir(null)}
-                className="db-ghost px-4 py-2 text-sm font-semibold"
-              >
-                Cancelar
-              </button>
-              <form action={removerEscalaAction} onSubmit={() => setEscalaParaExcluir(null)}>
-                <input type="hidden" name="id" value={escalaParaExcluir.id} />
-                <button type="submit" className="db-danger-button w-full px-4 py-2 text-sm font-semibold text-red-400 hover:text-red-300">
-                  Sim, excluir
-                </button>
-              </form>
-            </div>
-          </section>
-        </div>
-      )}
+      <DeleteConfirmDialog
+        open={Boolean(escalaParaExcluir)}
+        title="Excluir escala?"
+        description={<>A escala <strong>“{escalaParaExcluir?.titulo}”</strong> será removida permanentemente.</>}
+        onCancel={() => setEscalaParaExcluir(null)}
+      >
+        {escalaParaExcluir && (
+          <form action={removerEscalaAction} onSubmit={() => setEscalaParaExcluir(null)}>
+            <input type="hidden" name="id" value={escalaParaExcluir.id} />
+            <button type="submit" className="delete-confirm-danger w-full">Sim, excluir</button>
+          </form>
+        )}
+      </DeleteConfirmDialog>
     </>
   );
 }

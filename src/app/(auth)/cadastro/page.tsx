@@ -9,7 +9,7 @@ import { AuthCard } from "@/components/auth/AuthCard";
 import {
   AuthBadge,
   AuthField,
-  GhostPillLink,
+  GoogleAuthButton,
   GhostUnderlineLink,
   PrimaryButton,
 } from "@/components/auth/AuthUi";
@@ -108,6 +108,11 @@ export default function CadastroPage() {
             <GhostUnderlineLink href="/login">Entrar</GhostUnderlineLink>
           </div>
 
+          <form action={loginComGoogleAction} className="mt-3 flex justify-center">
+            <input type="hidden" name="next" value="/dashboard" />
+            <GoogleAuthButton>Entrar com Google</GoogleAuthButton>
+          </form>
+
           <p className="mt-5 text-center text-xs font-semibold leading-relaxed af-muted">
             Ao criar conta, voce concorda com os{" "}
             <Link
@@ -126,16 +131,6 @@ export default function CadastroPage() {
             .
           </p>
 
-          <div className="mt-6 flex justify-center">
-            <GhostPillLink href="/login">Entrar</GhostPillLink>
-          </div>
-
-          <form action={loginComGoogleAction} className="mt-3 flex justify-center">
-            <input type="hidden" name="next" value="/dashboard" />
-            <button type="submit" className="af-btn-google">
-              Cadastrar com Google
-            </button>
-          </form>
         </div>
       </AuthCard>
 

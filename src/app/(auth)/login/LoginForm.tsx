@@ -11,7 +11,7 @@ import { Showcase } from "@/components/auth/Showcase";
 import {
   AuthBadge,
   AuthField,
-  GhostPillLink,
+  GoogleAuthButton,
   GhostUnderlineLink,
   PrimaryButton,
 } from "@/components/auth/AuthUi";
@@ -146,6 +146,12 @@ export function LoginForm() {
               maxLength={FORM_LIMITS.email}
               required
             />
+
+            <div className="-mt-2 text-right">
+              <Link href="/esqueci-senha" className="text-xs font-bold af-muted underline underline-offset-4 transition hover:text-amber">
+                Esqueci minha senha
+              </Link>
+            </div>
             <AuthField
               label="Senha"
               name="senha"
@@ -165,9 +171,12 @@ export function LoginForm() {
             </div>
           </form>
 
-          <div className="mt-4">
-            <GhostUnderlineLink href="/cadastro">Cadastre-se</GhostUnderlineLink>
-          </div>
+          <form action={loginComGoogleAction} className="mt-3 flex justify-center">
+            <input type="hidden" name="next" value={next} />
+            <GoogleAuthButton>Entrar com Google</GoogleAuthButton>
+          </form>
+
+          <div className="mt-3"><GhostUnderlineLink href="/cadastro">Cadastre-se</GhostUnderlineLink></div>
 
           <p className="mt-5 text-center text-xs font-semibold leading-relaxed af-muted">
             Ao entrar, você concorda com os{" "}
@@ -187,16 +196,6 @@ export function LoginForm() {
             .
           </p>
 
-          <div className="mt-7 flex justify-center">
-            <GhostPillLink href="/esqueci-senha">Esqueci minha senha</GhostPillLink>
-          </div>
-
-          <form action={loginComGoogleAction} className="mt-3 flex justify-center">
-            <input type="hidden" name="next" value={next} />
-            <button type="submit" className="af-btn-google">
-              Entrar com Google
-            </button>
-          </form>
         </div>
       </AuthCard>
 
