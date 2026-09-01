@@ -811,9 +811,9 @@ html[data-dashboard-theme="light"] .db-brand-subtitle { color: #0d6b96 !importan
 html[data-dashboard-theme="light"] aside, html[data-dashboard-theme="light"] header, html[data-dashboard-theme="light"] nav.fixed { background-color: #f9fcfe !important; border-color: rgba(44, 104, 151, .18) !important; }
 html[data-dashboard-theme="light"] .db-nav-link-active { color: #594000; background: linear-gradient(90deg, rgba(255, 206, 72, .5), rgba(160, 225, 255, .25)); }
 html[data-dashboard-theme="light"] .db-hero { border-color:rgba(194,125,15,.72); background: linear-gradient(115deg, #093d59 0%, #263272 53%, #703e8a 100%); }
-html[data-dashboard-theme="light"] .site-footer { border-color:rgba(177,112,13,.25) !important; background:#f9fcfe !important; color:#526780 !important; }
-html[data-dashboard-theme="light"] .site-footer a { color:#405873; }
-html[data-dashboard-theme="light"] .site-footer a:hover { color:#845600; }
+html[data-dashboard-theme="light"] .site-footer-dashboard { border-color:rgba(177,112,13,.25) !important; background:#f9fcfe !important; color:#526780 !important; }
+html[data-dashboard-theme="light"] .site-footer-dashboard a { color:#405873; }
+html[data-dashboard-theme="light"] .site-footer-dashboard a:hover { color:#845600; }
 html[data-dashboard-theme="light"] .db-data-table { background: rgba(255,255,255,.82); }
 html[data-dashboard-theme="light"] .db-file-button { border-color:rgba(21, 114, 156, .42); background:rgba(87, 211, 244, .18); color:#123955; }
 html[data-dashboard-theme="light"] .db-file-name { color:#263b57; }

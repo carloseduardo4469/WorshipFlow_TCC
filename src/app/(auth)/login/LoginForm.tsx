@@ -7,7 +7,6 @@ import { loginAction, loginComGoogleAction } from "@/lib/actions/auth";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthCard } from "@/components/auth/AuthCard";
-import { Showcase } from "@/components/auth/Showcase";
 import {
   AuthBadge,
   AuthField,
@@ -64,23 +63,7 @@ export function LoginForm() {
 
   return (
     <AuthShell>
-      <AuthCard
-        formSide="left"
-        showcase={
-          <Showcase
-            title={
-              <>
-                Bem-vindo ao
-                <br />
-                WorshipFlow.
-              </>
-            }
-            subtitle="Organize escalas, repertórios e equipes do ministério de louvor em um único ambiente."
-            ctaHref="/cadastro"
-            ctaLabel="Criar cadastro"
-          />
-        }
-      >
+      <AuthCard>
         <div className="flex flex-col">
           <div className="mb-7">
             <AuthBadge size={88} />
@@ -147,11 +130,6 @@ export function LoginForm() {
               required
             />
 
-            <div className="-mt-2 text-right">
-              <Link href="/esqueci-senha" className="text-xs font-bold af-muted underline underline-offset-4 transition hover:text-amber">
-                Esqueci minha senha
-              </Link>
-            </div>
             <AuthField
               label="Senha"
               name="senha"
@@ -161,6 +139,12 @@ export function LoginForm() {
               maxLength={FORM_LIMITS.senha}
               required
             />
+
+            <div className="-mt-2 text-right">
+              <Link href="/esqueci-senha" className="text-xs font-bold af-muted underline underline-offset-4 transition hover:text-amber">
+                Esqueci minha senha
+              </Link>
+            </div>
 
             {state?.error && <FormAlert>{state.error}</FormAlert>}
 
