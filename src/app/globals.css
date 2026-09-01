@@ -1310,6 +1310,8 @@ html[data-dashboard-theme="light"] .db-mobile-nav-link-active { border-color:rgb
 .legal-theme-light .legal-grid { opacity:.55; background-image:linear-gradient(rgba(84,109,132,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(84,109,132,.08) 1px,transparent 1px); }
 .legal-header { position:relative; z-index:2; display:flex; min-height:4.25rem; align-items:center; justify-content:space-between; gap:.75rem; border-bottom:1px solid var(--legal-border); padding:.75rem 1rem; background:color-mix(in srgb,var(--legal-bg) 94%,transparent); }
 .legal-brand { color:var(--legal-text); font-family:var(--font-serif); font-size:1.15rem; font-weight:900; }
+.legal-back-button { display:inline-flex; align-items:center; gap:.3rem; border:1px solid var(--legal-border); border-radius:999px; padding:.45rem .58rem; color:var(--legal-muted); font-size:.68rem; font-weight:800; }
+.legal-back-button:hover { border-color:var(--legal-gold); color:var(--legal-gold); }
 .legal-nav { display:flex; min-width:0; align-items:center; gap:.4rem; }
 .legal-nav a { border-radius:999px; padding:.45rem .55rem; color:var(--legal-muted); font-size:.68rem; font-weight:800; }
 .legal-nav a:hover { color:var(--legal-gold); }

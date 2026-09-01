@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Moon, Sun } from "lucide-react";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type ThemeMode = "dark" | "light";
@@ -9,6 +10,7 @@ const STORAGE_KEY = "wf-legal-theme";
 
 export function LegalShell({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>("dark");
+  const router = useRouter();
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -29,7 +31,12 @@ export function LegalShell({ children }: { children: React.ReactNode }) {
     <div className={`legal-theme ${mode === "light" ? "legal-theme-light" : ""}`}>
       <div aria-hidden className="legal-grid pointer-events-none fixed inset-0" />
       <header className="legal-header">
-        <Link href="/" className="legal-brand">WorshipFlow</Link>
+        <div className="flex min-w-0 items-center gap-2">
+          <button type="button" onClick={() => window.history.length > 1 ? router.back() : router.push("/login")} className="legal-back-button" aria-label="Voltar">
+            <ArrowLeft size={16} /> <span>Voltar</span>
+          </button>
+          <Link href="/" className="legal-brand">WorshipFlow</Link>
+        </div>
         <nav aria-label="Páginas institucionais" className="legal-nav">
           <Link href="/termos">Termos</Link>
           <Link href="/privacidade">Privacidade</Link>
