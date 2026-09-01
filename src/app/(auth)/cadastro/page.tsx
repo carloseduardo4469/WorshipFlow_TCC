@@ -6,7 +6,6 @@ import { cadastroAction, loginComGoogleAction } from "@/lib/actions/auth";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthCard } from "@/components/auth/AuthCard";
-import { Showcase } from "@/components/auth/Showcase";
 import {
   AuthBadge,
   AuthField,
@@ -27,24 +26,7 @@ export default function CadastroPage() {
 
   return (
     <AuthShell>
-      <AuthCard
-        formSide="right"
-        wide
-        showcase={
-          <Showcase
-            title={
-              <>
-                Ja faz parte
-                <br />
-                da equipe?
-              </>
-            }
-            subtitle="Entre com sua conta para acompanhar escalas, ensaios e repertorios do ministerio."
-            ctaHref="/login"
-            ctaLabel="Entrar"
-          />
-        }
-      >
+      <AuthCard wide>
         <div className="flex flex-col">
           <div className="mb-7">
             <AuthBadge size={88} />

@@ -1,5 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import logo from "@/app/icon.webp";
 
@@ -44,6 +48,8 @@ export function AuthField({
   ...rest
 }: AuthFieldProps) {
   const inputId = `field-${name}`;
+  const passwordField = type === "password";
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   return (
     <div className="flex flex-col gap-2">
@@ -51,20 +57,33 @@ export function AuthField({
         {label}
         {required && <span className="af-required">*</span>}
       </label>
-      <input
-        id={inputId}
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        autoComplete={autoComplete}
-        minLength={minLength}
-        maxLength={maxLength}
-        inputMode={inputMode}
-        defaultValue={defaultValue}
-        className="af-input"
-        {...rest}
-      />
+      <div className="relative">
+        <input
+          id={inputId}
+          name={name}
+          type={passwordField && mostrarSenha ? "text" : type}
+          placeholder={placeholder}
+          required={required}
+          autoComplete={autoComplete}
+          minLength={minLength}
+          maxLength={maxLength}
+          inputMode={inputMode}
+          defaultValue={defaultValue}
+          className={`af-input w-full ${passwordField ? "!pr-12" : ""}`}
+          {...rest}
+        />
+        {passwordField && (
+          <button
+            type="button"
+            onClick={() => setMostrarSenha((atual) => !atual)}
+            aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+            aria-pressed={mostrarSenha}
+            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-[color:var(--af-muted)] transition hover:bg-white/10 hover:text-[color:var(--af-text)]"
+          >
+            {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+      </div>
       {hint && <p className="af-hint">{hint}</p>}
     </div>
   );

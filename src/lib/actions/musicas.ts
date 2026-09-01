@@ -79,7 +79,7 @@ export async function criarMusicaNaEscalaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAuth();
+  const { profile } = await requireAuth();
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
@@ -90,8 +90,13 @@ export async function criarMusicaNaEscalaAction(
   if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
   if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
-  const repos = await getRepositories();
-  const musica = await repos.musicas.create({ ...data, ministerioId: null });
+  let musica: Musica;
+  try {
+    const repos = await getRepositories();
+    musica = await repos.musicas.create({ ...data, ministerioId: profile.ministerioId });
+  } catch {
+    return { error: "Não foi possível salvar a música. Tente novamente." };
+  }
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");
@@ -99,7 +104,7 @@ export async function criarMusicaNaEscalaAction(
 }
 
 export async function criarMusicaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAuth();
+  const { profile } = await requireAuth();
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
@@ -112,8 +117,15 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   if (data.ministerioId !== null && (!Number.isInteger(data.ministerioId) || data.ministerioId <= 0)) {
     return { error: "Ministério inválido." };
   }
-  const repos = await getRepositories();
-  await repos.musicas.create(data);
+  try {
+    const repos = await getRepositories();
+    await repos.musicas.create({
+      ...data,
+      ministerioId: data.ministerioId ?? profile.ministerioId,
+    });
+  } catch {
+    return { error: "Não foi possível salvar a música. Tente novamente." };
+  }
 
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
@@ -137,9 +149,13 @@ export async function atualizarMusicaAction(
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
   if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
-  const repos = await getRepositories();
-  const { ministerioId: _ministerioId, ...musica } = data;
-  await repos.musicas.update(id, musica);
+  try {
+    const repos = await getRepositories();
+    const { ministerioId: _ministerioId, ...musica } = data;
+    await repos.musicas.update(id, musica);
+  } catch {
+    return { error: "Não foi possível salvar as alterações da música. Tente novamente." };
+  }
 
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
