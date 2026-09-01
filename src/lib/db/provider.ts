@@ -2,12 +2,11 @@ import "server-only";
 import type { Backend } from "./repositories/types";
 
 /**
- * Decide qual backend usar nesta requisição: 'supabase' (padrão) ou 'local'
- * (fallback em SQLite, para dev em rede que bloqueia a conexão direta ao
- * Postgres/proxy do Supabase).
+ * Decide qual backend usar nesta requisição: 'supabase' (padrão) ou 'local'.
  *
- * DB_MODE no .env força um dos dois; sem ele, tenta Supabase primeiro e
- * cai pro local automaticamente se a checagem falhar ou der timeout.
+ * O SQLite contém dados independentes e só pode ser usado quando DB_MODE=local
+ * for definido explicitamente. O modo auto continua disponível para ambientes
+ * de demonstração, mas nunca é ativado silenciosamente.
  * O resultado fica em cache por CACHE_MS pra não bater no Supabase a cada
  * requisição em dev.
  */
@@ -46,9 +45,13 @@ async function checkSupabaseHealth(): Promise<boolean> {
 }
 
 export async function resolveBackend(): Promise<Backend> {
-  const mode = (process.env.DB_MODE ?? "auto").toLowerCase();
+  const mode = (process.env.DB_MODE ?? "supabase").toLowerCase();
   if (mode === "supabase") return "supabase";
   if (mode === "local") return "local";
+  if (mode !== "auto") {
+    console.warn(`[worshipflow/db] DB_MODE desconhecido: ${mode}. Usando Supabase.`);
+    return "supabase";
+  }
 
   // Em serverless (Vercel) o filesystem é read-only: o fallback pro SQLite
   // nunca pode acontecer lá, senão toda request quebra. Força Supabase —
