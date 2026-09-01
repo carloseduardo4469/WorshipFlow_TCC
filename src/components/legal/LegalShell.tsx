@@ -15,15 +15,8 @@ export function LegalShell({ children, currentPage }: { children: React.ReactNod
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     const next = saved === "light" ? "light" : "dark";
-    const owner = `${Date.now()}-${Math.random()}`;
     setMode(next);
     document.documentElement.dataset.legalTheme = next;
-    document.documentElement.dataset.legalThemeOwner = owner;
-    return () => {
-      if (document.documentElement.dataset.legalThemeOwner !== owner) return;
-      delete document.documentElement.dataset.legalTheme;
-      delete document.documentElement.dataset.legalThemeOwner;
-    };
   }, []);
 
   function toggleTheme() {

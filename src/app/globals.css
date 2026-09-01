@@ -1306,6 +1306,7 @@ html[data-dashboard-theme="light"] .db-mobile-nav-link-active { border-color:rgb
   color:var(--legal-text);
 }
 .legal-theme-light { --legal-bg:#f6f8f5; --legal-panel:#fffdfa; --legal-panel-soft:#fff8e7; --legal-border:rgba(170,105,8,.32); --legal-text:#17233a; --legal-muted:#53677d; --legal-gold:#9a6405; }
+html[data-legal-theme="light"] .legal-theme { --legal-bg:#f6f8f5; --legal-panel:#fffdfa; --legal-panel-soft:#fff8e7; --legal-border:rgba(170,105,8,.32); --legal-text:#17233a; --legal-muted:#53677d; --legal-gold:#9a6405; }
 .legal-grid { opacity:.34; background-image:linear-gradient(rgba(148,163,184,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.06) 1px,transparent 1px); background-size:42px 42px; }
 .legal-theme-light .legal-grid { opacity:.55; background-image:linear-gradient(rgba(84,109,132,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(84,109,132,.08) 1px,transparent 1px); }
 .legal-header { position:relative; z-index:2; display:flex; min-height:4.25rem; align-items:center; justify-content:space-between; gap:.75rem; border-bottom:1px solid var(--legal-border); padding:.75rem 1rem; background:color-mix(in srgb,var(--legal-bg) 94%,transparent); }
@@ -1329,8 +1330,8 @@ html[data-dashboard-theme="light"] .db-mobile-nav-link-active { border-color:rgb
 .legal-card p,.legal-contact p:not(.legal-eyebrow) { margin-top:.4rem; color:var(--legal-muted); font-size:.82rem; line-height:1.65; }
 .legal-contact { scroll-margin-top:1rem; display:grid; grid-template-columns:2.6rem minmax(0,1fr); gap:.85rem; margin-top:.2rem; border:1px solid var(--legal-border); border-radius:1.1rem; padding:1.1rem; background:var(--legal-panel-soft); }
 .legal-contact a { display:inline-block; max-width:100%; margin-top:.75rem; overflow-wrap:anywhere; color:var(--legal-gold); font-size:.82rem; font-weight:850; text-decoration:underline; text-underline-offset:4px; }
-html[data-legal-theme="light"] .site-footer { border-color:rgba(170,105,8,.24) !important; background:#f6f8f5 !important; color:#53677d !important; }
-html[data-legal-theme="light"] .site-footer a { color:#40566e; }
+body:has(.legal-theme-light) .site-footer { border-color:rgba(170,105,8,.24) !important; background:#f6f8f5 !important; color:#53677d !important; }
+body:has(.legal-theme-light) .site-footer a { color:#40566e; }
 
 @media (min-width:640px) {
   .legal-header { padding-inline:1.5rem; }

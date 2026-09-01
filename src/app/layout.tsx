@@ -77,6 +77,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try { var legalTheme = localStorage.getItem("wf-legal-theme"); if (legalTheme === "light" || legalTheme === "dark") document.documentElement.dataset.legalTheme = legalTheme; } catch (_) {}`,
+          }}
+        />
         <PwaRegister />
         {children}
         <SiteFooter />
