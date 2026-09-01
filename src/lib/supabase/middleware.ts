@@ -59,19 +59,19 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // getUser() (não getSession()) valida o token com o servidor Auth —
-  // é o jeito seguro de checar sessão em middleware.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() valida o JWT localmente quando o projeto usa chaves
+  // assimétricas. Isso elimina uma chamada ao Auth em cada navegação; em
+  // projetos com segredo simétrico a própria biblioteca faz fallback seguro.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
 
-  if (!user && !publicPath) {
+  if (!userId && !publicPath) {
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && (pathname === "/login" || pathname === "/cadastro")) {
+  if (userId && (pathname === "/login" || pathname === "/cadastro")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

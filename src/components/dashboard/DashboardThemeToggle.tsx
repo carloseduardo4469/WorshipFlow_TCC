@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
-import { applyTheme, setTheme, useThemeMode } from "@/lib/theme/client";
+import { setTheme, useThemeMode } from "@/lib/theme/client";
 
 export function DashboardThemeToggle({ compact = false }: { compact?: boolean }) {
   const mode = useThemeMode();
-  useEffect(() => {
-    applyTheme(mode);
-  }, [mode]);
-
   function toggleTheme() {
     const next = mode === "dark" ? "light" : "dark";
     setTheme(next);

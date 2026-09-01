@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { LogOut, Sparkles } from "lucide-react";
 import { logoutAction } from "@/lib/actions/auth";
@@ -8,7 +9,7 @@ import { DashboardThemeToggle } from "./DashboardThemeToggle";
 
 function Avatar({ usuario }: { usuario: Usuario }) {
   const initials = usuario.nome.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]!.toUpperCase()).join("");
-  return usuario.fotoPerfilUrl ? <img src={usuario.fotoPerfilUrl} alt={usuario.nome} width={32} height={32} loading="lazy" className="h-8 w-8 rounded-full object-cover" /> : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#e9d375] to-[#5ccee0] text-xs font-bold text-[#07101e]">{initials}</span>;
+  return usuario.fotoPerfilUrl ? <Image src={usuario.fotoPerfilUrl} alt={usuario.nome} width={32} height={32} sizes="32px" className="h-8 w-8 rounded-full object-cover" /> : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#e9d375] to-[#5ccee0] text-xs font-bold text-[#07101e]">{initials}</span>;
 }
 
 export function TopNavbar({ usuario }: { usuario: Usuario }) {

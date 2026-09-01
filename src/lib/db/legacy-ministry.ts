@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Repositories } from "@/lib/db/repositories";
 import type { Usuario } from "@/types/domain";
+import { invalidateDataCache } from "@/lib/db/cache";
 
 let migrationPromise: Promise<number | null> | null = null;
 
@@ -105,6 +106,7 @@ export async function ensureLegacyMinistryAssignments(
   // ainda precisam receber o vínculo de forma persistente no primeiro acesso.
   if (profile.ministerioId !== ministerioId) {
     await assignCurrentProfile(repos, profile.id, ministerioId);
+    invalidateDataCache("usuarios");
   }
 
   return profile.ministerioId === ministerioId

@@ -15,7 +15,7 @@ export function PresenceTracker() {
     }
 
     bater();
-    const timer = window.setInterval(bater, 60_000);
+    const timer = window.setInterval(bater, 120_000);
     const onVisibility = () => bater();
     document.addEventListener("visibilitychange", onVisibility);
 

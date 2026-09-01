@@ -18,7 +18,15 @@ const FILTROS: { value: CampoFiltro; label: string }[] = [
   { value: "tonalidade", label: "Tom" },
 ];
 
-export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
+export function MusicasManager({
+  isAdmin,
+  musicasIniciais,
+  temMaisInicial,
+}: {
+  isAdmin: boolean;
+  musicasIniciais: Musica[];
+  temMaisInicial: boolean;
+}) {
   const [musicaAberta, setMusicaAberta] = useState<Musica | "nova" | null>(null);
   const [musicaParaExcluir, setMusicaParaExcluir] = useState<Musica | null>(null);
   const [busca, setBusca] = useState("");
@@ -65,6 +73,8 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
     limiteDom: 50,
     alturaPadraoLinha: 42,
     reiniciarAo: `${campoFiltro}|${buscaEfetiva}`,
+    itensIniciais: musicasIniciais,
+    temMaisInicial,
   });
 
   useEffect(() => {

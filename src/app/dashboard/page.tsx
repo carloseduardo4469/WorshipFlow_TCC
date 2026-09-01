@@ -3,6 +3,7 @@ import { ArrowUpRight, CalendarDays, Check, History } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-automatico";
+import { listEscalasCached } from "@/lib/db/queries";
 
 function mesParaExibir(hoje: string) {
   const [ano, mes, dia] = hoje.split("-").map(Number);
@@ -21,7 +22,7 @@ function formatarData(data: string | null) {
 export default async function DashboardHomePage() {
   const { profile, authId } = await requireAuth();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list(profile.ministerioId ?? -1));
+  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos, profile.ministerioId ?? -1));
   const hoje = hojeEmSaoPaulo();
   const mes = mesParaExibir(hoje);
   const minhasEscalas = escalas.filter((escala) => escala.status === "PUBLICADA" && escala.usuarioIds.includes(authId) && escala.dataEscala?.startsWith(mes.prefixo)).sort((a, b) => (a.dataEscala ?? "").localeCompare(b.dataEscala ?? ""));

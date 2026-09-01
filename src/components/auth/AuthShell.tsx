@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
-import { applyTheme, setTheme, useThemeMode } from "@/lib/theme/client";
+import { setTheme, useThemeMode } from "@/lib/theme/client";
 
 /**
  * Estrutura das telas de autenticação: fundo navy com grade quadriculada,
@@ -10,11 +9,6 @@ import { applyTheme, setTheme, useThemeMode } from "@/lib/theme/client";
  */
 export function AuthShell({ children }: { children: React.ReactNode }) {
   const mode = useThemeMode();
-
-  // Recupera a preferência salva depois da hidratação (evita mismatch de SSR).
-  useEffect(() => {
-    applyTheme(mode);
-  }, [mode]);
 
   function toggleMode() {
     setTheme(mode === "dark" ? "light" : "dark");

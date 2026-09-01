@@ -1,11 +1,13 @@
 import "@/styles/legal.css";
 import { Database, LockKeyhole, Mail, Scale, ShieldCheck, Users } from "lucide-react";
 import { LegalShell } from "@/components/legal/LegalShell";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export default function TermosPage() {
   return (
-    <LegalShell currentPage="termos">
-      <section className="legal-hero">
+    <>
+      <LegalShell currentPage="termos">
+        <section className="legal-hero">
         <p className="legal-eyebrow"><Scale size={14} /> Documento institucional</p>
         <h1>Termos de uso</h1>
         <p>Regras simples para utilizar o WorshipFlow com segurança, responsabilidade e respeito à equipe do ministério.</p>
@@ -17,7 +19,9 @@ export default function TermosPage() {
         <section className="legal-card"><span className="legal-card-icon"><Database size={19} /></span><div><h2>Conteúdo cadastrado</h2><p>Músicas, escalas e demais registros devem respeitar a finalidade do sistema. Informações incorretas ou inadequadas podem ser corrigidas ou removidas pela administração.</p></div></section>
         <section className="legal-card"><span className="legal-card-icon"><ShieldCheck size={19} /></span><div><h2>Disponibilidade</h2><p>O sistema pode receber atualizações, correções ou interrupções temporárias. Buscamos preservar os dados e manter o serviço estável, mas não garantimos funcionamento ininterrupto.</p></div></section>
         <section id="contato" className="legal-contact"><span className="legal-contact-icon"><Mail size={21} /></span><div><p className="legal-eyebrow">Contato</p><h2>Precisa falar conosco?</h2><p>Para dúvidas sobre os termos, privacidade ou utilização do WorshipFlow, envie um e-mail.</p><a href="mailto:Lucasavilagodoi43@gmail.com">Lucasavilagodoi43@gmail.com</a></div></section>
-      </div>
-    </LegalShell>
+        </div>
+      </LegalShell>
+      <SiteFooter />
+    </>
   );
 }

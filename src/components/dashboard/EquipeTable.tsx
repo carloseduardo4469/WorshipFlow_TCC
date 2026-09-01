@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { ArrowUpRight, Mail, Music4, Phone, X } from "lucide-react";
 import { listarUsuariosComPresenca } from "@/lib/actions/usuarios";
 import type { Usuario } from "@/types/domain";
@@ -16,8 +17,8 @@ const nomesHabilidades: Record<string, string> = {
   "voz-secundaria": "Voz secundária",
 };
 
-// Considera online quem teve atividade nos últimos 2 minutos.
-const LIMITE_ONLINE_MS = 2 * 60 * 1000;
+// Considera online quem teve atividade nos últimos 3 minutos.
+const LIMITE_ONLINE_MS = 3 * 60 * 1000;
 
 function habilidadesLista(usuario: Usuario): string[] {
   return (usuario.habilidades ?? "")
@@ -34,7 +35,7 @@ function estaOnline(usuario: Usuario, agora: number): boolean {
   return agora - ultima < LIMITE_ONLINE_MS;
 }
 
-function Avatar({ usuario, className = "" }: { usuario: Usuario; className?: string }) {
+function Avatar({ usuario, className = "", size = 40 }: { usuario: Usuario; className?: string; size?: number }) {
   const iniciais = usuario.nome
     .split(" ")
     .filter(Boolean)
@@ -43,7 +44,7 @@ function Avatar({ usuario, className = "" }: { usuario: Usuario; className?: str
     .join("");
 
   if (usuario.fotoPerfilUrl) {
-    return <img src={usuario.fotoPerfilUrl} alt={`Foto de ${usuario.nome}`} loading="lazy" className={`shrink-0 rounded-full object-cover ${className}`} />;
+    return <Image src={usuario.fotoPerfilUrl} alt={`Foto de ${usuario.nome}`} width={size} height={size} sizes={`${size}px`} className={`shrink-0 rounded-full object-cover ${className}`} />;
   }
 
   return (
@@ -85,7 +86,7 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
         .finally(() => { buscandoPresenca.current = false; });
     }
 
-    const timer = window.setInterval(atualizarPresencas, 30_000);
+    const timer = window.setInterval(atualizarPresencas, 60_000);
     document.addEventListener("visibilitychange", atualizarPresencas);
     return () => {
       window.clearInterval(timer);
@@ -179,7 +180,7 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
             </button>
 
             <div className="flex flex-col items-center text-center">
-              <Avatar usuario={selecionado} className="h-24 w-24 text-2xl ring-2 ring-cyan-300/45" />
+              <Avatar usuario={selecionado} size={96} className="h-24 w-24 text-2xl ring-2 ring-cyan-300/45" />
               <p className="db-label mt-4 text-cyan-300">Perfil da equipe</p>
               <h2 id="perfil-equipe-titulo" className="db-title mt-1 pr-0 text-3xl text-paper">
                 {selecionado.nome}

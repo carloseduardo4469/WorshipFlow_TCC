@@ -1,3 +1,11 @@
+const supabaseHostname = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
+  } catch {
+    return "";
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -23,7 +31,12 @@ const nextConfig = {
   // bundle do servidor, senão o build falha ou o runtime quebra em prod.
   serverExternalPackages: ["better-sqlite3"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
+      ...(supabaseHostname ? [{ protocol: "https", hostname: supabaseHostname, pathname: "/storage/v1/object/public/**" }] : []),
+    ],
   },
 };
 

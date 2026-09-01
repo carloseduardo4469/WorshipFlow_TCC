@@ -6,18 +6,15 @@ import {
 import "./globals.css";
 import { appConfig } from "@/content/app-config";
 import { PwaRegister } from "@/components/PwaRegister";
-import { SiteFooter } from "@/components/SiteFooter";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["500", "700", "800"],
   variable: "--font-display",
 });
 
 // Serifada estilo didone dos títulos grandes das telas de autenticação.
 const serif = Playfair_Display({
   subsets: ["latin"],
-  weight: ["700", "800", "900"],
   variable: "--font-serif",
 });
 
@@ -88,7 +85,6 @@ export default function RootLayout({
         />
         <PwaRegister />
         {children}
-        <SiteFooter />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

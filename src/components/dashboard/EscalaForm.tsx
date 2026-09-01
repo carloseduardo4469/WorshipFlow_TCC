@@ -26,10 +26,12 @@ const NOMES_FUNCOES: Record<string, string> = {
 export function EscalaForm({
   escala,
   usuarios,
+  temMaisUsuariosInicial = false,
   onCancel,
 }: {
   escala?: Escala;
   usuarios: Usuario[];
+  temMaisUsuariosInicial?: boolean;
   onCancel?: () => void;
 }) {
   const action = escala ? atualizarEscalaAction : criarEscalaAction;
@@ -88,6 +90,8 @@ export function EscalaForm({
     tamanhoPagina: 20,
     limiteDom: 40,
     alturaPadraoLinha: 36,
+    itensIniciais: escala ? undefined : usuarios,
+    temMaisInicial: temMaisUsuariosInicial,
   });
 
   const hoje = new Date();

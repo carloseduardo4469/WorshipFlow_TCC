@@ -2,15 +2,10 @@
 
 import Link from "next/link";
 import { ArrowLeft, Moon, Sun } from "lucide-react";
-import { useEffect } from "react";
-import { applyTheme, setTheme, useThemeMode } from "@/lib/theme/client";
+import { setTheme, useThemeMode } from "@/lib/theme/client";
 
 export function LegalShell({ children, currentPage }: { children: React.ReactNode; currentPage: "termos" | "privacidade" }) {
   const mode = useThemeMode();
-
-  useEffect(() => {
-    applyTheme(mode);
-  }, [mode]);
 
   function toggleTheme() {
     const next = mode === "dark" ? "light" : "dark";

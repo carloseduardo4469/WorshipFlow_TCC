@@ -38,7 +38,7 @@ html[data-theme="light"] .legal-grid { opacity:.55; background-image:linear-grad
 .legal-hero > p:not(.legal-eyebrow) { max-width:42rem; margin-top:1rem; color:var(--legal-muted); font-size:.9rem; font-weight:550; line-height:1.7; }
 .legal-updated { display:inline-flex; margin-top:1rem; border:1px solid var(--legal-border); border-radius:999px; padding:.38rem .65rem; color:var(--legal-muted); font-size:.68rem; font-weight:750; }
 .legal-content { display:grid; gap:.75rem; margin-top:.9rem; }
-.legal-card { display:grid; grid-template-columns:2.4rem minmax(0,1fr); gap:.8rem; border:1px solid color-mix(in srgb,var(--legal-border) 72%,transparent); border-radius:1rem; padding:1rem; background:var(--legal-panel); }
+.legal-card { display:grid; grid-template-columns:2.4rem minmax(0,1fr); gap:.8rem; border:1px solid color-mix(in srgb,var(--legal-border) 72%,transparent); border-radius:1rem; padding:1rem; background:var(--legal-panel); content-visibility:auto; contain-intrinsic-size:auto 180px; }
 .legal-card-icon,.legal-contact-icon { display:grid; width:2.4rem; height:2.4rem; place-items:center; border:1px solid var(--legal-border); border-radius:.8rem; background:var(--legal-panel-soft); color:var(--legal-gold); }
 .legal-card h2,.legal-contact h2 { color:var(--legal-text); font-size:1rem; font-weight:850; }
 .legal-card p,.legal-contact p:not(.legal-eyebrow) { margin-top:.4rem; color:var(--legal-muted); font-size:.82rem; line-height:1.65; }

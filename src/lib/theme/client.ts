@@ -17,13 +17,14 @@ export function readTheme(): ThemeMode {
 
 export function applyTheme(mode: ThemeMode, persist = false) {
   const root = document.documentElement;
-  root.dataset.theme = mode;
-  root.dataset.authTheme = mode;
-  root.dataset.dashboardTheme = mode;
-  root.dataset.legalTheme = mode;
+  if (root.dataset.theme !== mode) root.dataset.theme = mode;
+  if (root.dataset.authTheme !== mode) root.dataset.authTheme = mode;
+  if (root.dataset.dashboardTheme !== mode) root.dataset.dashboardTheme = mode;
+  if (root.dataset.legalTheme !== mode) root.dataset.legalTheme = mode;
 
   const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  themeMeta?.setAttribute("content", mode === "light" ? "#f6f8f5" : "#07101e");
+  const themeColor = mode === "light" ? "#f6f8f5" : "#07101e";
+  if (themeMeta?.content !== themeColor) themeMeta?.setAttribute("content", themeColor);
 
   if (persist) window.localStorage.setItem(THEME_STORAGE_KEY, mode);
 }

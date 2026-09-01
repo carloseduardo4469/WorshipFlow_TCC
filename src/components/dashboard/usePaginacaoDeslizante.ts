@@ -32,6 +32,9 @@ export interface OpcoesPaginacao<T> {
   alturaPadraoLinha?: number;
   /** Qualquer mudança nesta string zera a lista e recarrega da página 1. */
   reiniciarAo?: string;
+  /** Primeira página renderizada no servidor, evitando uma busca após hidratar. */
+  itensIniciais?: T[];
+  temMaisInicial?: boolean;
 }
 
 export interface PaginacaoDeslizante<T> {
@@ -60,14 +63,16 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
     limiteDom = LIMITE_DOM_PADRAO,
     alturaPadraoLinha = ALTURA_PADRAO_LINHA,
     reiniciarAo = "",
+    itensIniciais,
+    temMaisInicial = false,
   } = opcoes;
 
-  const [itens, setItens] = useState<T[]>([]);
+  const [itens, setItens] = useState<T[]>(() => itensIniciais ?? []);
   const [inicio, setInicio] = useState(0);
   const [topoAltura, setTopoAltura] = useState(0);
-  const [carregando, setCarregando] = useState(true);
+  const [carregando, setCarregando] = useState(itensIniciais === undefined);
   const [carregandoMais, setCarregandoMais] = useState(false);
-  const [temMais, setTemMais] = useState(true);
+  const [temMais, setTemMais] = useState(itensIniciais === undefined ? true : temMaisInicial);
   const [erro, setErro] = useState(false);
   const [roleiDaLista, setRoleiDaLista] = useState(false);
   const [alturas, setAlturas] = useState(new Map<string | number, number>());
@@ -77,12 +82,13 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
   const sentinelaRef = useCallback((elemento: HTMLElement | null) => {
     sentinelaElementoRef.current = elemento;
   }, []);
-  const itensRef = useRef<T[]>([]);
+  const itensRef = useRef<T[]>(itensIniciais ?? []);
   const inicioRef = useRef(0);
   const topoRef = useRef(0);
   const carregandoRef = useRef(false);
   const geracaoRef = useRef(0);
   const frameRef = useRef<number | null>(null);
+  const primeiraCargaRef = useRef(itensIniciais !== undefined);
 
   const definirInicio = useCallback((valor: number) => {
     inicioRef.current = valor;
@@ -111,6 +117,10 @@ export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): Paginacao
   for (let i = fim; i < itens.length; i++) fundoAltura += alturaDe(itens[i]);
 // Carrega a primeira página sempre que a busca/filtro mudar.
   useEffect(() => {
+    if (primeiraCargaRef.current) {
+      primeiraCargaRef.current = false;
+      return;
+    }
     const geracao = ++geracaoRef.current;
     let ativo = true;
     const timer = setTimeout(async () => {

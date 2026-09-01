@@ -3,11 +3,12 @@ import { getRepositories } from "@/lib/db/repositories";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { HistoricoCalendar } from "@/components/dashboard/HistoricoCalendar";
 import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-automatico";
+import { listEscalasCached } from "@/lib/db/queries";
 
 export default async function HistoricoPage() {
   const { profile } = await requireAuth();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list(profile.ministerioId ?? -1));
+  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos, profile.ministerioId ?? -1));
   const limite = hojeEmSaoPaulo();
   const historico = escalas.filter((escala) =>
     escala.status === "CONCLUIDA" && Boolean(escala.dataEscala && escala.dataEscala < limite)

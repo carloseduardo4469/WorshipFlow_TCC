@@ -3,11 +3,12 @@ import { getRepositories } from "@/lib/db/repositories";
 import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-automatico";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EscalasTable } from "@/components/dashboard/EscalasTable";
+import { listEscalasCached } from "@/lib/db/queries";
 
 export default async function EscalasPage() {
   const { authId, profile } = await requireAuth();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await repos.escalas.list(profile.ministerioId ?? -1));
+  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos, profile.ministerioId ?? -1));
   const hoje = hojeEmSaoPaulo();
   const proximasEscalas = escalas.filter((escala) =>
     escala.status === "PUBLICADA" && (!escala.dataEscala || escala.dataEscala >= hoje)
