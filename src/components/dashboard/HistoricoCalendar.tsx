@@ -154,7 +154,7 @@ export function HistoricoCalendar({
                 </button>
               ))}
             </div>
-            <p className="mt-4 flex items-center gap-2 text-xs text-muted"><CalendarDays size={14} /> Toque em uma escala para ver todos os detalhes.</p>
+            <p className="db-expand-hint mt-4"><CalendarDays size={14} /> Toque em uma escala para ver todos os detalhes.</p>
           </section>
         </div>
       )}

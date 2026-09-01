@@ -198,11 +198,11 @@ export function MusicasManager({ isAdmin }: { isAdmin: boolean }) {
                           {musica.tonalidade ?? "—"}
                         </td>
                         <td className="px-4 py-1.5 text-muted md:table-cell md:py-3.5">
-                          <span className="mr-2 text-xs uppercase text-muted/70 md:hidden">Cifra:</span>
+                          <span className="mb-1 block text-xs uppercase text-muted/70 md:hidden">Cifra:</span>
                           {musica.linkCifra ? (
-                            <a href={musica.linkCifra} target="_blank" rel="noreferrer" className="inline-flex max-w-full items-center gap-1 text-cyan-300 hover:text-cyan-200 hover:underline">
-                              <span className="max-w-[180px] truncate">{musica.linkCifra}</span>
-                              <ExternalLink size={13} />
+                            <a href={musica.linkCifra} target="_blank" rel="noreferrer" className="flex min-w-0 max-w-full items-start gap-1 text-cyan-300 hover:text-cyan-200 hover:underline">
+                              <span className="min-w-0 [overflow-wrap:anywhere]">{musica.linkCifra}</span>
+                              <ExternalLink size={13} className="mt-0.5 shrink-0" />
                             </a>
                           ) : (
                             "—"

@@ -82,13 +82,13 @@ export async function atualizarPerfilAction(
   let fotoPerfilUrl: string | undefined;
   if (fotoPerfil instanceof File && fotoPerfil.size > 0) {
     const tiposPermitidos = ["image/jpeg", "image/png", "image/webp"];
-    const tamanhoMaximo = 1 * 1024 * 1024;
+    const tamanhoMaximo = 5 * 1024 * 1024;
 
     if (!tiposPermitidos.includes(fotoPerfil.type)) {
       return { error: "Use uma imagem JPG, PNG ou WebP." };
     }
     if (fotoPerfil.size > tamanhoMaximo) {
-      return { error: "A foto deve ter no máximo 1 MB." };
+      return { error: "A foto deve ter no máximo 5 MB." };
     }
 
     const bytes = Buffer.from(await fotoPerfil.arrayBuffer());

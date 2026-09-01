@@ -25,9 +25,9 @@ const OPCOES_HABILIDADES = [
 ];
 
 const FOTO_TIPOS_PERMITIDOS = ["image/jpeg", "image/png", "image/webp"];
-const FOTO_TAMANHO_MAXIMO_BYTES = 1 * 1024 * 1024;
+const FOTO_TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024;
 const FOTO_DIMENSAO_MAXIMA = 512;
-const FOTO_ERRO_TAMANHO = "A foto precisa ter no máximo 1 MB.";
+const FOTO_ERRO_TAMANHO = "A foto precisa ter no máximo 5 MB.";
 const FOTO_ERRO_TIPO = "Use uma imagem JPG, PNG ou WebP.";
 
 async function otimizarFoto(file: File): Promise<File> {

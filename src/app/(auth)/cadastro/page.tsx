@@ -132,7 +132,7 @@ export default function CadastroPage() {
 
           <form action={loginComGoogleAction} className="mt-3 flex justify-center">
             <input type="hidden" name="next" value="/dashboard" />
-            <button type="submit" className="af-btn-pill">
+            <button type="submit" className="af-btn-google">
               Cadastrar com Google
             </button>
           </form>

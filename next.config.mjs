@@ -8,7 +8,8 @@ const nextConfig = {
   // esse cache na hora, então o dado alterado aparece na próxima visita.
   experimental: {
     serverActions: {
-      bodySizeLimit: "2mb",
+      // 5 MB para a imagem, mais a pequena sobrecarga do multipart/form-data.
+      bodySizeLimit: "6mb",
     },
     staleTimes: {
       dynamic: 600,

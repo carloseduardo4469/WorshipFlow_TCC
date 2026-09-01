@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, Music2, Plus, Users } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Music2, Plus, Users } from "lucide-react";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
 import { EscalaMusicasDialog } from "./EscalaMusicasDialog";
@@ -66,7 +66,7 @@ export function EscalasTable({
                 >
                   <td data-label="Escala" className="px-4 py-3.5">
                     <strong className="db-schedule-row-title block">{escala.titulo}</strong>
-                    <span className="db-schedule-row-hint mt-1 block">Clique para ver equipe e repertório</span>
+                    <span className="db-expand-hint mt-2"><ArrowUpRight size={13} /> Clique para ver equipe e repertório</span>
                     {podeAdicionarMusicas && (
                       <button type="button" onClick={(event) => { event.stopPropagation(); setEscalaParaMusicas(escala); }} className="db-btn-sm mt-3 text-xs">
                         <Plus size={14} /> Adicionar músicas

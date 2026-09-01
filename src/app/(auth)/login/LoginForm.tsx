@@ -193,7 +193,7 @@ export function LoginForm() {
 
           <form action={loginComGoogleAction} className="mt-3 flex justify-center">
             <input type="hidden" name="next" value={next} />
-            <button type="submit" className="af-btn-pill">
+            <button type="submit" className="af-btn-google">
               Entrar com Google
             </button>
           </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mail, Music4, Phone, X } from "lucide-react";
+import { ArrowUpRight, Mail, Music4, Phone, X } from "lucide-react";
 import { listarUsuariosComPresenca } from "@/lib/actions/usuarios";
 import type { Usuario } from "@/types/domain";
 
@@ -119,6 +119,7 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
                       <span className="min-w-0">
                         <span className="block truncate">{usuario.nome}</span>
                         <span className="block truncate text-xs font-normal text-muted">{usuario.email}</span>
+                        <span className="db-expand-hint mt-2"><ArrowUpRight size={12} /> Clique para ver o perfil</span>
                       </span>
                     </span>
                   </td>
