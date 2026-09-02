@@ -7,7 +7,11 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { gerarLinkCifraClub, resolverTomOriginal } from "@/lib/music/cifraclub";
+import {
+  aplicarTonalidadeAoLinkCifra,
+  gerarLinkCifraClub,
+  resolverCifraOriginalSemCapotraste,
+} from "@/lib/music/cifraclub";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
@@ -106,25 +110,32 @@ function agendarCifraComTomOriginal(musica: Musica) {
   after(async () => {
     try {
       if (!musica.artista || !musica.tonalidade) return;
-      const tomOriginal = await resolverTomOriginal({ titulo: musica.titulo, artista: musica.artista });
-      if (!tomOriginal) return;
-      const linkCifra = gerarLinkCifraClub({
+      const cifraOriginal = await resolverCifraOriginalSemCapotraste({
         titulo: musica.titulo,
         artista: musica.artista,
-        tonalidade: musica.tonalidade,
-        tomOriginal,
       });
-      if (!linkCifra || linkCifra === musica.linkCifra) return;
+      if (!cifraOriginal) return;
+      const cifraNoTomSelecionado = aplicarTonalidadeAoLinkCifra({
+        linkCifra: cifraOriginal.linkCifra,
+        tonalidadeOriginal: cifraOriginal.tonalidade,
+        tonalidadeSelecionada: musica.tonalidade,
+      });
+      const linkCifra = cifraNoTomSelecionado?.linkCifra ?? cifraOriginal.linkCifra;
+      const tonalidade = cifraNoTomSelecionado?.tonalidade ?? cifraOriginal.tonalidade;
+      if (linkCifra === musica.linkCifra && tonalidade === musica.tonalidade) return;
 
       const repos = await getRepositories();
       if (repos.backend === "supabase") {
         const admin = createAdminClient();
-        const query = admin.from("musicas").update({ link_cifra: linkCifra }).eq("id", musica.id);
+        const query = admin
+          .from("musicas")
+          .update({ link_cifra: linkCifra, tonalidade })
+          .eq("id", musica.id);
         const { error } = await query;
         if (error) throw error;
       } else {
         const atual = await repos.musicas.getById(musica.id);
-        if (atual) await repos.musicas.update(musica.id, { linkCifra });
+        if (atual) await repos.musicas.update(musica.id, { linkCifra, tonalidade });
       }
       invalidateDataCache("musicas");
       revalidatePath("/dashboard");
@@ -188,6 +199,9 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");
+  if (formData.get("preservarPesquisa") === "true") {
+    return { success: true, musica };
+  }
   redirect("/dashboard/musicas");
 }
 
@@ -207,18 +221,32 @@ export async function atualizarMusicaAction(
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
   if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+  let musicaAtualizada: Musica;
   try {
     const repos = await getRepositories();
     const atual = await repos.musicas.getById(id);
     if (!atual) return { error: "Música não encontrada." };
+    const mesmaCifra =
+      atual.titulo.trim().toLocaleLowerCase("pt-BR") === data.titulo.trim().toLocaleLowerCase("pt-BR") &&
+      (atual.artista ?? "").trim().toLocaleLowerCase("pt-BR") ===
+        (data.artista ?? "").trim().toLocaleLowerCase("pt-BR");
+    const cifraNoNovoTom = mesmaCifra
+      ? aplicarTonalidadeAoLinkCifra({
+          linkCifra: atual.linkCifra,
+          tonalidadeOriginal: atual.tonalidade,
+          tonalidadeSelecionada: data.tonalidade,
+        })
+      : null;
     const musica = {
       titulo: data.titulo,
       artista: data.artista,
-      tonalidade: data.tonalidade,
-      linkCifra: data.linkCifra,
+      tonalidade: cifraNoNovoTom?.tonalidade ?? data.tonalidade,
+      linkCifra: cifraNoNovoTom?.linkCifra ?? data.linkCifra,
     };
-    const atualizada = await repos.musicas.update(id, musica);
-    agendarCifraComTomOriginal(atualizada);
+    musicaAtualizada = await repos.musicas.update(id, musica);
+    // Se título ou artista mudou, a página também pode ter mudado e precisa ser
+    // redetectada. Na simples troca de tom, preservamos a URL exata já validada.
+    if (!cifraNoNovoTom) agendarCifraComTomOriginal(musicaAtualizada);
   } catch {
     return { error: "Não foi possível salvar as alterações da música. Tente novamente." };
   }
@@ -226,6 +254,9 @@ export async function atualizarMusicaAction(
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
   revalidatePath("/dashboard");
+  if (formData.get("preservarPesquisa") === "true") {
+    return { success: true, musica: musicaAtualizada };
+  }
   redirect("/dashboard/musicas");
 }
 

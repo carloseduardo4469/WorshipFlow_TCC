@@ -37,11 +37,11 @@ convenções de pasta).
 Login normal e Google OAuth funcionam em dev mesmo com a rede bloqueando
 portas acima de 1010, porque tudo passa por HTTPS 443 (ver Fase 1).
 
-### Fase 3 — CRUD ministérios / músicas / repertórios
+### Fase 3 — CRUD de músicas e repertórios
 
-- `src/lib/actions/{ministerios,musicas,repertorios}.ts` — Server Actions,
+- `src/lib/actions/{musicas,repertorios}.ts` — Server Actions,
   só ADMIN escreve.
-- `src/app/dashboard/{ministerios,musicas,repertorios}/` — lista + criar +
+- `src/app/dashboard/{musicas,repertorios}/` — lista + criar +
   editar, cada um com seu formulário em `src/components/dashboard/`.
 - Repertórios usam checkboxes pra vincular músicas (tabela de junção).
 
@@ -61,7 +61,7 @@ guardados como `jsonb` (`funcoes_usuarios`, `tonalidades_musicas`).
 
 - `src/app/dashboard/page.tsx` — contadores + "minhas próximas escalas".
 - `src/app/dashboard/perfil/` — cada usuário edita o próprio perfil.
-- `src/app/dashboard/usuarios/` — ADMIN gerencia papel/status/ministério de
+- `src/app/dashboard/usuarios/` — ADMIN gerencia papel e suspensão de
   qualquer pessoa (edição inline por linha).
 - `/termos` e `/privacidade` — páginas públicas.
 - `src/components/dashboard/DashboardNav.tsx` — sidebar que esconde itens
@@ -101,7 +101,13 @@ para Windows x64.
 
 Sem `.env` do Supabase preenchido, cai automaticamente pro SQLite local —
 dá pra navegar o app inteiro (auth via Supabase real continua exigindo as
-chaves; os dados de ministérios/músicas/escalas funcionam offline).
+chaves; os dados de músicas e escalas funcionam offline).
+
+### Remoção da antiga camada de ministérios
+
+O sistema agora trabalha com uma única equipe. Depois de publicar esta versão,
+execute `scripts/remover-ministerios-supabase.sql` no SQL Editor do Supabase
+para remover as colunas antigas sem apagar músicas, usuários ou escalas.
 
 ### Limitações conhecidas / próximos passos sugeridos
 

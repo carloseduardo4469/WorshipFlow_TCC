@@ -33,10 +33,15 @@ export function MusicasManager({
   const [buscaEfetiva, setBuscaEfetiva] = useState("");
   const [campoFiltro, setCampoFiltro] = useState<CampoFiltro>("titulo");
   const [filtroAberto, setFiltroAberto] = useState(false);
+  const [revisaoLista, setRevisaoLista] = useState(0);
   const [erroExclusao, setErroExclusao] = useState<string | null>(null);
   const filtroRef = useRef<HTMLDivElement>(null);
   const exclusoesRef = useRef(new Map<number, { item: Musica; indiceOriginal: number }>());
   const formDialogRef = useDialogA11y(Boolean(musicaAberta), () => setMusicaAberta(null));
+  const aoSalvarMusica = useCallback(() => {
+    setMusicaAberta(null);
+    setRevisaoLista((atual) => atual + 1);
+  }, []);
 
   // Busca com debounce: só consulta o banco quando o usuário para de digitar.
   useEffect(() => {
@@ -72,7 +77,7 @@ export function MusicasManager({
     tamanhoPagina: 25,
     limiteDom: 50,
     alturaPadraoLinha: 42,
-    reiniciarAo: `${campoFiltro}|${buscaEfetiva}`,
+    reiniciarAo: `${campoFiltro}|${buscaEfetiva}|${revisaoLista}`,
     itensIniciais: musicasIniciais,
     temMaisInicial,
   });
@@ -290,7 +295,11 @@ export function MusicasManager({
               </h2>
             </div>
             <div className="p-2 sm:p-3">
-              <MusicaForm musica={musicaAberta === "nova" ? undefined : musicaAberta} onCancel={() => setMusicaAberta(null)} />
+              <MusicaForm
+                musica={musicaAberta === "nova" ? undefined : musicaAberta}
+                onCancel={() => setMusicaAberta(null)}
+                onSaved={aoSalvarMusica}
+              />
             </div>
           </section>
         </div>

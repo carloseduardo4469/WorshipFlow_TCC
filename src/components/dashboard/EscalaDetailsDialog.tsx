@@ -5,6 +5,7 @@ import { CalendarDays, ExternalLink, Loader2, Music2, Plus, Users, X } from "luc
 import { buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { normalizarEscala } from "@/lib/escalas/normalize";
+import { aplicarTonalidadeAoLinkCifra } from "@/lib/music/cifraclub";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { Escala, Musica, Usuario } from "@/types/domain";
 
@@ -160,21 +161,35 @@ export function EscalaDetailsDialog({
             <p className="mt-3">Nenhuma música adicionada.</p>
           ) : (
             <ol className="db-schedule-song-list mt-3 space-y-2">
-              {musicas.map((musica, index) => (
-                <li key={musica.id} className="db-schedule-song">
-                  <span className="db-schedule-song-index">{index + 1}</span>
-                  <span className="min-w-0 flex-1">
-                    <strong className="block break-words">{musica.titulo}</strong>
-                    {musica.artista && <small className="block break-words">{musica.artista}</small>}
-                  </span>
-                  <span className="db-schedule-tone">{tonsPorMusica.get(musica.id) ?? musica.tonalidade ?? "—"}</span>
-                  {musica.linkCifra && (
-                    <a href={musica.linkCifra} target="_blank" rel="noreferrer" aria-label={`Abrir cifra de ${musica.titulo}`}>
-                      <ExternalLink size={16} /> <span className="hidden sm:inline">Cifra</span>
-                    </a>
-                  )}
-                </li>
-              ))}
+              {musicas.map((musica, index) => {
+                const tonalidadeDaEscala = tonsPorMusica.get(musica.id) ?? musica.tonalidade;
+                const cifraNoTomDaEscala = aplicarTonalidadeAoLinkCifra({
+                  linkCifra: musica.linkCifra,
+                  tonalidadeOriginal: musica.tonalidade,
+                  tonalidadeSelecionada: tonalidadeDaEscala ?? null,
+                });
+                const linkCifra = cifraNoTomDaEscala?.linkCifra ?? musica.linkCifra;
+                return (
+                  <li key={musica.id} className="db-schedule-song">
+                    <span className="db-schedule-song-index">{index + 1}</span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block break-words">{musica.titulo}</strong>
+                      {musica.artista && <small className="block break-words">{musica.artista}</small>}
+                    </span>
+                    <span className="db-schedule-tone">{tonalidadeDaEscala ?? "—"}</span>
+                    {linkCifra && (
+                      <a
+                        href={linkCifra}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Abrir cifra de ${musica.titulo} no tom ${tonalidadeDaEscala ?? "original"}`}
+                      >
+                        <ExternalLink size={16} /> <span className="hidden sm:inline">Cifra</span>
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
             </ol>
           )}
         </section>

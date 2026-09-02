@@ -3,11 +3,25 @@ import { ehTonalidadeMenor, relativaMenor } from "@/lib/music/tonalidades";
 const CIFRA_CLUB_BASE_URL = "https://www.cifraclub.com.br";
 
 const ARTIST_ALIASES: Record<string, string> = {
+  "adoracao-adoradores": "adoracao-e-adoradores",
+  "altomonte-music": "altomonte",
+  "attos-2-worship": "attos2-worship",
+  "cultura-do-ceu-kaleb-e-josh-davi-fernandes":
+    "cultura-do-ceu-kaleb-e-josh-e-davi-fernandes",
+  "dunamis-music": "dunamis-movement",
   fhop: "florianopolis-house-of-prayer",
   "fhop-music": "florianopolis-house-of-prayer",
   fhopmusic: "florianopolis-house-of-prayer",
   "florianopolis-house-of-prayer": "florianopolis-house-of-prayer",
   "florianopolis-house-of-prayer-fhop": "florianopolis-house-of-prayer",
+  "florianopolis-house-of-prayer-fhop-music": "florianopolis-house-of-prayer",
+  "jose-jr": "jose-augusto-five-music",
+  "kaleb-josh": "kaleb-e-josh",
+  kemuel: "coral-kemuel",
+  morada: "ministerio-morada",
+  "nic-rachael-billman": "nic-e-rachael-billman",
+  "ministerio-voz-de-muitas-aguas": "voz-de-muitas-aguas",
+  "pedras-vivas": "ministerio-pedras-vivas",
 };
 
 const ORIGINAL_KEYS: Record<string, string> = {
@@ -33,6 +47,63 @@ const KEY_SHAPES: Record<string, number> = {
   G: 10,
   "G#": 11,
   Ab: 11,
+};
+
+const SONG_SLUG_ALIASES: Record<string, string> = {
+  "alessandro-vilas-boas/deixa-queimar-part-brunao-morada": "deixa-queimar",
+  "alessandro-vilas-boas/quero-conhecer-jesus":
+    "quero-conhecer-jesus-o-meu-amado--o-mais-belo",
+  "aline-barros/rendido-estou-part-fernandinho-e-bruna-karla": "rendido-estou",
+  "ana-nobrega/oh-quao-lindo-esse-nome-e-what-a-beautiful-name":
+    "oh-quao-lindo-esse-nome-",
+  "bola-de-neve/autoridade-e-poder": "autoridade-poder",
+  "cultura-do-ceu/cultura-do-ceu-reino-inabalavel-part-kaleb-e-josh-davi-fernandes":
+    "cultura-do-ceu-reino-inabalavel-pai-nosso",
+  "delino-marcal/deus-e-deus": "deus--deus",
+  "diante-do-trono/me-ama": "me-ama-",
+  "fernandinho/ainda-que-a-figueira": "ainda-que-figueira-",
+  "florianopolis-house-of-prayer/tu-es-aguas-purificadoras-pot-pourri":
+    "tu-es-aguas-purificadoras",
+  "gabriela-rocha/eu-e-o-rei-weslei-santos": "eu-e-o-rei",
+  "gabriela-rocha/toda-terra": "toda-terra-ao-vivo",
+  "juliano-son/lindo-es-so-quero-ver-voce": "lindo-s",
+  "laura-souguellis/amor-que-enche": "amor-que-enche-love-that-fills",
+  "marco-telles/colossenses-e-suas-linhas-de-amor-part-fhop-music":
+    "colossenses-e-suas-linhas-de-amor",
+  "marco-telles/unico-part-fhop-music": "unico",
+  "mateus-brito/jesus-te-amo-nao-temo-ondas-pot-pourri":
+    "jesus-te-amo--nao-temo-ondas-pot-pourri",
+  "ministerio-morada/e-tudo-sobre-voce-ser-mudado":
+    "e-tudo-sobre-voce-ser-mudado-medley",
+  "ministerio-morada/para-onde-eu-irei": "pra-onde-eu-irei",
+  "ministerio-morada/so-tu-es-santo": "so-tu-s-santo",
+  "ministerio-morada/so-tu-es-santo-uma-coisa-deixa-queimar-quando-ele-vem-pot-pourri":
+    "so-tu-es-santo-uma-coisa-deixa-queimar-quando-ele-vem-ao-vivo",
+  "ministerio-zoe/aquieta-minhalma": "aquieta-minh-alma",
+  "nivea-soares/nao-seremos-abalados": "nao-seremos-abalados-we-will-not-be-shaken",
+  "nivea-soares/que-se-abram-os-ceus": "que-se-abra-os-ceus",
+  "one-sounds/como-eu-te-amo": "como-eu-te-amo-",
+  "pr-w-junior/tu-es-o-rei": "tu-s-o-rei",
+};
+
+const CHROMATIC_POSITIONS: Record<string, number> = {
+  C: 0,
+  "C#": 1,
+  Db: 1,
+  D: 2,
+  "D#": 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  "F#": 6,
+  Gb: 6,
+  G: 7,
+  "G#": 8,
+  Ab: 8,
+  A: 9,
+  "A#": 10,
+  Bb: 10,
+  B: 11,
 };
 
 function normalizeText(value: string) {
@@ -67,9 +138,9 @@ const TOM_PADRAO = /Tom(?:<!--\s*-->)?\s*:\s*<\/span>\s*<button[^>]*>\s*([A-G][#
  * relativa menor quando a música é menor — para qualquer música, sem mapa fixo.
  * Falha silenciosamente (null) em caso de rede/timeout/música inexistente.
  */
-export async function detectarTomOriginalCifraClub(path: string): Promise<string | null> {
+async function detectarTomNaUrl(url: URL): Promise<string | null> {
   try {
-    const resposta = await fetch(`${CIFRA_CLUB_BASE_URL}/${path}/`, {
+    const resposta = await fetch(url, {
       headers: { "User-Agent": CIFRA_CLUB_USER_AGENT, "Accept-Language": "pt-BR,pt;q=0.9" },
       signal: AbortSignal.timeout(5000),
       cache: "no-store",
@@ -88,6 +159,50 @@ export async function detectarTomOriginalCifraClub(path: string): Promise<string
   }
 }
 
+function resolveSongSlug(artistSlug: string, titulo: string) {
+  const songSlug = toCifraClubSlug(titulo);
+  return SONG_SLUG_ALIASES[`${artistSlug}/${songSlug}`] ?? songSlug;
+}
+
+export async function detectarTomOriginalCifraClub(path: string): Promise<string | null> {
+  return detectarTomNaUrl(new URL(`${CIFRA_CLUB_BASE_URL}/${path}/`));
+}
+
+/** Descobre o deslocamento específico da página e monta sua versão original sem capotraste. */
+export async function resolverCifraOriginalSemCapotraste({
+  titulo,
+  artista,
+}: {
+  titulo: string;
+  artista: string;
+}) {
+  const artistSlug = resolveArtistSlug(artista);
+  const songSlug = resolveSongSlug(artistSlug, titulo);
+  if (!artistSlug || !songSlug) return null;
+
+  const urlOriginal = new URL(`${CIFRA_CLUB_BASE_URL}/${artistSlug}/${songSlug}/`);
+  const urlFormaZero = new URL(urlOriginal);
+  urlFormaZero.searchParams.set("capo", "0");
+  urlFormaZero.searchParams.set("keyShape", "0");
+  const [tomOriginal, tomFormaZero] = await Promise.all([
+    detectarTomNaUrl(urlOriginal),
+    detectarTomNaUrl(urlFormaZero),
+  ]);
+  if (!tomOriginal || !tomFormaZero) return null;
+
+  const notaOriginal = noteFromKey(tomOriginal);
+  const notaFormaZero = noteFromKey(tomFormaZero);
+  if (!notaOriginal || !notaFormaZero) return null;
+  const posicaoOriginal = CHROMATIC_POSITIONS[notaOriginal];
+  const posicaoFormaZero = CHROMATIC_POSITIONS[notaFormaZero];
+  if (posicaoOriginal === undefined || posicaoFormaZero === undefined) return null;
+
+  const keyShape = (posicaoOriginal - posicaoFormaZero + 12) % 12;
+  urlOriginal.searchParams.set("capo", "0");
+  urlOriginal.searchParams.set("keyShape", String(keyShape));
+  return { linkCifra: urlOriginal.toString(), tonalidade: tomOriginal };
+}
+
 /** Resolve o caminho da cifra no site e detecta o tom original (null se não houver). */
 export async function resolverTomOriginal({
   titulo,
@@ -97,7 +212,7 @@ export async function resolverTomOriginal({
   artista: string;
 }): Promise<string | null> {
   const artistSlug = resolveArtistSlug(artista);
-  const songSlug = toCifraClubSlug(titulo);
+  const songSlug = resolveSongSlug(artistSlug, titulo);
   if (!artistSlug || !songSlug) return null;
   return detectarTomOriginalCifraClub(`${artistSlug}/${songSlug}`);
 }
@@ -114,6 +229,72 @@ function noteFromKey(tonalidade: string) {
   return normalizeKey(tonalidade)?.replace(/m$/, "") ?? null;
 }
 
+function targetKeyForSong(originalKey: string, selectedKey: string) {
+  const original = normalizeKey(originalKey);
+  let target = normalizeKey(selectedKey);
+  if (!original || !target) return null;
+
+  // O seletor do WorshipFlow usa tons maiores. Para uma cifra originalmente
+  // menor, a seleção representa sua relativa maior (G selecionado -> Em).
+  if (ehTonalidadeMenor(original) && !ehTonalidadeMenor(target)) {
+    target = relativaMenor(target);
+  }
+  return target;
+}
+
+/**
+ * Troca o tom sem recriar o caminho da cifra. O keyShape do Cifra Club tem um
+ * deslocamento próprio em cada página; por isso o cálculo parte do keyShape já
+ * validado e salvo, em vez de assumir que ele é absoluto.
+ */
+export function aplicarTonalidadeAoLinkCifra({
+  linkCifra,
+  tonalidadeOriginal,
+  tonalidadeSelecionada,
+}: {
+  linkCifra: string | null;
+  tonalidadeOriginal: string | null;
+  tonalidadeSelecionada: string | null;
+}) {
+  if (!linkCifra || !tonalidadeOriginal || !tonalidadeSelecionada) return null;
+
+  let url: URL;
+  try {
+    url = new URL(linkCifra);
+  } catch {
+    return null;
+  }
+  if (!["cifraclub.com.br", "www.cifraclub.com.br"].includes(url.hostname.toLowerCase())) {
+    return null;
+  }
+
+  const originalKeyShape = Number(url.searchParams.get("keyShape"));
+  const originalNote = noteFromKey(tonalidadeOriginal);
+  const targetKey = targetKeyForSong(tonalidadeOriginal, tonalidadeSelecionada);
+  const targetNote = targetKey ? noteFromKey(targetKey) : null;
+  if (
+    !Number.isInteger(originalKeyShape) ||
+    originalKeyShape < 0 ||
+    originalKeyShape > 11 ||
+    !originalNote ||
+    !targetNote
+  ) {
+    return null;
+  }
+
+  const originalPosition = CHROMATIC_POSITIONS[originalNote];
+  const targetPosition = CHROMATIC_POSITIONS[targetNote];
+  if (originalPosition === undefined || targetPosition === undefined) return null;
+
+  const targetKeyShape = (originalKeyShape + targetPosition - originalPosition + 12) % 12;
+  url.protocol = "https:";
+  url.hostname = "www.cifraclub.com.br";
+  url.hash = "";
+  url.searchParams.set("capo", "0");
+  url.searchParams.set("keyShape", String(targetKeyShape));
+  return { linkCifra: url.toString(), tonalidade: targetKey };
+}
+
 export function gerarLinkCifraClub({
   titulo,
   artista,
@@ -128,7 +309,7 @@ export function gerarLinkCifraClub({
   if (!titulo.trim() || !artista?.trim()) return null;
 
   const artistSlug = resolveArtistSlug(artista);
-  const songSlug = toCifraClubSlug(titulo);
+  const songSlug = resolveSongSlug(artistSlug, titulo);
   if (!artistSlug || !songSlug) return null;
 
   const path = `${artistSlug}/${songSlug}`;

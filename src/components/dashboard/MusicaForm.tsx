@@ -15,9 +15,11 @@ import { FORM_LIMITS } from "@/lib/validation/forms";
 export function MusicaForm({
   musica,
   onCancel,
+  onSaved,
 }: {
   musica?: Musica;
   onCancel?: () => void;
+  onSaved?: () => void;
 }) {
   const action = musica ? atualizarMusicaAction : criarMusicaAction;
   const [state, formAction, pending] = useActionState(action, null);
@@ -42,6 +44,10 @@ export function MusicaForm({
     });
   }, [state]);
 
+  useEffect(() => {
+    if (state?.success && onSaved) onSaved();
+  }, [state, onSaved]);
+
   return (
     <form
       ref={formRef}
@@ -58,6 +64,7 @@ export function MusicaForm({
       className="db-panel flex max-w-lg flex-col gap-5 p-6 text-left sm:p-8"
     >
       {musica && <input type="hidden" name="id" value={musica.id} />}
+      {onSaved && <input type="hidden" name="preservarPesquisa" value="true" />}
 
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} maxLength={FORM_LIMITS.musicaTitulo} required />
       <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} maxLength={FORM_LIMITS.artista} required />
