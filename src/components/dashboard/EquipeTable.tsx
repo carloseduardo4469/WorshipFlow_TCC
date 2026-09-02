@@ -145,7 +145,7 @@ export function EquipeTable({ usuarios: usuariosIniciais }: { usuarios: Usuario[
                       <span className="text-muted">Não informado</span>
                     )}
                   </td>
-                  <td data-label="Status" className="px-4 py-3.5">
+                  <td data-label="Status" className="px-4 py-3.5 align-top">
                     <BadgeOnline online={online} />
                   </td>
                 </tr>
