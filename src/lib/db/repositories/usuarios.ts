@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, asc, count, eq, inArray } from "drizzle-orm";
+import { asc, count, eq, inArray } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import { usuarios as usuariosTable } from "@/lib/db/local/schema";
@@ -14,11 +14,9 @@ type SupabaseUsuarioRow = {
   telefone: string | null;
   instrumento_principal: string | null;
   habilidades: string | null;
-  status_ministerio: Usuario["statusMinisterio"];
   is_suspended: boolean | null;
   perfil: Usuario["perfil"];
   foto_perfil_url: string | null;
-  ministerio_id: number | null;
   ultima_atividade: string | null;
   created_at: string;
 };
@@ -31,11 +29,9 @@ function mapSupabaseRow(row: SupabaseUsuarioRow): Usuario {
     telefone: row.telefone ?? null,
     instrumentoPrincipal: row.instrumento_principal ?? null,
     habilidades: row.habilidades ?? null,
-    statusMinisterio: row.status_ministerio,
     isSuspended: Boolean(row.is_suspended),
     perfil: row.perfil,
     fotoPerfilUrl: row.foto_perfil_url ?? null,
-    ministerioId: row.ministerio_id ?? null,
     ultimaAtividade: row.ultima_atividade ?? null,
     createdAt: row.created_at,
   };
@@ -49,11 +45,9 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
     telefone: row.telefone ?? null,
     instrumentoPrincipal: row.instrumentoPrincipal ?? null,
     habilidades: row.habilidades ?? null,
-    statusMinisterio: row.statusMinisterio as Usuario["statusMinisterio"],
     isSuspended: Boolean(row.isSuspended),
     perfil: row.perfil as Usuario["perfil"],
     fotoPerfilUrl: row.fotoPerfilUrl ?? null,
-    ministerioId: row.ministerioId ?? null,
     ultimaAtividade: row.ultimaAtividade ?? null,
     createdAt: row.createdAt,
   };
@@ -62,20 +56,16 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
 function toSupabasePayload(data: UpdateUsuario) {
   const {
     instrumentoPrincipal,
-    statusMinisterio,
     isSuspended,
     fotoPerfilUrl,
-    ministerioId,
     ultimaAtividade,
     ...rest
   } = data;
   return {
     ...rest,
     ...(instrumentoPrincipal !== undefined ? { instrumento_principal: instrumentoPrincipal } : {}),
-    ...(statusMinisterio !== undefined ? { status_ministerio: statusMinisterio } : {}),
     ...(isSuspended !== undefined ? { is_suspended: isSuspended } : {}),
     ...(fotoPerfilUrl !== undefined ? { foto_perfil_url: fotoPerfilUrl } : {}),
-    ...(ministerioId !== undefined ? { ministerio_id: ministerioId } : {}),
     ...(ultimaAtividade !== undefined ? { ultima_atividade: ultimaAtividade } : {}),
   };
 }
@@ -85,25 +75,17 @@ function createLocalRepository(): UsuariosRepository {
   const localDb = getLocalDb();
 
   return {
-    async count(ministerioId, statusMinisterio) {
-      const filters = [];
-      if (ministerioId) filters.push(eq(usuariosTable.ministerioId, ministerioId));
-      if (statusMinisterio) filters.push(eq(usuariosTable.statusMinisterio, statusMinisterio));
-      const query = localDb.select({ count: count() }).from(usuariosTable);
-      const rows = filters.length ? await query.where(and(...filters)) : await query;
+    async count() {
+      const rows = await localDb.select({ count: count() }).from(usuariosTable);
       return rows[0]?.count ?? 0;
     },
-    async list(ministerioId) {
-      const rows = ministerioId
-        ? await localDb.select().from(usuariosTable).where(eq(usuariosTable.ministerioId, ministerioId))
-        : await localDb.select().from(usuariosTable);
+    async list() {
+      const rows = await localDb.select().from(usuariosTable);
       return rows.map(mapLocalRow).sort((a, b) => a.nome.localeCompare(b.nome));
     },
-    async search({ offset = 0, limit = 50, ministerioId }) {
+    async search({ offset = 0, limit = 50 }) {
       const query = localDb.select().from(usuariosTable);
-      const rows = ministerioId
-        ? await query.where(eq(usuariosTable.ministerioId, ministerioId)).orderBy(asc(usuariosTable.nome)).limit(limit).offset(offset)
-        : await query.orderBy(asc(usuariosTable.nome)).limit(limit).offset(offset);
+      const rows = await query.orderBy(asc(usuariosTable.nome)).limit(limit).offset(offset);
       return rows.map(mapLocalRow);
     },
     async getByIds(ids) {
@@ -143,24 +125,20 @@ function createLocalRepository(): UsuariosRepository {
 
 function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository {
   return {
-    async count(ministerioId, statusMinisterio) {
-      let query = supabase.from("profiles").select("id", { count: "exact", head: true });
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
-      if (statusMinisterio) query = query.eq("status_ministerio", statusMinisterio);
+    async count() {
+      const query = supabase.from("profiles").select("id", { count: "exact", head: true });
       const { count: total, error } = await query;
       if (error) throw error;
       return total ?? 0;
     },
-    async list(ministerioId) {
-      let query = supabase.from("profiles").select("*").order("nome");
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+    async list() {
+      const query = supabase.from("profiles").select("*").order("nome");
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);
     },
-    async search({ offset = 0, limit = 50, ministerioId }) {
-      let query = supabase.from("profiles").select("*").order("nome").range(offset, offset + limit - 1);
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+    async search({ offset = 0, limit = 50 }) {
+      const query = supabase.from("profiles").select("*").order("nome").range(offset, offset + limit - 1);
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);

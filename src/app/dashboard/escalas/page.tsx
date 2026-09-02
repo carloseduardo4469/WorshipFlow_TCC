@@ -6,15 +6,15 @@ import { EscalasTable } from "@/components/dashboard/EscalasTable";
 import { listEscalasCached } from "@/lib/db/queries";
 
 export default async function EscalasPage() {
-  const { authId, profile } = await requireAuth();
+  const { authId } = await requireAuth();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos, profile.ministerioId ?? -1));
+  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos));
   const hoje = hojeEmSaoPaulo();
   const proximasEscalas = escalas.filter((escala) =>
     escala.status === "PUBLICADA" && (!escala.dataEscala || escala.dataEscala >= hoje)
   );
   const usuarioIds = [...new Set(proximasEscalas.flatMap((escala) => escala.usuarioIds))];
-  const usuarios = (await repos.usuarios.getByIds(usuarioIds)).filter((usuario) => usuario.ministerioId === profile.ministerioId);
+  const usuarios = await repos.usuarios.getByIds(usuarioIds);
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">
       <PageHeader title="Escalas" description="Próximas equipes publicadas para cultos e compromissos." />

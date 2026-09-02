@@ -1,14 +1,11 @@
 import type {
   Escala,
-  Ministerio,
   Musica,
   NewEscala,
-  NewMinisterio,
   NewMusica,
   NewRepertorio,
   Repertorio,
   UpdateEscala,
-  UpdateMinisterio,
   UpdateMusica,
   UpdateRepertorio,
   UpdateUsuario,
@@ -17,17 +14,9 @@ import type {
 
 export type Backend = "supabase" | "local";
 
-export interface MinisteriosRepository {
-  list(): Promise<Ministerio[]>;
-  getById(id: number): Promise<Ministerio | null>;
-  create(data: NewMinisterio): Promise<Ministerio>;
-  update(id: number, data: UpdateMinisterio): Promise<Ministerio>;
-  remove(id: number): Promise<void>;
-}
-
 export interface MusicasRepository {
-  list(ministerioId?: number): Promise<Musica[]>;
-  count(ministerioId?: number): Promise<number>;
+  list(): Promise<Musica[]>;
+  count(): Promise<number>;
   getById(id: number): Promise<Musica | null>;
   /**
    * Busca paginada por título/artista (case-insensitive). Sem `busca`,
@@ -38,7 +27,6 @@ export interface MusicasRepository {
     busca?: string;
     offset?: number;
     limit?: number;
-    ministerioId?: number;
     campo?: "titulo" | "artista" | "tonalidade";
   }): Promise<Musica[]>;
   /** Busca várias músicas de uma vez pelos IDs (ex.: itens já selecionados). */
@@ -49,8 +37,8 @@ export interface MusicasRepository {
 }
 
 export interface RepertoriosRepository {
-  list(ministerioId?: number): Promise<Repertorio[]>;
-  count(ministerioId?: number): Promise<number>;
+  list(): Promise<Repertorio[]>;
+  count(): Promise<number>;
   getById(id: number): Promise<Repertorio | null>;
   create(data: NewRepertorio): Promise<Repertorio>;
   update(id: number, data: UpdateRepertorio): Promise<Repertorio>;
@@ -59,10 +47,10 @@ export interface RepertoriosRepository {
 }
 
 export interface UsuariosRepository {
-  list(ministerioId?: number): Promise<Usuario[]>;
-  search(params: { offset?: number; limit?: number; ministerioId?: number }): Promise<Usuario[]>;
+  list(): Promise<Usuario[]>;
+  search(params: { offset?: number; limit?: number }): Promise<Usuario[]>;
   getByIds(ids: string[]): Promise<Usuario[]>;
-  count(ministerioId?: number, statusMinisterio?: Usuario["statusMinisterio"]): Promise<number>;
+  count(): Promise<number>;
   getById(id: string): Promise<Usuario | null>;
   getByEmail(email: string): Promise<Usuario | null>;
   update(id: string, data: UpdateUsuario): Promise<Usuario>;
@@ -72,8 +60,8 @@ export interface UsuariosRepository {
 }
 
 export interface EscalasRepository {
-  list(ministerioId?: number): Promise<Escala[]>;
-  count(ministerioId?: number, statuses?: Escala["status"][]): Promise<number>;
+  list(): Promise<Escala[]>;
+  count(statuses?: Escala["status"][]): Promise<number>;
   getById(id: number): Promise<Escala | null>;
   create(data: NewEscala): Promise<Escala>;
   update(id: number, data: UpdateEscala): Promise<Escala>;
@@ -84,7 +72,6 @@ export interface EscalasRepository {
 
 export interface Repositories {
   backend: Backend;
-  ministerios: MinisteriosRepository;
   musicas: MusicasRepository;
   repertorios: RepertoriosRepository;
   usuarios: UsuariosRepository;

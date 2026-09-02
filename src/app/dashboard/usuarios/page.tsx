@@ -5,9 +5,9 @@ import { EquipeTable } from "@/components/dashboard/EquipeTable";
 import { listUsuariosCached } from "@/lib/db/queries";
 
 export default async function EquipePage() {
-  const { profile } = await requireAuth();
+  await requireAuth();
   const repos = await getRepositories();
-  const usuarios = await listUsuariosCached(repos, profile.ministerioId ?? -1);
+  const usuarios = await listUsuariosCached(repos);
 
   return (
     <div className="mx-auto max-w-[1240px]">

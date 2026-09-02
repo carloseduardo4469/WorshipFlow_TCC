@@ -13,7 +13,6 @@ type SupabaseMusicaRow = {
   artista: string | null;
   tonalidade: string | null;
   link_cifra: string | null;
-  ministerio_id: number | null;
   created_at: string;
 };
 
@@ -24,7 +23,6 @@ function mapSupabaseRow(row: SupabaseMusicaRow): Musica {
     artista: row.artista ?? null,
     tonalidade: row.tonalidade ?? null,
     linkCifra: row.link_cifra ?? null,
-    ministerioId: row.ministerio_id ?? null,
     createdAt: row.created_at,
   };
 }
@@ -36,17 +34,15 @@ function mapLocalRow(row: typeof musicasTable.$inferSelect): Musica {
     artista: row.artista ?? null,
     tonalidade: row.tonalidade ?? null,
     linkCifra: row.linkCifra ?? null,
-    ministerioId: row.ministerioId ?? null,
     createdAt: row.createdAt,
   };
 }
 
 function toSupabasePayload(data: Partial<NewMusica>) {
-  const { linkCifra, ministerioId, ...rest } = data;
+  const { linkCifra, ...rest } = data;
   return {
     ...rest,
     ...(linkCifra !== undefined ? { link_cifra: linkCifra } : {}),
-    ...(ministerioId !== undefined ? { ministerio_id: ministerioId } : {}),
   };
 }
 
@@ -55,27 +51,21 @@ function createLocalRepository(): MusicasRepository {
   const localDb = getLocalDb();
 
   return {
-    async count(ministerioId) {
-      const query = localDb.select({ count: count() }).from(musicasTable);
-      const rows = ministerioId
-        ? await query.where(eq(musicasTable.ministerioId, ministerioId))
-        : await query;
+    async count() {
+      const rows = await localDb.select({ count: count() }).from(musicasTable);
       return rows[0]?.count ?? 0;
     },
-    async list(ministerioId) {
-      const rows = ministerioId
-        ? await localDb.select().from(musicasTable).where(eq(musicasTable.ministerioId, ministerioId))
-        : await localDb.select().from(musicasTable);
+    async list() {
+      const rows = await localDb.select().from(musicasTable);
       return rows.map(mapLocalRow).sort((a, b) => a.titulo.localeCompare(b.titulo));
     },
     async getById(id) {
       const rows = await localDb.select().from(musicasTable).where(eq(musicasTable.id, id));
       return rows[0] ? mapLocalRow(rows[0]) : null;
     },
-    async search({ busca, offset = 0, limit = 50, ministerioId, campo }) {
+    async search({ busca, offset = 0, limit = 50, campo }) {
       const termo = (busca ?? "").trim().toLocaleLowerCase();
       const conditions: SQL[] = [];
-      if (ministerioId) conditions.push(eq(musicasTable.ministerioId, ministerioId));
       if (termo) {
         const pattern = `%${termo}%`;
         if (campo === "titulo") {
@@ -117,7 +107,6 @@ function createLocalRepository(): MusicasRepository {
           artista: data.artista,
           tonalidade: data.tonalidade,
           linkCifra: data.linkCifra,
-          ministerioId: data.ministerioId,
         })
         .returning();
       return mapLocalRow(row);
@@ -139,16 +128,14 @@ function createLocalRepository(): MusicasRepository {
 
 function createSupabaseRepository(supabase: SupabaseClient): MusicasRepository {
   return {
-    async count(ministerioId) {
-      let query = supabase.from("musicas").select("id", { count: "exact", head: true });
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+    async count() {
+      const query = supabase.from("musicas").select("id", { count: "exact", head: true });
       const { count: total, error } = await query;
       if (error) throw error;
       return total ?? 0;
     },
-    async list(ministerioId) {
-      let query = supabase.from("musicas").select("*").order("titulo");
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+    async list() {
+      const query = supabase.from("musicas").select("*").order("titulo");
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);
@@ -158,14 +145,13 @@ function createSupabaseRepository(supabase: SupabaseClient): MusicasRepository {
       if (error) throw error;
       return data ? mapSupabaseRow(data) : null;
     },
-    async search({ busca, offset = 0, limit = 50, ministerioId, campo }) {
+    async search({ busca, offset = 0, limit = 50, campo }) {
       const termo = (busca ?? "").trim().toLocaleLowerCase();
       let query = supabase
         .from("musicas")
         .select("*")
         .order("titulo")
         .range(offset, offset + limit - 1);
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
       if (termo) {
         if (campo === "titulo") {
           query = query.ilike("titulo", `%${termo}%`);

@@ -14,14 +14,6 @@ import * as schema from "./schema";
 const DB_PATH = path.join(process.cwd(), ".data", "local.db");
 
 const BOOTSTRAP_SQL = `
-create table if not exists ministerios (
-  id integer primary key autoincrement,
-  nome text not null,
-  descricao text,
-  ativo integer not null default 1,
-  created_at text not null default current_timestamp
-);
-
 create table if not exists usuarios (
   id text primary key,
   nome text not null,
@@ -29,11 +21,9 @@ create table if not exists usuarios (
   telefone text,
   instrumento_principal text,
   habilidades text,
-  status_ministerio text not null default 'ATIVO',
   is_suspended integer not null default 0,
   perfil text not null default 'MEMBRO',
   foto_perfil_url text,
-  ministerio_id integer references ministerios(id) on delete set null,
   ultima_atividade text,
   created_at text not null default current_timestamp
 );
@@ -44,7 +34,6 @@ create table if not exists musicas (
   artista text,
   tonalidade text,
   link_cifra text,
-  ministerio_id integer references ministerios(id) on delete set null,
   created_at text not null default current_timestamp
 );
 
@@ -52,7 +41,6 @@ create table if not exists repertorios (
   id integer primary key autoincrement,
   nome text not null,
   descricao text,
-  ministerio_id integer references ministerios(id) on delete set null,
   created_at text not null default current_timestamp
 );
 
@@ -70,7 +58,6 @@ create table if not exists escalas (
   observacoes text,
   funcoes_usuarios text not null default '[]',
   tonalidades_musicas text not null default '[]',
-  ministerio_id integer references ministerios(id) on delete set null,
   created_at text not null default current_timestamp
 );
 

@@ -23,7 +23,7 @@ export type BuscarMusicasInput = {
 
 /** Busca paginada de músicas para listas e seletores com rolagem infinita. */
 export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]> {
-  const { profile } = await requireAuth();
+  await requireAuth();
   const busca = String(input?.busca ?? "").trim();
   if (busca.length > FORM_LIMITS.busca) throw new Error("Busca muito longa.");
   const offset = Number.isFinite(input?.offset) ? Math.max(0, Math.floor(input.offset)) : 0;
@@ -37,28 +37,24 @@ export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]
     campo,
     offset,
     limit,
-    ministerioId: profile.ministerioId ?? -1,
   });
 }
 
 /** Retorna as músicas já vinculadas (ids) para exibir como chips no seletor. */
 export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
-  const { profile } = await requireAuth();
-  if (profile.ministerioId === null) return [];
+  await requireAuth();
   const idsLimpos = [...new Set(Array.isArray(ids) ? ids : [])]
     .filter((id) => Number.isInteger(id) && id > 0)
     .slice(0, FORM_LIMITS.selecoes);
   if (idsLimpos.length === 0) return [];
   const repos = await getRepositories();
-  const musicas = await repos.musicas.getByIds(idsLimpos);
-  return musicas.filter((musica) => musica.ministerioId === profile.ministerioId);
+  return repos.musicas.getByIds(idsLimpos);
 }
 
 function readMusicaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const artista = String(formData.get("artista") ?? "").trim();
   const tonalidade = String(formData.get("tonalidade") ?? "").trim();
-  const ministerioIdRaw = String(formData.get("ministerioId") ?? "").trim();
 
   const linkCifra = gerarLinkCifraClub({
     titulo,
@@ -71,25 +67,19 @@ function readMusicaForm(formData: FormData) {
     artista: artista || null,
     tonalidade: tonalidade || null,
     linkCifra,
-    ministerioId: ministerioIdRaw ? Number(ministerioIdRaw) : null,
   };
 }
 
-async function criarMusicaAutorizada(
-  data: ReturnType<typeof readMusicaForm>,
-  ministerioDoPerfil: number | null
-): Promise<Musica> {
+async function criarMusicaAutorizada(data: ReturnType<typeof readMusicaForm>): Promise<Musica> {
   const repos = await getRepositories();
   if (repos.backend === "local") {
-    return repos.musicas.create({ ...data, ministerioId: ministerioDoPerfil });
+    return repos.musicas.create(data);
   }
 
   // A ação já autenticou e validou o usuário. A gravação privilegiada evita
   // que uma política RLS desatualizada impeça membros autorizados de cadastrar
   // repertório pelo celular.
   const admin = createAdminClient();
-  if (ministerioDoPerfil === null) throw new Error("Perfil sem ministério.");
-
   const { data: row, error } = await admin
     .from("musicas")
     .insert({
@@ -97,7 +87,6 @@ async function criarMusicaAutorizada(
       artista: data.artista,
       tonalidade: data.tonalidade,
       link_cifra: data.linkCifra,
-      ministerio_id: ministerioDoPerfil,
     })
     .select("*")
     .single();
@@ -109,7 +98,6 @@ async function criarMusicaAutorizada(
     artista: row.artista ?? null,
     tonalidade: row.tonalidade ?? null,
     linkCifra: row.link_cifra ?? null,
-    ministerioId: row.ministerio_id ?? null,
     createdAt: row.created_at,
   };
 }
@@ -131,13 +119,12 @@ function agendarCifraComTomOriginal(musica: Musica) {
       const repos = await getRepositories();
       if (repos.backend === "supabase") {
         const admin = createAdminClient();
-        let query = admin.from("musicas").update({ link_cifra: linkCifra }).eq("id", musica.id);
-        if (musica.ministerioId !== null) query = query.eq("ministerio_id", musica.ministerioId);
+        const query = admin.from("musicas").update({ link_cifra: linkCifra }).eq("id", musica.id);
         const { error } = await query;
         if (error) throw error;
       } else {
         const atual = await repos.musicas.getById(musica.id);
-        if (atual?.ministerioId === musica.ministerioId) await repos.musicas.update(musica.id, { linkCifra });
+        if (atual) await repos.musicas.update(musica.id, { linkCifra });
       }
       invalidateDataCache("musicas");
       revalidatePath("/dashboard");
@@ -153,8 +140,7 @@ export async function criarMusicaNaEscalaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const { profile } = await requireAuth();
-  if (profile.ministerioId === null) return { error: "Seu perfil ainda não está vinculado a um ministério." };
+  await requireAuth();
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
@@ -167,7 +153,7 @@ export async function criarMusicaNaEscalaAction(
 
   let musica: Musica;
   try {
-    musica = await criarMusicaAutorizada(data, profile.ministerioId);
+    musica = await criarMusicaAutorizada(data);
   } catch (error) {
     console.error("Falha ao cadastrar música na escala:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
@@ -180,8 +166,7 @@ export async function criarMusicaNaEscalaAction(
 }
 
 export async function criarMusicaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const { profile } = await requireAuth();
-  if (profile.ministerioId === null) return { error: "Seu perfil ainda não está vinculado a um ministério." };
+  await requireAuth();
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
@@ -193,7 +178,7 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
   let musica: Musica;
   try {
-    musica = await criarMusicaAutorizada(data, profile.ministerioId);
+    musica = await criarMusicaAutorizada(data);
   } catch (error) {
     console.error("Falha ao cadastrar música:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
@@ -210,8 +195,7 @@ export async function atualizarMusicaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const { profile } = await requireAuth();
-  if (profile.ministerioId === null) return { error: "Seu perfil ainda não está vinculado a um ministério." };
+  await requireAuth();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) return { error: "Música inválida." };
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
@@ -226,7 +210,7 @@ export async function atualizarMusicaAction(
   try {
     const repos = await getRepositories();
     const atual = await repos.musicas.getById(id);
-    if (!atual || atual.ministerioId !== profile.ministerioId) return { error: "Música não encontrada." };
+    if (!atual) return { error: "Música não encontrada." };
     const musica = {
       titulo: data.titulo,
       artista: data.artista,
@@ -246,13 +230,13 @@ export async function atualizarMusicaAction(
 }
 
 export async function removerMusicaAction(formData: FormData) {
-  const current = await requireAdmin();
+  await requireAdmin();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) throw new Error("Música inválida.");
 
   const repos = await getRepositories();
   const musica = await repos.musicas.getById(id);
-  if (!musica || current.profile.ministerioId === null || musica.ministerioId !== current.profile.ministerioId) {
+  if (!musica) {
     throw new Error("Música não encontrada.");
   }
   await repos.musicas.remove(id);

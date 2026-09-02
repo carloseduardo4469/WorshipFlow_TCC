@@ -5,11 +5,11 @@ import { listEscalasCached } from "@/lib/db/queries";
 import { concluirEscalasVencidas } from "@/lib/escalas/status-automatico";
 
 export default async function RegistrosEscalasPage() {
-  const { profile } = await requireAdmin();
+  await requireAdmin();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos, profile.ministerioId ?? -1));
+  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos));
   const usuarioIds = [...new Set(escalas.flatMap((escala) => escala.usuarioIds))];
-  const usuarios = (await repos.usuarios.getByIds(usuarioIds)).filter((usuario) => usuario.ministerioId === profile.ministerioId);
+  const usuarios = await repos.usuarios.getByIds(usuarioIds);
 
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">

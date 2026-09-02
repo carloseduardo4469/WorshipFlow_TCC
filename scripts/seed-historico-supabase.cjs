@@ -20,25 +20,14 @@ if (!url || !serviceRole) throw new Error("Credenciais do Supabase não configur
 const supabase = createClient(url, serviceRole, { auth: { persistSession: false } });
 
 async function executar() {
-  const { data: ministerios, error: ministeriosError } = await supabase
-    .from("ministerios")
-    .select("id,nome")
-    .eq("ativo", true)
-    .order("id")
-    .limit(1);
-  if (ministeriosError) throw ministeriosError;
-  if (!ministerios?.length) throw new Error("Nenhum ministério ativo encontrado no Supabase.");
-  let ministerioId = ministerios[0].id;
-
   const [{ data: integrantes, error: integrantesError }, { data: musicas, error: musicasError }] = await Promise.all([
-    supabase.from("profiles").select("id,nome,instrumento_principal,ministerio_id").eq("status_ministerio", "ATIVO").order("nome").limit(6),
+    supabase.from("profiles").select("id,nome,instrumento_principal").eq("is_suspended", false).order("nome").limit(6),
     supabase.from("musicas").select("id,titulo,tonalidade").order("titulo").limit(8),
   ]);
   if (integrantesError) throw integrantesError;
   if (musicasError) throw musicasError;
   if (!integrantes || integrantes.length < 2) throw new Error("São necessários ao menos 2 integrantes ativos no Supabase.");
   if (!musicas || musicas.length < 4) throw new Error("São necessárias ao menos 4 músicas no Supabase.");
-  ministerioId = integrantes.find((integrante) => integrante.ministerio_id)?.ministerio_id ?? ministerioId;
 
   const modelos = [
     { titulo: "Culto de Celebração — 09/08/2026", data: "2026-08-09", integrantes: integrantes.slice(0, Math.min(4, integrantes.length)), musicas: musicas.slice(0, 4) },
@@ -70,7 +59,6 @@ async function executar() {
         observacoes: "Escala fictícia para teste do histórico.",
         funcoes_usuarios: funcoesUsuarios,
         tonalidades_musicas: tonalidadesMusicas,
-        ministerio_id: ministerioId,
       }).eq("id", escalaId);
       if (error) throw error;
     } else {
@@ -81,7 +69,6 @@ async function executar() {
         observacoes: "Escala fictícia para teste do histórico.",
         funcoes_usuarios: funcoesUsuarios,
         tonalidades_musicas: tonalidadesMusicas,
-        ministerio_id: ministerioId,
       }).select("id").single();
       if (error) throw error;
       escalaId = escala.id;
@@ -103,7 +90,7 @@ async function executar() {
     console.log(`${modelo.data}: ${modelo.integrantes.length} integrante(s), ${modelo.musicas.length} música(s).`);
   }
 
-  console.log(`Histórico criado no Supabase com integrantes e músicas do ministério ${ministerios[0].nome}.`);
+  console.log("Histórico criado no Supabase com integrantes e músicas da equipe.");
 }
 
 executar().catch((error) => {

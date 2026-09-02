@@ -6,7 +6,6 @@ export const FORM_LIMITS = {
   musicaTitulo: 80,
   artista: 80,
   nomeGenerico: 80,
-  ministerioNome: 64,
   descricao: 240,
   observacoes: 240,
   busca: 80,

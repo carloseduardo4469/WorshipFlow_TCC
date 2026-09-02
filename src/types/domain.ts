@@ -3,19 +3,7 @@
 // então nada aqui pode depender de um backend específico.
 
 export type PerfilUsuario = "ADMIN" | "MEMBRO";
-export type StatusMinisterio = "ATIVO" | "INATIVO";
 export type StatusEscala = "RASCUNHO" | "PUBLICADA" | "CONCLUIDA" | "CANCELADA";
-
-export interface Ministerio {
-  id: number;
-  nome: string;
-  descricao: string | null;
-  ativo: boolean;
-  createdAt: string;
-}
-
-export type NewMinisterio = Pick<Ministerio, "nome" | "descricao" | "ativo">;
-export type UpdateMinisterio = Partial<NewMinisterio>;
 
 export interface Usuario {
   id: string; // uuid — mesmo id do auth.users no Supabase
@@ -24,11 +12,9 @@ export interface Usuario {
   telefone: string | null;
   instrumentoPrincipal: string | null;
   habilidades: string | null;
-  statusMinisterio: StatusMinisterio;
   isSuspended: boolean;
   perfil: PerfilUsuario;
   fotoPerfilUrl: string | null;
-  ministerioId: number | null;
   ultimaAtividade: string | null; // ISO — usado para mostrar Online/Offline na equipe
   createdAt: string;
 }
@@ -40,11 +26,9 @@ export type UpdateUsuario = Partial<
     | "telefone"
     | "instrumentoPrincipal"
     | "habilidades"
-    | "statusMinisterio"
     | "isSuspended"
     | "perfil"
     | "fotoPerfilUrl"
-    | "ministerioId"
     | "ultimaAtividade"
   >
 >;
@@ -55,13 +39,12 @@ export interface Musica {
   artista: string | null;
   tonalidade: string | null;
   linkCifra: string | null;
-  ministerioId: number | null;
   createdAt: string;
 }
 
 export type NewMusica = Pick<
   Musica,
-  "titulo" | "artista" | "tonalidade" | "linkCifra" | "ministerioId"
+  "titulo" | "artista" | "tonalidade" | "linkCifra"
 >;
 export type UpdateMusica = Partial<NewMusica>;
 
@@ -69,12 +52,11 @@ export interface Repertorio {
   id: number;
   nome: string;
   descricao: string | null;
-  ministerioId: number | null;
   musicaIds: number[];
   createdAt: string;
 }
 
-export type NewRepertorio = Pick<Repertorio, "nome" | "descricao" | "ministerioId">;
+export type NewRepertorio = Pick<Repertorio, "nome" | "descricao">;
 export type UpdateRepertorio = Partial<NewRepertorio>;
 
 export interface FuncaoUsuario {
@@ -95,7 +77,6 @@ export interface Escala {
   observacoes: string | null;
   funcoesUsuarios: FuncaoUsuario[];
   tonalidadesMusicas: TonalidadeMusica[];
-  ministerioId: number | null;
   usuarioIds: string[];
   musicaIds: number[];
   createdAt: string;
@@ -103,6 +84,6 @@ export interface Escala {
 
 export type NewEscala = Pick<
   Escala,
-  "titulo" | "dataEscala" | "status" | "observacoes" | "funcoesUsuarios" | "tonalidadesMusicas" | "ministerioId"
+  "titulo" | "dataEscala" | "status" | "observacoes" | "funcoesUsuarios" | "tonalidadesMusicas"
 >;
 export type UpdateEscala = Partial<NewEscala>;

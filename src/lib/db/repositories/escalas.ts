@@ -20,7 +20,6 @@ type SupabaseEscalaRow = {
   observacoes: string | null;
   funcoes_usuarios: Escala["funcoesUsuarios"] | null;
   tonalidades_musicas: Escala["tonalidadesMusicas"] | null;
-  ministerio_id: number | null;
   escala_usuarios?: Array<{ usuario_id: string }> | null;
   escala_musicas?: Array<{ musica_id: number }> | null;
   created_at: string;
@@ -35,7 +34,6 @@ function mapSupabaseRow(row: SupabaseEscalaRow): Escala {
     observacoes: row.observacoes ?? null,
     funcoesUsuarios: row.funcoes_usuarios ?? [],
     tonalidadesMusicas: row.tonalidades_musicas ?? [],
-    ministerioId: row.ministerio_id ?? null,
     usuarioIds: (row.escala_usuarios ?? []).map((relation) => relation.usuario_id),
     musicaIds: (row.escala_musicas ?? []).map((relation) => relation.musica_id),
     createdAt: row.created_at,
@@ -43,13 +41,12 @@ function mapSupabaseRow(row: SupabaseEscalaRow): Escala {
 }
 
 function toSupabasePayload(data: Partial<NewEscala>) {
-  const { dataEscala, funcoesUsuarios, tonalidadesMusicas, ministerioId, ...rest } = data;
+  const { dataEscala, funcoesUsuarios, tonalidadesMusicas, ...rest } = data;
   return {
     ...rest,
     ...(dataEscala !== undefined ? { data_escala: dataEscala } : {}),
     ...(funcoesUsuarios !== undefined ? { funcoes_usuarios: funcoesUsuarios } : {}),
     ...(tonalidadesMusicas !== undefined ? { tonalidades_musicas: tonalidadesMusicas } : {}),
-    ...(ministerioId !== undefined ? { ministerio_id: ministerioId } : {}),
   };
 }
 
@@ -70,7 +67,6 @@ function createLocalRepository(): EscalasRepository {
       observacoes: row.observacoes ?? null,
       funcoesUsuarios: (row.funcoesUsuarios as Escala["funcoesUsuarios"]) ?? [],
       tonalidadesMusicas: (row.tonalidadesMusicas as Escala["tonalidadesMusicas"]) ?? [],
-      ministerioId: row.ministerioId ?? null,
       usuarioIds: usuarioLinks.map((l) => l.usuarioId),
       musicaIds: musicaLinks.map((l) => l.musicaId),
       createdAt: row.createdAt,
@@ -78,18 +74,15 @@ function createLocalRepository(): EscalasRepository {
   }
 
   return {
-    async count(ministerioId, statuses) {
+    async count(statuses) {
       const filters = [];
-      if (ministerioId) filters.push(eq(escalasTable.ministerioId, ministerioId));
       if (statuses?.length) filters.push(inArray(escalasTable.status, statuses));
       const query = localDb.select({ count: count() }).from(escalasTable);
       const rows = filters.length ? await query.where(and(...filters)) : await query;
       return rows[0]?.count ?? 0;
     },
-    async list(ministerioId) {
-      const rows = ministerioId
-        ? await localDb.select().from(escalasTable).where(eq(escalasTable.ministerioId, ministerioId))
-        : await localDb.select().from(escalasTable);
+    async list() {
+      const rows = await localDb.select().from(escalasTable);
       const withRelations = await Promise.all(rows.map(attachRelations));
       return withRelations.sort((a, b) => (b.dataEscala ?? "").localeCompare(a.dataEscala ?? ""));
     },
@@ -138,20 +131,18 @@ function createSupabaseRepository(supabase: SupabaseClient): EscalasRepository {
   const selectWithRelations = "*, escala_usuarios(usuario_id), escala_musicas(musica_id)";
 
   return {
-    async count(ministerioId, statuses) {
+    async count(statuses) {
       let query = supabase.from("escalas").select("id", { count: "exact", head: true });
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
       if (statuses?.length) query = query.in("status", statuses);
       const { count: total, error } = await query;
       if (error) throw error;
       return total ?? 0;
     },
-    async list(ministerioId) {
-      let query = supabase
+    async list() {
+      const query = supabase
         .from("escalas")
         .select(selectWithRelations)
         .order("data_escala", { ascending: false });
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);

@@ -3,7 +3,6 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRepositories } from "@/lib/db/repositories";
-import { ensureLegacyMinistryAssignments } from "@/lib/db/legacy-ministry";
 import { cachedData } from "@/lib/db/cache";
 import type { Usuario } from "@/types/domain";
 
@@ -45,22 +44,14 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       telefone: typeof metadata.telefone === "string" ? metadata.telefone : null,
       instrumentoPrincipal: null,
       habilidades: null,
-      statusMinisterio: "ATIVO",
       isSuspended: false,
       perfil: "MEMBRO",
       fotoPerfilUrl: null,
-      ministerioId: null,
       ultimaAtividade: null,
     });
   }
 
   if (!profile) return null;
-
-  // Versões antigas permitiam profiles e conteúdos sem ministerio_id. Depois
-  // que as consultas passaram a ser isoladas por ministério, esses registros
-  // ficaram invisíveis e novos cadastros foram bloqueados. Em instalações com
-  // um único ministério, vincula os dados legados de forma idempotente.
-  profile = await ensureLegacyMinistryAssignments(repos, profile);
 
   return { authId, email: email || profile.email, profile };
 });

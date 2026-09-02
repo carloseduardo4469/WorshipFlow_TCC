@@ -5,12 +5,12 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { MusicaForm } from "@/components/dashboard/MusicaForm";
 
 export default async function EditarMusicaPage({ params }: { params: Promise<{ id: string }> }) {
-  const { profile } = await requireAuth();
+  await requireAuth();
   const { id } = await params;
 
   const repos = await getRepositories();
   const musica = await repos.musicas.getById(Number(id));
-  if (!musica || profile.ministerioId === null || musica.ministerioId !== profile.ministerioId) notFound();
+  if (!musica) notFound();
 
   return (
     <div className="mx-auto max-w-[760px] lg:mx-0">

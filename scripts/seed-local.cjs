@@ -4,11 +4,6 @@ const db = new Database(".data/local.db");
 db.pragma("foreign_keys = ON");
 
 db.transaction(() => {
-  const ministry = db.prepare("SELECT id FROM ministerios WHERE nome = ?").get("Bola de Neve Bragança Paulista");
-  const ministryId = ministry?.id ?? db.prepare(
-    "INSERT INTO ministerios (nome, descricao, ativo) VALUES (?, ?, 1)"
-  ).run("Bola de Neve Bragança Paulista", "Dados de teste do ministério de louvor.").lastInsertRowid;
-
   const members = [
     ["Lucas Martins", "lucas.martins@worshipflow.local", "Vocal", "Vocal principal"],
     ["Ana Beatriz Souza", "ana.souza@worshipflow.local", "Teclado", "Teclado e backing vocal"],
@@ -21,8 +16,8 @@ db.transaction(() => {
     if (current) return current.id;
     const id = `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`;
     db.prepare(`INSERT INTO usuarios
-      (id, nome, email, instrumento_principal, habilidades, status_ministerio, perfil, ministerio_id)
-      VALUES (?, ?, ?, ?, ?, 'ATIVO', 'MEMBRO', ?)`).run(id, nome, email, instrumento, habilidades, ministryId);
+      (id, nome, email, instrumento_principal, habilidades, perfil)
+      VALUES (?, ?, ?, ?, ?, 'MEMBRO')`).run(id, nome, email, instrumento, habilidades);
     return id;
   });
 
@@ -35,10 +30,10 @@ db.transaction(() => {
     ["Que Se Abram os Céus", "Nívea Soares", "E"],
   ];
   const songIds = songs.map(([titulo, artista, tonalidade]) => {
-    const current = db.prepare("SELECT id FROM musicas WHERE titulo = ? AND ministerio_id = ?").get(titulo, ministryId);
+    const current = db.prepare("SELECT id FROM musicas WHERE titulo = ? AND artista = ?").get(titulo, artista);
     if (current) return current.id;
-    return db.prepare("INSERT INTO musicas (titulo, artista, tonalidade, link_cifra, ministerio_id) VALUES (?, ?, ?, ?, ?)")
-      .run(titulo, artista, tonalidade, `https://www.cifraclub.com.br/${titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-")}/`, ministryId).lastInsertRowid;
+    return db.prepare("INSERT INTO musicas (titulo, artista, tonalidade, link_cifra) VALUES (?, ?, ?, ?)")
+      .run(titulo, artista, tonalidade, `https://www.cifraclub.com.br/${titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-")}/`).lastInsertRowid;
   });
 
   const schedules = [
@@ -51,9 +46,9 @@ db.transaction(() => {
     const memberLinks = memberIndexes.map((index) => ({ usuarioId: memberIds[index], funcao: members[index][3] }));
     const songKeys = songIndexes.map((index, position) => ({ musicaId: Number(songIds[index]), tonalidade: keys[position] }));
     const id = db.prepare(`INSERT INTO escalas
-      (titulo, data_escala, status, observacoes, funcoes_usuarios, tonalidades_musicas, ministerio_id)
-      VALUES (?, ?, 'CONCLUIDA', ?, ?, ?, ?)`).run(
-      title, date, "Escala fictícia para teste do histórico.", JSON.stringify(memberLinks), JSON.stringify(songKeys), ministryId
+      (titulo, data_escala, status, observacoes, funcoes_usuarios, tonalidades_musicas)
+      VALUES (?, ?, 'CONCLUIDA', ?, ?, ?)`).run(
+      title, date, "Escala fictícia para teste do histórico.", JSON.stringify(memberLinks), JSON.stringify(songKeys)
     ).lastInsertRowid;
     const addMember = db.prepare("INSERT INTO escala_usuarios (escala_id, usuario_id) VALUES (?, ?)");
     memberIndexes.forEach((index) => addMember.run(id, memberIds[index]));

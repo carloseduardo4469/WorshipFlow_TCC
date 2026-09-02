@@ -9,12 +9,12 @@ export default async function EditarRepertorioPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { profile } = await requireAdmin();
+  await requireAdmin();
   const { id } = await params;
 
   const repos = await getRepositories();
   const repertorio = await repos.repertorios.getById(Number(id));
-  if (!repertorio || profile.ministerioId === null || repertorio.ministerioId !== profile.ministerioId) notFound();
+  if (!repertorio) notFound();
 
   return (
     <div className="mx-auto max-w-[760px] lg:mx-0">

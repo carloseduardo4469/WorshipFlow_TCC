@@ -13,7 +13,6 @@ type SupabaseRepertorioRow = {
   id: number;
   nome: string;
   descricao: string | null;
-  ministerio_id: number | null;
   repertorio_musicas?: Array<{ musica_id: number }> | null;
   created_at: string;
 };
@@ -23,7 +22,6 @@ function mapSupabaseRow(row: SupabaseRepertorioRow): Repertorio {
     id: row.id,
     nome: row.nome,
     descricao: row.descricao ?? null,
-    ministerioId: row.ministerio_id ?? null,
     musicaIds: (row.repertorio_musicas ?? []).map((relation) => relation.musica_id),
     createdAt: row.created_at,
   };
@@ -42,24 +40,18 @@ function createLocalRepository(): RepertoriosRepository {
       id: row.id,
       nome: row.nome,
       descricao: row.descricao ?? null,
-      ministerioId: row.ministerioId ?? null,
       musicaIds: links.map((l) => l.musicaId),
       createdAt: row.createdAt,
     };
   }
 
   return {
-    async count(ministerioId) {
-      const query = localDb.select({ count: count() }).from(repertoriosTable);
-      const rows = ministerioId
-        ? await query.where(eq(repertoriosTable.ministerioId, ministerioId))
-        : await query;
+    async count() {
+      const rows = await localDb.select({ count: count() }).from(repertoriosTable);
       return rows[0]?.count ?? 0;
     },
-    async list(ministerioId) {
-      const rows = ministerioId
-        ? await localDb.select().from(repertoriosTable).where(eq(repertoriosTable.ministerioId, ministerioId))
-        : await localDb.select().from(repertoriosTable);
+    async list() {
+      const rows = await localDb.select().from(repertoriosTable);
       const withMusicas = await Promise.all(rows.map(attachMusicaIds));
       return withMusicas.sort((a, b) => a.nome.localeCompare(b.nome));
     },
@@ -100,16 +92,14 @@ function createSupabaseRepository(supabase: SupabaseClient): RepertoriosReposito
   const selectWithMusicas = "*, repertorio_musicas(musica_id)";
 
   return {
-    async count(ministerioId) {
-      let query = supabase.from("repertorios").select("id", { count: "exact", head: true });
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+    async count() {
+      const query = supabase.from("repertorios").select("id", { count: "exact", head: true });
       const { count: total, error } = await query;
       if (error) throw error;
       return total ?? 0;
     },
-    async list(ministerioId) {
-      let query = supabase.from("repertorios").select(selectWithMusicas).order("nome");
-      if (ministerioId) query = query.eq("ministerio_id", ministerioId);
+    async list() {
+      const query = supabase.from("repertorios").select(selectWithMusicas).order("nome");
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);
@@ -126,7 +116,7 @@ function createSupabaseRepository(supabase: SupabaseClient): RepertoriosReposito
     async create(data: NewRepertorio) {
       const { data: row, error } = await supabase
         .from("repertorios")
-        .insert({ nome: data.nome, descricao: data.descricao, ministerio_id: data.ministerioId })
+        .insert({ nome: data.nome, descricao: data.descricao })
         .select(selectWithMusicas)
         .single();
       if (error) throw error;
@@ -136,7 +126,6 @@ function createSupabaseRepository(supabase: SupabaseClient): RepertoriosReposito
       const payload: Record<string, unknown> = {};
       if (data.nome !== undefined) payload.nome = data.nome;
       if (data.descricao !== undefined) payload.descricao = data.descricao;
-      if (data.ministerioId !== undefined) payload.ministerio_id = data.ministerioId;
 
       const { data: row, error } = await supabase
         .from("repertorios")

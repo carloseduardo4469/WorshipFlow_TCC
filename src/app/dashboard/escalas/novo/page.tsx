@@ -7,11 +7,10 @@ import { firstUsuariosPageCached } from "@/lib/db/queries";
 const TAMANHO_PAGINA = 20;
 
 export default async function NovaEscalaPage() {
-  const { profile } = await requireAdmin();
+  await requireAdmin();
   const repos = await getRepositories();
   const resultadoInicial = await firstUsuariosPageCached(
     repos,
-    profile.ministerioId ?? -1,
     TAMANHO_PAGINA + 1
   );
 

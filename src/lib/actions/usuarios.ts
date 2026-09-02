@@ -19,7 +19,7 @@ export type ActionState = { error?: string; success?: boolean } | null;
 
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
-async function uploadProfilePhoto(userId: string, ministerioId: number | null, file: File) {
+async function uploadProfilePhoto(userId: string, file: File) {
   const admin = createAdminClient();
   const { data: bucket } = await admin.storage.getBucket(PROFILE_PHOTOS_BUCKET);
   if (!bucket) {
@@ -32,7 +32,7 @@ async function uploadProfilePhoto(userId: string, ministerioId: number | null, f
   }
 
   const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const objectPath = `${ministerioId ?? "sem-ministerio"}/${userId}/avatar.${extension}`;
+  const objectPath = `${userId}/avatar.${extension}`;
   const bytes = Buffer.from(await file.arrayBuffer());
   const { error: uploadError } = await admin.storage
     .from(PROFILE_PHOTOS_BUCKET)
@@ -54,30 +54,28 @@ export async function registrarAtividade(): Promise<void> {
 
 /** Lista os usuários com presença fresca (sem cache) para a equipe. */
 export async function listarUsuariosComPresenca(): Promise<Array<Pick<Usuario, "id" | "ultimaAtividade">>> {
-  const { profile } = await requireAuth();
+  await requireAuth();
   const repos = await getRepositories();
-  const usuarios = await repos.usuarios.list(profile.ministerioId ?? -1);
+  const usuarios = await repos.usuarios.list();
   return usuarios.map(({ id, ultimaAtividade }) => ({ id, ultimaAtividade }));
 }
 
 /** Busca uma página de usuários para seletores roláveis, sem carregar a tabela inteira. */
 export async function buscarUsuarios(offset: number, limit: number): Promise<Usuario[]> {
-  const { profile } = await requireAuth();
+  await requireAuth();
   const offsetSeguro = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
   const limiteSeguro = Number.isFinite(limit) ? Math.min(100, Math.max(1, Math.floor(limit))) : 20;
   const repos = await getRepositories();
-  return repos.usuarios.search({ offset: offsetSeguro, limit: limiteSeguro, ministerioId: profile.ministerioId ?? -1 });
+  return repos.usuarios.search({ offset: offsetSeguro, limit: limiteSeguro });
 }
 
 export async function buscarUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
-  const { profile } = await requireAuth();
-  if (profile.ministerioId === null) return [];
+  await requireAuth();
   const idsLimpos = [...new Set(Array.isArray(ids) ? ids.map(String).filter(Boolean) : [])]
     .slice(0, FORM_LIMITS.selecoes);
   if (idsLimpos.length === 0) return [];
   const repos = await getRepositories();
-  const usuarios = await repos.usuarios.getByIds(idsLimpos);
-  return usuarios.filter((usuario) => usuario.ministerioId === profile.ministerioId);
+  return repos.usuarios.getByIds(idsLimpos);
 }
 
 export async function atualizarPerfilAction(
@@ -123,7 +121,7 @@ export async function atualizarPerfilAction(
 
     try {
       if (repos.backend === "supabase") {
-        fotoPerfilUrl = await uploadProfilePhoto(profile.id, profile.ministerioId, fotoPerfil);
+        fotoPerfilUrl = await uploadProfilePhoto(profile.id, fotoPerfil);
       } else {
         const bytes = Buffer.from(await fotoPerfil.arrayBuffer());
         fotoPerfilUrl = `data:${fotoPerfil.type};base64,${bytes.toString("base64")}`;
@@ -172,8 +170,8 @@ export async function atualizarUsuarioAdminAction(
     return { error: "Você não pode suspender a própria conta." };
   }
   const usuario = await repos.usuarios.getById(id);
-  if (!usuario || current.profile.ministerioId === null || usuario.ministerioId !== current.profile.ministerioId) {
-    return { error: "Usuário não encontrado neste ministério." };
+  if (!usuario) {
+    return { error: "Usuário não encontrado." };
   }
   try {
     await repos.usuarios.update(id, {
@@ -210,9 +208,6 @@ export async function removerUsuarioAdminAction(
     const usuario = await repos.usuarios.getById(id);
 
     if (!usuario) return { error: "Usuário não encontrado." };
-    if (current.profile.ministerioId === null || usuario.ministerioId !== current.profile.ministerioId) {
-      return { error: "Usuário não encontrado neste ministério." };
-    }
     if (usuario.perfil === "ADMIN") {
       return { error: "Administradores não podem ser removidos por esta tela." };
     }

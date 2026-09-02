@@ -12,7 +12,6 @@ export default async function MusicasPage() {
   const repos = await getRepositories();
   const resultadoInicial = await firstMusicasPageCached(
     repos,
-    profile.ministerioId ?? -1,
     TAMANHO_PAGINA + 1
   );
 

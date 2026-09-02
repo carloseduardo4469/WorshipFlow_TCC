@@ -22,7 +22,7 @@ function formatarData(data: string | null) {
 export default async function DashboardHomePage() {
   const { profile, authId } = await requireAuth();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos, profile.ministerioId ?? -1));
+  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos));
   const hoje = hojeEmSaoPaulo();
   const mes = mesParaExibir(hoje);
   const minhasEscalas = escalas.filter((escala) => escala.status === "PUBLICADA" && escala.usuarioIds.includes(authId) && escala.dataEscala?.startsWith(mes.prefixo)).sort((a, b) => (a.dataEscala ?? "").localeCompare(b.dataEscala ?? ""));

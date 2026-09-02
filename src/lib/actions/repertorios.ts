@@ -21,22 +21,19 @@ function validarTextos(nome: string, descricao: string): string | null {
     ?? validateMaxLength(descricao, FORM_LIMITS.descricao, "Descrição");
 }
 
-async function musicasPertencemAoMinisterio(
+async function musicasExistem(
   repos: Awaited<ReturnType<typeof getRepositories>>,
-  musicaIds: number[],
-  ministerioId: number
+  musicaIds: number[]
 ) {
   const musicas = await repos.musicas.getByIds(musicaIds);
-  return musicas.length === musicaIds.length
-    && musicas.every((musica) => musica.ministerioId === ministerioId);
+  return musicas.length === musicaIds.length;
 }
 
 export async function criarRepertorioAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const { profile } = await requireAdmin();
-  if (profile.ministerioId === null) return { error: "Seu perfil não está vinculado a um ministério." };
+  await requireAdmin();
   const nome = String(formData.get("nome") ?? "").trim();
   const descricao = String(formData.get("descricao") ?? "").trim();
   const musicaIds = readMusicaIds(formData);
@@ -45,13 +42,12 @@ export async function criarRepertorioAction(
   if (textoError) return { error: textoError };
 
   const repos = await getRepositories();
-  if (!(await musicasPertencemAoMinisterio(repos, musicaIds, profile.ministerioId))) {
-    return { error: "Uma ou mais músicas não pertencem ao seu ministério." };
+  if (!(await musicasExistem(repos, musicaIds))) {
+    return { error: "Uma ou mais músicas selecionadas não existem mais." };
   }
   const repertorio = await repos.repertorios.create({
     nome,
     descricao: descricao || null,
-    ministerioId: profile.ministerioId,
   });
   try {
     await repos.repertorios.setMusicas(repertorio.id, musicaIds);
@@ -71,8 +67,7 @@ export async function atualizarRepertorioAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const { profile } = await requireAdmin();
-  if (profile.ministerioId === null) return { error: "Seu perfil não está vinculado a um ministério." };
+  await requireAdmin();
   const id = Number(formData.get("id"));
   const nome = String(formData.get("nome") ?? "").trim();
   const descricao = String(formData.get("descricao") ?? "").trim();
@@ -84,22 +79,20 @@ export async function atualizarRepertorioAction(
 
   const repos = await getRepositories();
   const atual = await repos.repertorios.getById(id);
-  if (!atual || atual.ministerioId !== profile.ministerioId) return { error: "Repertório não encontrado." };
-  if (!(await musicasPertencemAoMinisterio(repos, musicaIds, profile.ministerioId))) {
-    return { error: "Uma ou mais músicas não pertencem ao seu ministério." };
+  if (!atual) return { error: "Repertório não encontrado." };
+  if (!(await musicasExistem(repos, musicaIds))) {
+    return { error: "Uma ou mais músicas selecionadas não existem mais." };
   }
   try {
     await repos.repertorios.update(id, {
       nome,
       descricao: descricao || null,
-      ministerioId: profile.ministerioId,
     });
     await repos.repertorios.setMusicas(id, musicaIds);
   } catch (error) {
     await repos.repertorios.update(id, {
       nome: atual.nome,
       descricao: atual.descricao,
-      ministerioId: atual.ministerioId,
     }).catch(() => {});
     await repos.repertorios.setMusicas(id, atual.musicaIds).catch(() => {});
     console.error("Falha ao atualizar repertório:", error);
@@ -113,13 +106,13 @@ export async function atualizarRepertorioAction(
 }
 
 export async function removerRepertorioAction(formData: FormData) {
-  const { profile } = await requireAdmin();
+  await requireAdmin();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) throw new Error("Repertório inválido.");
 
   const repos = await getRepositories();
   const repertorio = await repos.repertorios.getById(id);
-  if (!repertorio || profile.ministerioId === null || repertorio.ministerioId !== profile.ministerioId) {
+  if (!repertorio) {
     throw new Error("Repertório não encontrado.");
   }
   await repos.repertorios.remove(id);

@@ -6,15 +6,15 @@ import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-au
 import { listEscalasCached } from "@/lib/db/queries";
 
 export default async function HistoricoPage() {
-  const { profile } = await requireAuth();
+  await requireAuth();
   const repos = await getRepositories();
-  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos, profile.ministerioId ?? -1));
+  const escalas = await concluirEscalasVencidas(repos, await listEscalasCached(repos));
   const limite = hojeEmSaoPaulo();
   const historico = escalas.filter((escala) =>
     escala.status === "CONCLUIDA" && Boolean(escala.dataEscala && escala.dataEscala < limite)
   );
   const usuarioIds = [...new Set(historico.flatMap((escala) => escala.usuarioIds))];
-  const usuarios = (await repos.usuarios.getByIds(usuarioIds)).filter((usuario) => usuario.ministerioId === profile.ministerioId);
+  const usuarios = await repos.usuarios.getByIds(usuarioIds);
 
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">

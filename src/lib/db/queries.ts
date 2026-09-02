@@ -3,30 +3,30 @@ import { cachedData } from "@/lib/db/cache";
 import type { Repositories } from "@/lib/db/repositories";
 
 /** Leituras frequentes e imutáveis entre mutações, compartilhadas por 30 s. */
-export function listEscalasCached(repos: Repositories, ministerioId: number) {
+export function listEscalasCached(repos: Repositories) {
   return cachedData(
-    `cache:escalas:list:${repos.backend}:${ministerioId}`,
-    () => repos.escalas.list(ministerioId)
+    `cache:escalas:list:${repos.backend}`,
+    () => repos.escalas.list()
   );
 }
 
-export function listUsuariosCached(repos: Repositories, ministerioId: number) {
+export function listUsuariosCached(repos: Repositories) {
   return cachedData(
-    `cache:usuarios:list:${repos.backend}:${ministerioId}`,
-    () => repos.usuarios.list(ministerioId)
+    `cache:usuarios:list:${repos.backend}`,
+    () => repos.usuarios.list()
   );
 }
 
-export function firstMusicasPageCached(repos: Repositories, ministerioId: number, limit: number) {
+export function firstMusicasPageCached(repos: Repositories, limit: number) {
   return cachedData(
-    `cache:musicas:first-page:${repos.backend}:${ministerioId}:${limit}`,
-    () => repos.musicas.search({ ministerioId, offset: 0, limit, campo: "titulo" })
+    `cache:musicas:first-page:${repos.backend}:${limit}`,
+    () => repos.musicas.search({ offset: 0, limit, campo: "titulo" })
   );
 }
 
-export function firstUsuariosPageCached(repos: Repositories, ministerioId: number, limit: number) {
+export function firstUsuariosPageCached(repos: Repositories, limit: number) {
   return cachedData(
-    `cache:usuarios:first-page:${repos.backend}:${ministerioId}:${limit}`,
-    () => repos.usuarios.search({ ministerioId, offset: 0, limit })
+    `cache:usuarios:first-page:${repos.backend}:${limit}`,
+    () => repos.usuarios.search({ offset: 0, limit })
   );
 }

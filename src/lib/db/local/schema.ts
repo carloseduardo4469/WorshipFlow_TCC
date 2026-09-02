@@ -5,14 +5,6 @@ import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 // não está acessível (ex.: rede que bloqueia a conexão). Sem RLS aqui: quem
 // decide o que cada perfil pode ver/editar é a camada de repositório/rotas.
 
-export const ministerios = sqliteTable("ministerios", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  nome: text("nome").notNull(),
-  descricao: text("descricao"),
-  ativo: integer("ativo", { mode: "boolean" }).notNull().default(true),
-  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
-});
-
 export const usuarios = sqliteTable("usuarios", {
   id: text("id").primaryKey(), // uuid gerado em app, para bater com o formato do Supabase
   nome: text("nome").notNull(),
@@ -20,13 +12,9 @@ export const usuarios = sqliteTable("usuarios", {
   telefone: text("telefone"),
   instrumentoPrincipal: text("instrumento_principal"),
   habilidades: text("habilidades"),
-  statusMinisterio: text("status_ministerio").notNull().default("ATIVO"),
   isSuspended: integer("is_suspended", { mode: "boolean" }).notNull().default(false),
   perfil: text("perfil").notNull().default("MEMBRO"),
   fotoPerfilUrl: text("foto_perfil_url"),
-  ministerioId: integer("ministerio_id").references(() => ministerios.id, {
-    onDelete: "set null",
-  }),
   ultimaAtividade: text("ultima_atividade"),
   createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });
@@ -37,9 +25,6 @@ export const musicas = sqliteTable("musicas", {
   artista: text("artista"),
   tonalidade: text("tonalidade"),
   linkCifra: text("link_cifra"),
-  ministerioId: integer("ministerio_id").references(() => ministerios.id, {
-    onDelete: "set null",
-  }),
   createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });
 
@@ -47,9 +32,6 @@ export const repertorios = sqliteTable("repertorios", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   nome: text("nome").notNull(),
   descricao: text("descricao"),
-  ministerioId: integer("ministerio_id").references(() => ministerios.id, {
-    onDelete: "set null",
-  }),
   createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });
 
@@ -75,9 +57,6 @@ export const escalas = sqliteTable("escalas", {
   // JSON serializado como texto — sqlite não tem jsonb nativo.
   funcoesUsuarios: text("funcoes_usuarios", { mode: "json" }).notNull().default("[]"),
   tonalidadesMusicas: text("tonalidades_musicas", { mode: "json" }).notNull().default("[]"),
-  ministerioId: integer("ministerio_id").references(() => ministerios.id, {
-    onDelete: "set null",
-  }),
   createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });
 
