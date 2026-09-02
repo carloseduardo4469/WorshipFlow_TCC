@@ -1,9 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { aplicarTonalidadeAoLinkCifra, gerarLinkCifraClub, toCifraClubSlug } from "./cifraclub";
+import {
+  aplicarTonalidadeAoLinkCifra,
+  extrairUrlCifraClub,
+  gerarLinkCifraClub,
+  toCifraClubSlug,
+} from "./cifraclub";
 
 describe("links de cifra", () => {
   it("normaliza título e artista com acentos", () => {
     expect(toCifraClubSlug("Águas Purificadoras")).toBe("aguas-purificadoras");
+  });
+
+  it("extrai a URL pura quando um link Markdown foi salvo no banco", () => {
+    expect(
+      extrairUrlCifraClub(
+        "[https://www.cifraclub.com.br/nengo-vieira/a-vida/](https://www.cifraclub.com.br/nengo-vieira/a-vida/)"
+      )
+    ).toBe("https://www.cifraclub.com.br/nengo-vieira/a-vida/");
   });
 
   it("resolve o alias FHOP e sempre remove o capotraste", () => {
@@ -27,6 +40,8 @@ describe("links de cifra", () => {
     ["Só Tu És Santo", "MORADA", "/ministerio-morada/so-tu-s-santo/"],
     ["Toda Terra", "Gabriela Rocha", "/gabriela-rocha/toda-terra-ao-vivo/"],
     ["Lindo És / Só Quero Ver Você", "Juliano Son", "/juliano-son/lindo-s/"],
+    ["Hô Pai", "Nengo Vieira", "/nengo-vieira/hi-pai/"],
+    ["Tempo de Adorar", "Nengo Vieira", "/nengo-vieira/tempo-de-perdoar/"],
   ])("resolve a rota especial de %s", (titulo, artista, caminho) => {
     const link = gerarLinkCifraClub({ titulo, artista, tonalidade: "C" });
     expect(new URL(link!).pathname).toBe(caminho);

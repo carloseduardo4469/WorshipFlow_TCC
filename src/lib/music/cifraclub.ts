@@ -82,6 +82,10 @@ const SONG_SLUG_ALIASES: Record<string, string> = {
   "ministerio-zoe/aquieta-minhalma": "aquieta-minh-alma",
   "nivea-soares/nao-seremos-abalados": "nao-seremos-abalados-we-will-not-be-shaken",
   "nivea-soares/que-se-abram-os-ceus": "que-se-abra-os-ceus",
+  "nengo-vieira/deus-e-fiel": "deus-fiel",
+  "nengo-vieira/ho-pai": "hi-pai",
+  "nengo-vieira/rei-es": "rei-s",
+  "nengo-vieira/tempo-de-adorar": "tempo-de-perdoar",
   "one-sounds/como-eu-te-amo": "como-eu-te-amo-",
   "pr-w-junior/tu-es-o-rei": "tu-s-o-rei",
 };
@@ -157,6 +161,13 @@ async function detectarTomNaUrl(url: URL): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** Aceita URL pura e também corrige links Markdown colados em SQL ou importações. */
+export function extrairUrlCifraClub(value: string) {
+  const texto = value.trim();
+  const markdown = texto.match(/^\[[^\]]*\]\((https?:\/\/[^)\s]+)\)$/i);
+  return markdown?.[1] ?? texto;
 }
 
 function resolveSongSlug(artistSlug: string, titulo: string) {
@@ -260,7 +271,7 @@ export function aplicarTonalidadeAoLinkCifra({
 
   let url: URL;
   try {
-    url = new URL(linkCifra);
+    url = new URL(extrairUrlCifraClub(linkCifra));
   } catch {
     return null;
   }

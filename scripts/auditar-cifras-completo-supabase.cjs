@@ -4,6 +4,16 @@ const { createClient } = require("@supabase/supabase-js");
 
 const aplicarNomes = process.argv.includes("--apply-names");
 const somenteMetadados = process.argv.includes("--metadata-only");
+const idsArgumento = process.argv.find((argumento) => argumento.startsWith("--ids="));
+const somenteIds = idsArgumento
+  ? new Set(
+      idsArgumento
+        .slice("--ids=".length)
+        .split(",")
+        .map(Number)
+        .filter((id) => Number.isInteger(id) && id > 0)
+    )
+  : null;
 
 for (const arquivo of [".env.local", ".env"]) {
   if (!fs.existsSync(arquivo)) continue;
@@ -74,7 +84,9 @@ async function buscarTodasAsMusicas() {
 }
 
 function urlBase(link) {
-  const url = new URL(link);
+  const valor = String(link ?? "").trim();
+  const markdown = valor.match(/^\[[^\]]*\]\((https?:\/\/[^)\s]+)\)$/i);
+  const url = new URL(markdown?.[1] ?? valor);
   if (!["cifraclub.com.br", "www.cifraclub.com.br"].includes(url.hostname.toLowerCase())) {
     throw new Error(`domínio inválido: ${url.hostname}`);
   }
@@ -193,8 +205,11 @@ async function restaurar(musicas) {
 }
 
 async function executar() {
-  const musicas = await buscarTodasAsMusicas();
-  console.log(`Banco consultado: ${musicas.length} músicas.`);
+  const todasAsMusicas = await buscarTodasAsMusicas();
+  const musicas = somenteIds
+    ? todasAsMusicas.filter((musica) => somenteIds.has(musica.id))
+    : todasAsMusicas;
+  console.log(`Banco consultado: ${todasAsMusicas.length} músicas; ${musicas.length} selecionadas.`);
 
   const metadados = await mapearComLimite(musicas, 5, auditarMetadados, (feito, total) => {
     if (feito % 25 === 0 || feito === total) console.log(`Metadados: ${feito}/${total}.`);

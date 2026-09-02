@@ -78,7 +78,9 @@ function notaDaTonalidade(valor) {
 function construirUrlBase(musica) {
   let url;
   try {
-    url = new URL(LINKS_CORRIGIDOS_POR_ID.get(musica.id) ?? String(musica.link_cifra ?? ""));
+    const valor = LINKS_CORRIGIDOS_POR_ID.get(musica.id) ?? String(musica.link_cifra ?? "");
+    const markdown = valor.trim().match(/^\[[^\]]*\]\((https?:\/\/[^)\s]+)\)$/i);
+    url = new URL(markdown?.[1] ?? valor);
   } catch {
     throw new Error("link_cifra não é uma URL válida");
   }
@@ -250,6 +252,22 @@ async function executar() {
   console.log(
     `Auditoria concluída: ${validadas.length - falhas.length} válidas, ${falhas.length} falhas, ${alteradas.length} links a alterar.`
   );
+  if (alteradas.length > 0) {
+    console.log(
+      JSON.stringify(
+        alteradas.map((item) => ({
+          id: item.musica.id,
+          titulo: item.musica.titulo,
+          artista: item.musica.artista,
+          tomAtual: item.musica.tonalidade,
+          tomOficial: item.tonalidadeNova,
+          linkMarkdown: /^\[/.test(String(item.musica.link_cifra ?? "").trim()),
+        })),
+        null,
+        2
+      )
+    );
+  }
 
   if (falhas.length > 0) {
     console.error("Falhas encontradas (nenhuma alteração foi feita):");
