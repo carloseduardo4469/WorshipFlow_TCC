@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const AUTO_SAVE_DELAY_MS = 2_000;
 const SAVE_BUTTON_PATTERN = /^(salvar|adicionar música)/i;
-
-type AutoSaveStatus = "idle" | "waiting" | "saving";
 
 function getSaveButton(form: HTMLFormElement): HTMLButtonElement | null {
   const buttons = form.querySelectorAll<HTMLButtonElement>('button[type="submit"]');
@@ -30,14 +27,15 @@ function findEligibleForm(target: EventTarget | null): HTMLFormElement | null {
 }
 
 export function AutoSaveManager() {
-  const [status, setStatus] = useState<AutoSaveStatus>("idle");
-  const timerRef = useRef<number | null>(null);
+  const [saving, setSaving] = useState(false);
   const statusTimerRef = useRef<number | null>(null);
   const signaturesRef = useRef(new WeakMap<HTMLFormElement, string>());
+  const dirtyFormsRef = useRef(new Set<HTMLFormElement>());
   const automaticSubmitRef = useRef(new WeakSet<HTMLFormElement>());
 
   useEffect(() => {
     const signatures = signaturesRef.current;
+    const dirtyForms = dirtyFormsRef.current;
 
     function rememberVisibleForms() {
       document.querySelectorAll<HTMLFormElement>("form").forEach((form) => {
@@ -45,85 +43,90 @@ export function AutoSaveManager() {
           signatures.set(form, formSignature(form));
         }
       });
+      dirtyForms.forEach((form) => {
+        if (!form.isConnected) dirtyForms.delete(form);
+      });
     }
 
-    function clearSaveTimer() {
-      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-
-    function clearStatusLater() {
-      if (statusTimerRef.current !== null) window.clearTimeout(statusTimerRef.current);
-      statusTimerRef.current = window.setTimeout(() => setStatus("idle"), 2_500);
-    }
-
-    function schedule(event: Event) {
+    function markAsChanged(event: Event) {
       const form = findEligibleForm(event.target);
       if (!form) return;
 
-      // Aguarda o React atualizar campos controlados e inputs hidden derivados.
       window.setTimeout(() => {
         if (!form.isConnected) return;
         const currentSignature = formSignature(form);
-        const previousSignature = signatures.get(form);
-        if (previousSignature === undefined) {
+        const initialSignature = signatures.get(form);
+        if (initialSignature === undefined) {
           signatures.set(form, currentSignature);
+        } else if (currentSignature !== initialSignature) {
+          dirtyForms.add(form);
+        } else {
+          dirtyForms.delete(form);
+        }
+      });
+    }
+
+    function saveWhenLeaving(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      for (const form of dirtyForms) {
+        if (!form.isConnected) {
+          dirtyForms.delete(form);
+          continue;
+        }
+        if (form.contains(target)) continue;
+
+        const saveButton = getSaveButton(form);
+        if (!saveButton || saveButton.disabled) continue;
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+          form.reportValidity();
           return;
         }
-        if (currentSignature === previousSignature) return;
 
-        clearSaveTimer();
-        setStatus("waiting");
-        timerRef.current = window.setTimeout(() => {
-          timerRef.current = null;
-          const saveButton = getSaveButton(form);
-          if (!form.isConnected || !saveButton || saveButton.disabled || !form.checkValidity()) {
-            setStatus("idle");
-            return;
-          }
-          if (formSignature(form) === signatures.get(form)) return;
-
-          automaticSubmitRef.current.add(form);
-          form.requestSubmit(saveButton);
-        }, AUTO_SAVE_DELAY_MS);
-      });
+        automaticSubmitRef.current.add(form);
+        dirtyForms.delete(form);
+        signatures.set(form, formSignature(form));
+        form.requestSubmit(saveButton);
+      }
     }
 
     function submitted(event: SubmitEvent) {
       const form = event.target;
       if (!(form instanceof HTMLFormElement) || !getSaveButton(form)) return;
-      clearSaveTimer();
+      dirtyForms.delete(form);
       signatures.set(form, formSignature(form));
 
-      if (automaticSubmitRef.current.has(form)) {
-        automaticSubmitRef.current.delete(form);
-        setStatus("saving");
-        clearStatusLater();
-      } else {
-        setStatus("idle");
-      }
+      if (!automaticSubmitRef.current.has(form)) return;
+      automaticSubmitRef.current.delete(form);
+      setSaving(true);
+      if (statusTimerRef.current !== null) window.clearTimeout(statusTimerRef.current);
+      statusTimerRef.current = window.setTimeout(() => setSaving(false), 2_500);
     }
 
     rememberVisibleForms();
     const observer = new MutationObserver(rememberVisibleForms);
     observer.observe(document.body, { childList: true, subtree: true });
-    document.addEventListener("input", schedule);
-    document.addEventListener("change", schedule);
-    document.addEventListener("click", schedule);
+    document.addEventListener("input", markAsChanged);
+    document.addEventListener("change", markAsChanged);
+    document.addEventListener("click", markAsChanged);
+    document.addEventListener("pointerdown", saveWhenLeaving, true);
     document.addEventListener("submit", submitted, true);
 
     return () => {
       observer.disconnect();
-      document.removeEventListener("input", schedule);
-      document.removeEventListener("change", schedule);
-      document.removeEventListener("click", schedule);
+      document.removeEventListener("input", markAsChanged);
+      document.removeEventListener("change", markAsChanged);
+      document.removeEventListener("click", markAsChanged);
+      document.removeEventListener("pointerdown", saveWhenLeaving, true);
       document.removeEventListener("submit", submitted, true);
-      clearSaveTimer();
       if (statusTimerRef.current !== null) window.clearTimeout(statusTimerRef.current);
     };
   }, []);
 
-  if (status === "idle") return null;
+  if (!saving) return null;
 
   return (
     <div
@@ -131,7 +134,7 @@ export function AutoSaveManager() {
       aria-live="polite"
       className="fixed bottom-4 right-4 z-[150] rounded-xl border border-cyan-300/25 bg-[#07101e]/95 px-4 py-2.5 text-xs font-semibold text-cyan-100 shadow-xl backdrop-blur sm:bottom-6 sm:right-6"
     >
-      {status === "waiting" ? "Alteração detectada · salvando em instantes…" : "Salvando automaticamente…"}
+      Salvando alterações antes de sair…
     </div>
   );
 }

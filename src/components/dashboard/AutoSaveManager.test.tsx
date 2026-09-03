@@ -7,7 +7,7 @@ afterEach(() => {
 });
 
 describe("AutoSaveManager", () => {
-  it("envia um formulário válido após dois segundos sem alterações", () => {
+  it("salva um formulário alterado quando o usuário clica fora dele", () => {
     vi.useFakeTimers();
     const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
 
@@ -17,17 +17,21 @@ describe("AutoSaveManager", () => {
         <form onSubmit={onSubmit}>
           <input name="nome" defaultValue="Antes" required />
           <button type="submit">Salvar</button>
+          <button type="button">Cancelar</button>
         </form>
+        <button type="button">Fechar tela</button>
       </>
     );
 
     fireEvent.input(screen.getByRole("textbox"), { target: { value: "Depois" } });
-    act(() => vi.advanceTimersByTime(1_999));
+    act(() => vi.runOnlyPendingTimers());
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Cancelar" }));
     expect(onSubmit).not.toHaveBeenCalled();
 
-    act(() => vi.advanceTimersByTime(1));
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Fechar tela" }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("status")).toHaveTextContent("Salvando automaticamente");
+    expect(screen.getByRole("status")).toHaveTextContent("Salvando alterações antes de sair");
   });
 
   it("não envia ações destrutivas automaticamente", () => {
@@ -41,11 +45,13 @@ describe("AutoSaveManager", () => {
           <input name="confirmacao" defaultValue="" />
           <button type="submit">Sim, excluir conta</button>
         </form>
+        <button type="button">Fechar tela</button>
       </>
     );
 
     fireEvent.input(screen.getByRole("textbox"), { target: { value: "excluirminhaconta" } });
-    act(() => vi.advanceTimersByTime(3_000));
+    act(() => vi.runOnlyPendingTimers());
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Fechar tela" }));
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
