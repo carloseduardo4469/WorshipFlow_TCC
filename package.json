@@ -8,7 +8,6 @@
   },
   "scripts": {
     "dev": "next dev",
-    "seed:local": "node scripts/seed-local.cjs",
     "seed:historico:supabase": "node scripts/seed-historico-supabase.cjs .env",
     "build": "next build",
     "start": "next start",

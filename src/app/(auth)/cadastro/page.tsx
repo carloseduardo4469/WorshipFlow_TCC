@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { cadastroAction, loginComGoogleAction } from "@/lib/actions/auth";
 import { FormAlert } from "@/components/ui/FormAlert";
@@ -23,6 +23,11 @@ import {
 
 export default function CadastroPage() {
   const [state, formAction, pending] = useActionState(cadastroAction, null);
+  const contaGoogleExistente = useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get("error") === "account-exists",
+    () => false
+  );
 
   return (
     <AuthShell>
@@ -94,7 +99,11 @@ export default function CadastroPage() {
               />
             </div>
 
-            {state?.error && <FormAlert>{state.error}</FormAlert>}
+            {(state?.error || contaGoogleExistente) && (
+              <FormAlert>
+                {state?.error ?? "Já existe uma conta com esse Gmail. Entre com o Google pela tela de login."}
+              </FormAlert>
+            )}
 
             <div className="mt-2">
               <PrimaryButton disabled={pending}>
@@ -109,7 +118,8 @@ export default function CadastroPage() {
 
           <form action={loginComGoogleAction} className="mt-3 flex justify-center">
             <input type="hidden" name="next" value="/dashboard" />
-            <GoogleAuthButton>Entrar com Google</GoogleAuthButton>
+            <input type="hidden" name="intent" value="signup" />
+            <GoogleAuthButton>Cadastrar com Google</GoogleAuthButton>
           </form>
 
           <p className="mt-5 text-center text-xs font-semibold leading-relaxed af-muted">

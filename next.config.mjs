@@ -26,9 +26,7 @@ const nextConfig = {
   },
   // Turbopack é o bundler padrão do Next.js 16 (não há pacote npm separado
   // para instalar nem flag para ativar — `next dev` e `next build` já usam).
-  //
-  // better-sqlite3 é um módulo nativo (binário) — precisa rodar fora do
-  // bundle do servidor, senão o build falha ou o runtime quebra em prod.
+  // Mantido externo enquanto os adaptadores legados são retirados do bundle.
   serverExternalPackages: ["better-sqlite3"],
   images: {
     formats: ["image/avif", "image/webp"],

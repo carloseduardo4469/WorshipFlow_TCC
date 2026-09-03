@@ -22,33 +22,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!claims || !authId) return null;
 
   const email = typeof claims.email === "string" ? claims.email : "";
-  const metadata = claims.user_metadata && typeof claims.user_metadata === "object"
-    ? claims.user_metadata as Record<string, unknown>
-    : {};
-
   const repos = await getRepositories();
   // O status de acesso precisa ser consultado em toda request para que uma
   // aprovacao ou suspensao administrativa tenha efeito imediatamente.
-  let profile = await repos.usuarios.getById(authId);
-
-  // Modo local: o trigger que cria o profile automaticamente só existe no
-  // Postgres do Supabase. Se caiu pro SQLite e o profile ainda não existe
-  // (ex.: usuário logado via Supabase Auth antes da queda), cria na hora.
-  if (!profile && repos.backend === "local") {
-    profile = await repos.usuarios.createLocal({
-      id: authId,
-      nome: typeof metadata.nome === "string" ? metadata.nome : email.split("@")[0] || "Usuário",
-      email,
-      telefone: typeof metadata.telefone === "string" ? metadata.telefone : null,
-      instrumentoPrincipal: null,
-      habilidades: null,
-      statusAcesso: "PENDENTE",
-      isSuspended: false,
-      perfil: "MEMBRO",
-      fotoPerfilUrl: null,
-      ultimaAtividade: null,
-    });
-  }
+  const profile = await repos.usuarios.getById(authId);
 
   if (!profile) return null;
 

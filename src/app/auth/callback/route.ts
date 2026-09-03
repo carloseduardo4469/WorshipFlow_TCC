@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { marcarCadastroPendente, usuarioCriadoRecentemente } from "@/lib/auth/approval";
+import { usuarioCriadoRecentemente } from "@/lib/auth/approval";
 
 // Pra onde o Supabase manda de volta depois do login com Google ou de
 // clicar no link de confirmação de email / reset de senha.
@@ -17,20 +17,18 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next"));
   const flow = searchParams.get("flow");
+  const intent = searchParams.get("intent");
 
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       if (flow === "google" && data.user && usuarioCriadoRecentemente(data.user.created_at)) {
-        try {
-          await marcarCadastroPendente(data.user.id);
-        } catch (approvalError) {
-          console.error("[auth/callback] falha ao registrar solicitacao:", approvalError);
-          await supabase.auth.signOut();
-          return NextResponse.redirect(`${origin}/login?error=approval`);
-        }
         return NextResponse.redirect(`${origin}/aguardando-aprovacao`);
+      }
+      if (flow === "google" && intent === "signup") {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(`${origin}/cadastro?error=account-exists`);
       }
       if (flow === "signup") {
         return NextResponse.redirect(`${origin}/aguardando-aprovacao`);

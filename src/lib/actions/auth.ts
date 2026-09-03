@@ -4,9 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { invalidateDataCache } from "@/lib/db/cache";
-import { marcarCadastroPendente, usuarioCriadoRecentemente } from "@/lib/auth/approval";
 import {
   FORM_LIMITS,
   normalizePersonName,
@@ -109,17 +107,8 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
   }
 
   const novoUsuario = data.user;
-  if (!novoUsuario || !usuarioCriadoRecentemente(novoUsuario.created_at)) {
+  if (!novoUsuario || novoUsuario.identities?.length === 0) {
     return { error: "Já existe uma conta com esse email." };
-  }
-
-  try {
-    await marcarCadastroPendente(novoUsuario.id);
-  } catch (approvalError) {
-    console.error("Falha ao registrar solicitação de acesso:", approvalError);
-    await createAdminClient().auth.admin.deleteUser(novoUsuario.id).catch(() => {});
-    await supabase.auth.signOut();
-    return { error: "Não foi possível enviar sua solicitação. Tente novamente." };
   }
 
   // O profile criado pelo trigger precisa entrar imediatamente nas listas de
@@ -211,6 +200,7 @@ export async function redefinirSenhaAction(
 
 export async function loginComGoogleAction(formData: FormData) {
   const next = safeNextPath(String(formData.get("next") ?? ""));
+  const intent = formData.get("intent") === "signup" ? "signup" : "login";
   const supabase = await createClient();
   const siteUrl = await getSiteUrl();
 
@@ -218,7 +208,7 @@ export async function loginComGoogleAction(formData: FormData) {
     provider: "google",
     options: {
       queryParams: { prompt: "select_account" },
-      redirectTo: `${siteUrl}/auth/callback?flow=google&next=${encodeURIComponent(next)}`,
+      redirectTo: `${siteUrl}/auth/callback?flow=google&intent=${intent}&next=${encodeURIComponent(next)}`,
     },
   });
 

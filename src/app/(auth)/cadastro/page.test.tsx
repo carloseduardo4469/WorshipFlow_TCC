@@ -35,6 +35,6 @@ describe("cadastro em tela mobile", () => {
     await user.click(screen.getByRole("button", { name: "Mostrar senha" }));
     expect(senha).toHaveAttribute("type", "text");
     expect(screen.getByRole("button", { name: "Cadastrar" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /entrar com google/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cadastrar com google/i })).toBeInTheDocument();
   });
 });

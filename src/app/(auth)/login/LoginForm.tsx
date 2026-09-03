@@ -126,6 +126,7 @@ export function LoginForm() {
 
           <form action={formAction} className="flex flex-col gap-5">
             <input type="hidden" name="next" value={next} />
+            <input type="hidden" name="intent" value="login" />
             <AuthField
               label="E-mail"
               name="email"
