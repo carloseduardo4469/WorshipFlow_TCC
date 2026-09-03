@@ -8,6 +8,7 @@ import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { TopNavbar } from "@/components/dashboard/TopNavbar";
 import { PresenceTracker } from "@/components/dashboard/PresenceTracker";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AutoSaveManager } from "@/components/dashboard/AutoSaveManager";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await requireAuth();
@@ -17,6 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="db-bg relative min-h-screen">
         <div aria-hidden className="db-grid pointer-events-none fixed inset-0" />
         <PresenceTracker />
+        <AutoSaveManager />
         <DashboardNav perfil={profile.perfil} usuario={profile} />
 
         <div className="relative lg:pl-[278px]">
