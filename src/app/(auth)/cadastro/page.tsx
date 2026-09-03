@@ -23,11 +23,18 @@ import {
 
 export default function CadastroPage() {
   const [state, formAction, pending] = useActionState(cadastroAction, null);
-  const contaGoogleExistente = useSyncExternalStore(
+  const erroGoogle = useSyncExternalStore(
     () => () => {},
-    () => new URLSearchParams(window.location.search).get("error") === "account-exists",
-    () => false
+    () => new URLSearchParams(window.location.search).get("error"),
+    () => null
   );
+  const mensagemGoogle = erroGoogle === "account-exists"
+    ? "Já existe uma conta com esse Gmail. Entre com o Google pela tela de login."
+    : erroGoogle === "profile-creation"
+      ? "O Google confirmou sua conta, mas não foi possível criar seu perfil. Tente novamente; se o erro continuar, procure um administrador."
+      : erroGoogle === "google-signup"
+        ? "Não foi possível concluir o cadastro com o Google. Tente novamente."
+        : null;
 
   return (
     <AuthShell>
@@ -99,9 +106,9 @@ export default function CadastroPage() {
               />
             </div>
 
-            {(state?.error || contaGoogleExistente) && (
+            {(state?.error || mensagemGoogle) && (
               <FormAlert>
-                {state?.error ?? "Já existe uma conta com esse Gmail. Entre com o Google pela tela de login."}
+                {state?.error ?? mensagemGoogle}
               </FormAlert>
             )}
 

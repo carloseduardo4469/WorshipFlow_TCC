@@ -15,9 +15,29 @@ function safeNextPath(value: string | null, fallback = "/dashboard"): string {
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const oauthError = searchParams.get("error");
+  const oauthErrorCode = searchParams.get("error_code");
+  const oauthErrorDescription = searchParams.get("error_description");
   const next = safeNextPath(searchParams.get("next"));
   const flow = searchParams.get("flow");
   const intent = searchParams.get("intent");
+
+  if (oauthError) {
+    console.error("[auth/callback] OAuth falhou:", {
+      error: oauthError,
+      code: oauthErrorCode,
+      description: oauthErrorDescription,
+      flow,
+      intent,
+    });
+
+    if (flow === "google" && intent === "signup") {
+      const errorType = /database error saving new user/i.test(oauthErrorDescription ?? "")
+        ? "profile-creation"
+        : "google-signup";
+      return NextResponse.redirect(`${origin}/cadastro?error=${errorType}`);
+    }
+  }
 
   if (code) {
     const supabase = await createClient();
