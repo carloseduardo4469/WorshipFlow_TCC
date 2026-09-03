@@ -137,6 +137,32 @@ html[data-dashboard-theme="light"] .db-overview .text-\[\#c0cada\], html[data-da
 @media (min-width: 640px) {
   .db-scale-music-list { height: 20rem; }
 }
+
+/* Lista de membros da escala: caixa com altura fixa e rolagem real em qualquer tela. */
+.db-scale-member-list {
+  height: 16rem;
+  min-height: 0;
+  flex-shrink: 0;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  scroll-padding-block: 0.75rem;
+}
+
+.db-scale-member-list::-webkit-scrollbar { width: 7px; }
+.db-scale-member-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(83, 217, 235, .62);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+@media (min-width: 640px) {
+  .db-scale-member-list { height: 20rem; }
+}
 .db-music-option { border-color: rgba(148, 181, 208, .2); background: rgba(255, 255, 255, .025); }
 .db-music-option:hover { border-color: rgba(83, 217, 235, .45); background: rgba(83, 217, 235, .06); }
 .db-choice-checkbox { appearance: none; width: 1.05rem; height: 1.05rem; flex: 0 0 auto; margin-top: .05rem; border: 1.5px solid rgba(148, 163, 184, .55); border-radius: .3rem; background: rgba(255, 255, 255, .08); cursor: pointer; }
