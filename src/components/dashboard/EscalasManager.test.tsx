@@ -25,6 +25,7 @@ const carlos: Usuario = {
   telefone: null,
   instrumentoPrincipal: "violao",
   habilidades: "violao",
+  statusAcesso: "ATIVO",
   isSuspended: false,
   perfil: "MEMBRO",
   fotoPerfilUrl: null,

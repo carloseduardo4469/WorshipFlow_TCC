@@ -196,7 +196,11 @@ export function EscalaForm({
         )}
 
         <span className="db-hint">Adicionar membros</span>
-        <div ref={usuariosListaRef} className="db-card db-scale-picker max-h-72 space-y-1 overflow-y-auto p-3">
+        <div
+          ref={usuariosListaRef}
+          className="db-card db-scale-picker max-h-72 space-y-1 overflow-y-auto p-3 pb-6"
+          style={{ scrollPaddingBlock: "0.75rem" }}
+        >
           {usuariosCarregando && usuariosTotalCarregado === 0 ? (
             <p className="text-sm text-muted">Carregando membros...</p>
           ) : usuariosErro ? (

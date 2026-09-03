@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { asc, count, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import { usuarios as usuariosTable } from "@/lib/db/local/schema";
@@ -14,6 +14,7 @@ type SupabaseUsuarioRow = {
   telefone: string | null;
   instrumento_principal: string | null;
   habilidades: string | null;
+  status_ministerio: string | null;
   is_suspended: boolean | null;
   perfil: Usuario["perfil"];
   foto_perfil_url: string | null;
@@ -29,6 +30,7 @@ function mapSupabaseRow(row: SupabaseUsuarioRow): Usuario {
     telefone: row.telefone ?? null,
     instrumentoPrincipal: row.instrumento_principal ?? null,
     habilidades: row.habilidades ?? null,
+    statusAcesso: row.status_ministerio === "ATIVO" ? "ATIVO" : "PENDENTE",
     isSuspended: Boolean(row.is_suspended),
     perfil: row.perfil,
     fotoPerfilUrl: row.foto_perfil_url ?? null,
@@ -45,6 +47,7 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
     telefone: row.telefone ?? null,
     instrumentoPrincipal: row.instrumentoPrincipal ?? null,
     habilidades: row.habilidades ?? null,
+    statusAcesso: row.statusAcesso === "ATIVO" ? "ATIVO" : "PENDENTE",
     isSuspended: Boolean(row.isSuspended),
     perfil: row.perfil as Usuario["perfil"],
     fotoPerfilUrl: row.fotoPerfilUrl ?? null,
@@ -56,6 +59,7 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
 function toSupabasePayload(data: UpdateUsuario) {
   const {
     instrumentoPrincipal,
+    statusAcesso,
     isSuspended,
     fotoPerfilUrl,
     ultimaAtividade,
@@ -64,6 +68,7 @@ function toSupabasePayload(data: UpdateUsuario) {
   return {
     ...rest,
     ...(instrumentoPrincipal !== undefined ? { instrumento_principal: instrumentoPrincipal } : {}),
+    ...(statusAcesso !== undefined ? { status_ministerio: statusAcesso } : {}),
     ...(isSuspended !== undefined ? { is_suspended: isSuspended } : {}),
     ...(fotoPerfilUrl !== undefined ? { foto_perfil_url: fotoPerfilUrl } : {}),
     ...(ultimaAtividade !== undefined ? { ultima_atividade: ultimaAtividade } : {}),
@@ -76,21 +81,37 @@ function createLocalRepository(): UsuariosRepository {
 
   return {
     async count() {
-      const rows = await localDb.select({ count: count() }).from(usuariosTable);
+      const rows = await localDb
+        .select({ count: count() })
+        .from(usuariosTable)
+        .where(eq(usuariosTable.statusAcesso, "ATIVO"));
       return rows[0]?.count ?? 0;
     },
     async list() {
+      const rows = await localDb
+        .select()
+        .from(usuariosTable)
+        .where(eq(usuariosTable.statusAcesso, "ATIVO"));
+      return rows.map(mapLocalRow).sort((a, b) => a.nome.localeCompare(b.nome));
+    },
+    async listAll() {
       const rows = await localDb.select().from(usuariosTable);
       return rows.map(mapLocalRow).sort((a, b) => a.nome.localeCompare(b.nome));
     },
     async search({ offset = 0, limit = 50 }) {
-      const query = localDb.select().from(usuariosTable);
+      const query = localDb
+        .select()
+        .from(usuariosTable)
+        .where(eq(usuariosTable.statusAcesso, "ATIVO"));
       const rows = await query.orderBy(asc(usuariosTable.nome)).limit(limit).offset(offset);
       return rows.map(mapLocalRow);
     },
     async getByIds(ids) {
       if (ids.length === 0) return [];
-      const rows = await localDb.select().from(usuariosTable).where(inArray(usuariosTable.id, ids));
+      const rows = await localDb
+        .select()
+        .from(usuariosTable)
+        .where(and(inArray(usuariosTable.id, ids), eq(usuariosTable.statusAcesso, "ATIVO")));
       return rows.map(mapLocalRow);
     },
     async getById(id) {
@@ -126,26 +147,44 @@ function createLocalRepository(): UsuariosRepository {
 function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository {
   return {
     async count() {
-      const query = supabase.from("profiles").select("id", { count: "exact", head: true });
+      const query = supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("status_ministerio", "ATIVO");
       const { count: total, error } = await query;
       if (error) throw error;
       return total ?? 0;
     },
     async list() {
+      const query = supabase.from("profiles").select("*").eq("status_ministerio", "ATIVO").order("nome");
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []).map(mapSupabaseRow);
+    },
+    async listAll() {
       const query = supabase.from("profiles").select("*").order("nome");
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);
     },
     async search({ offset = 0, limit = 50 }) {
-      const query = supabase.from("profiles").select("*").order("nome").range(offset, offset + limit - 1);
+      const query = supabase
+        .from("profiles")
+        .select("*")
+        .eq("status_ministerio", "ATIVO")
+        .order("nome")
+        .range(offset, offset + limit - 1);
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);
     },
     async getByIds(ids) {
       if (ids.length === 0) return [];
-      const { data, error } = await supabase.from("profiles").select("*").in("id", ids);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", ids)
+        .eq("status_ministerio", "ATIVO");
       if (error) throw error;
       return (data ?? []).map(mapSupabaseRow);
     },

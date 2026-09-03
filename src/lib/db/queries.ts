@@ -17,6 +17,13 @@ export function listUsuariosCached(repos: Repositories) {
   );
 }
 
+export function listTodosUsuariosCached(repos: Repositories) {
+  return cachedData(
+    `cache:usuarios:list-all:${repos.backend}`,
+    () => repos.usuarios.listAll()
+  );
+}
+
 export function firstMusicasPageCached(repos: Repositories, limit: number) {
   return cachedData(
     `cache:musicas:first-page:${repos.backend}:${limit}`,

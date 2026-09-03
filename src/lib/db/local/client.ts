@@ -21,6 +21,7 @@ create table if not exists usuarios (
   telefone text,
   instrumento_principal text,
   habilidades text,
+  status_ministerio text not null default 'ATIVO',
   is_suspended integer not null default 0,
   perfil text not null default 'MEMBRO',
   foto_perfil_url text,
@@ -90,6 +91,9 @@ function getSqliteHandle(): Database.Database {
   const usuarioColumns = db.prepare("pragma table_info(usuarios)").all() as Array<{ name: string }>;
   if (!usuarioColumns.some((column) => column.name === "is_suspended")) {
     db.exec("alter table usuarios add column is_suspended integer not null default 0");
+  }
+  if (!usuarioColumns.some((column) => column.name === "status_ministerio")) {
+    db.exec("alter table usuarios add column status_ministerio text not null default 'ATIVO'");
   }
   // Migração leve: coluna de presença (Online/Offline na equipe).
   if (!usuarioColumns.some((column) => column.name === "ultima_atividade")) {

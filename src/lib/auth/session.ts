@@ -3,7 +3,6 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRepositories } from "@/lib/db/repositories";
-import { cachedData } from "@/lib/db/cache";
 import type { Usuario } from "@/types/domain";
 
 export interface CurrentUser {
@@ -28,10 +27,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     : {};
 
   const repos = await getRepositories();
-  let profile = await cachedData(
-    `usuarios:profile:${repos.backend}:${authId}`,
-    () => repos.usuarios.getById(authId)
-  );
+  // O status de acesso precisa ser consultado em toda request para que uma
+  // aprovacao ou suspensao administrativa tenha efeito imediatamente.
+  let profile = await repos.usuarios.getById(authId);
 
   // Modo local: o trigger que cria o profile automaticamente só existe no
   // Postgres do Supabase. Se caiu pro SQLite e o profile ainda não existe
@@ -44,6 +42,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       telefone: typeof metadata.telefone === "string" ? metadata.telefone : null,
       instrumentoPrincipal: null,
       habilidades: null,
+      statusAcesso: "PENDENTE",
       isSuspended: false,
       perfil: "MEMBRO",
       fotoPerfilUrl: null,
@@ -60,6 +59,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireAuth(): Promise<CurrentUser> {
   const current = await getCurrentUser();
   if (!current) redirect("/login");
+  if (current.profile.statusAcesso !== "ATIVO") {
+    redirect("/aguardando-aprovacao");
+  }
   if (current.profile.isSuspended) {
     const supabase = await createClient();
     await supabase.auth.signOut();

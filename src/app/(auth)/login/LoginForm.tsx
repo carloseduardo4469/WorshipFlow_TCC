@@ -17,7 +17,7 @@ import {
 import { FORM_LIMITS } from "@/lib/validation/forms";
 
 const CADASTRO_MESSAGES: Record<string, string> = {
-  "confirme-email": "Conta criada! Confira seu email para confirmar o cadastro.",
+  "confirme-email": "Conta criada! Confirme seu email e aguarde a liberação do administrador.",
 };
 
 const RESET_MESSAGES: Record<string, string> = {
@@ -41,6 +41,7 @@ export function LoginForm() {
   const oauthError = authError === "google" || authError === "suspended" ? authError : null;
   const verificationError = authError === "verification";
   const callbackError = authError === "callback";
+  const approvalError = authError === "approval";
   const accountMsg = searchParams.get("account");
 
   // O Supabase anexa o detalhe do erro de OAuth no fragment (#error=...),
@@ -102,6 +103,11 @@ export function LoginForm() {
           {callbackError && (
             <div className="mb-5">
               <FormAlert>Não foi possível concluir a autenticação. Tente novamente.</FormAlert>
+            </div>
+          )}
+          {approvalError && (
+            <div className="mb-5">
+              <FormAlert>Não foi possível registrar sua solicitação de acesso. Tente novamente.</FormAlert>
             </div>
           )}
           {oauthError === "suspended" && (

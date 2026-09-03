@@ -7,8 +7,8 @@ begin;
 alter table if exists public.profiles
   drop column if exists ministerio_id;
 
-alter table if exists public.profiles
-  drop column if exists status_ministerio;
+-- status_ministerio permanece: agora controla a aprovação de acesso
+-- (PENDENTE para novos cadastros e ATIVO após aprovação administrativa).
 
 alter table if exists public.musicas
   drop column if exists ministerio_id;
@@ -29,6 +29,6 @@ from information_schema.columns
 where table_schema = 'public'
   and (
     table_name = 'ministerios'
-    or column_name in ('ministerio_id', 'status_ministerio')
+    or column_name = 'ministerio_id'
   )
 order by table_name, column_name;

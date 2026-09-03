@@ -4,7 +4,9 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { invalidateDataCache } from "@/lib/db/cache";
+import { marcarCadastroPendente, usuarioCriadoRecentemente } from "@/lib/auth/approval";
 import {
   FORM_LIMITS,
   normalizePersonName,
@@ -106,6 +108,20 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
     return { error: "Não foi possível criar a conta. Tente novamente." };
   }
 
+  const novoUsuario = data.user;
+  if (!novoUsuario || !usuarioCriadoRecentemente(novoUsuario.created_at)) {
+    return { error: "Já existe uma conta com esse email." };
+  }
+
+  try {
+    await marcarCadastroPendente(novoUsuario.id);
+  } catch (approvalError) {
+    console.error("Falha ao registrar solicitação de acesso:", approvalError);
+    await createAdminClient().auth.admin.deleteUser(novoUsuario.id).catch(() => {});
+    await supabase.auth.signOut();
+    return { error: "Não foi possível enviar sua solicitação. Tente novamente." };
+  }
+
   // O profile criado pelo trigger precisa entrar imediatamente nas listas de
   // equipe e nos seletores de membros das escalas.
   invalidateDataCache("usuarios");
@@ -121,7 +137,7 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
   // pro dashboard (usuário logado) sem mostrar mensagem nenhuma.
   if (data.session) {
     revalidatePath("/dashboard", "layout");
-    redirect("/dashboard");
+    redirect("/aguardando-aprovacao");
   }
 
   redirect("/login?cadastro=confirme-email");

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { marcarCadastroPendente, usuarioCriadoRecentemente } from "@/lib/auth/approval";
 
 // Pra onde o Supabase manda de volta depois do login com Google ou de
 // clicar no link de confirmação de email / reset de senha.
@@ -19,8 +20,21 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      if (flow === "google" && data.user && usuarioCriadoRecentemente(data.user.created_at)) {
+        try {
+          await marcarCadastroPendente(data.user.id);
+        } catch (approvalError) {
+          console.error("[auth/callback] falha ao registrar solicitacao:", approvalError);
+          await supabase.auth.signOut();
+          return NextResponse.redirect(`${origin}/login?error=approval`);
+        }
+        return NextResponse.redirect(`${origin}/aguardando-aprovacao`);
+      }
+      if (flow === "signup") {
+        return NextResponse.redirect(`${origin}/aguardando-aprovacao`);
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
     // Sem esse log o erro é engolido e fica impossível diagnosticar OAuth

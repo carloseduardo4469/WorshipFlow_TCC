@@ -48,6 +48,8 @@ export interface RepertoriosRepository {
 
 export interface UsuariosRepository {
   list(): Promise<Usuario[]>;
+  /** Inclui contas pendentes; uso exclusivo de telas administrativas. */
+  listAll(): Promise<Usuario[]>;
   search(params: { offset?: number; limit?: number }): Promise<Usuario[]>;
   getByIds(ids: string[]): Promise<Usuario[]>;
   count(): Promise<number>;

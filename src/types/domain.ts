@@ -3,6 +3,7 @@
 // então nada aqui pode depender de um backend específico.
 
 export type PerfilUsuario = "ADMIN" | "MEMBRO";
+export type StatusAcesso = "PENDENTE" | "ATIVO";
 export type StatusEscala = "RASCUNHO" | "PUBLICADA" | "CONCLUIDA" | "CANCELADA";
 
 export interface Usuario {
@@ -12,6 +13,7 @@ export interface Usuario {
   telefone: string | null;
   instrumentoPrincipal: string | null;
   habilidades: string | null;
+  statusAcesso: StatusAcesso;
   isSuspended: boolean;
   perfil: PerfilUsuario;
   fotoPerfilUrl: string | null;
@@ -26,6 +28,7 @@ export type UpdateUsuario = Partial<
     | "telefone"
     | "instrumentoPrincipal"
     | "habilidades"
+    | "statusAcesso"
     | "isSuspended"
     | "perfil"
     | "fotoPerfilUrl"

@@ -18,6 +18,17 @@ import {
 export type ActionState = { error?: string; success?: boolean } | null;
 
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function revalidarListasDeUsuarios() {
+  invalidateDataCache("usuarios");
+  revalidatePath("/dashboard/usuarios");
+  revalidatePath("/dashboard/equipe");
+  revalidatePath("/dashboard/admin/usuarios");
+  revalidatePath("/dashboard/admin/escalas");
+  revalidatePath("/dashboard/escalas/novo");
+  revalidatePath("/dashboard");
+}
 
 async function uploadProfilePhoto(userId: string, file: File) {
   const admin = createAdminClient();
@@ -188,6 +199,74 @@ export async function atualizarUsuarioAdminAction(
   revalidatePath("/dashboard/equipe");
   revalidatePath("/dashboard/admin/usuarios");
   revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function aprovarSolicitacaoCadastroAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!UUID_PATTERN.test(id)) return { error: "Solicitação inválida." };
+
+  try {
+    const repos = await getRepositories();
+    const usuario = await repos.usuarios.getById(id);
+    if (!usuario) return { error: "Solicitação não encontrada." };
+    if (usuario.statusAcesso === "ATIVO") return { success: true };
+
+    if (repos.backend === "supabase") {
+      const admin = createAdminClient();
+      const { error } = await admin
+        .from("profiles")
+        .update({ status_ministerio: "ATIVO", is_suspended: false })
+        .eq("id", id);
+      if (error) throw error;
+    } else {
+      await repos.usuarios.update(id, { statusAcesso: "ATIVO", isSuspended: false });
+    }
+  } catch (error) {
+    console.error("Falha ao aprovar solicitação de cadastro:", error);
+    return { error: "Não foi possível aprovar este cadastro. Tente novamente." };
+  }
+
+  revalidarListasDeUsuarios();
+  return { success: true };
+}
+
+export async function negarSolicitacaoCadastroAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const current = await requireAdmin();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!UUID_PATTERN.test(id) || id === current.authId) {
+    return { error: "Solicitação inválida." };
+  }
+
+  try {
+    const repos = await getRepositories();
+    const usuario = await repos.usuarios.getById(id);
+    if (!usuario || usuario.statusAcesso !== "PENDENTE") {
+      return { error: "Esta solicitação não está mais pendente." };
+    }
+
+    if (repos.backend === "supabase") {
+      const admin = createAdminClient();
+      const { error: authError } = await admin.auth.admin.deleteUser(id);
+      if (authError) throw authError;
+      const { error: profileError } = await admin.from("profiles").delete().eq("id", id);
+      if (profileError) throw profileError;
+    } else {
+      await repos.usuarios.remove(id);
+    }
+  } catch (error) {
+    console.error("Falha ao negar solicitação de cadastro:", error);
+    return { error: "Não foi possível negar este cadastro. Tente novamente." };
+  }
+
+  revalidarListasDeUsuarios();
   return { success: true };
 }
 
