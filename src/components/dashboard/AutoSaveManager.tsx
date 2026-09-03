@@ -86,6 +86,10 @@ export function AutoSaveManager() {
           return;
         }
 
+        // Impede que o mesmo clique feche/desmonte o modal antes de a Server
+        // Action terminar. No sucesso, o callback do formulário fecha a tela.
+        event.preventDefault();
+        event.stopPropagation();
         automaticSubmitRef.current.add(form);
         dirtyForms.delete(form);
         signatures.set(form, formSignature(form));

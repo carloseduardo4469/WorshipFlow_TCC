@@ -19,7 +19,7 @@ export function MusicaForm({
 }: {
   musica?: Musica;
   onCancel?: () => void;
-  onSaved?: () => void;
+  onSaved?: (musica: Musica) => void;
 }) {
   const action = musica ? atualizarMusicaAction : criarMusicaAction;
   const [state, formAction, pending] = useActionState(action, null);
@@ -45,7 +45,7 @@ export function MusicaForm({
   }, [state]);
 
   useEffect(() => {
-    if (state?.success && onSaved) onSaved();
+    if (state?.success && state.musica && onSaved) onSaved(state.musica);
   }, [state, onSaved]);
 
   return (

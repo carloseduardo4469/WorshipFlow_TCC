@@ -53,6 +53,7 @@ export interface PaginacaoDeslizante<T> {
   voltarAoTopo: () => void;
   removerItem: (item: T) => number;
   restaurarItem: (item: T, indiceOriginal: number) => void;
+  atualizarItem: (item: T) => void;
 }
 
 export function usePaginacaoDeslizante<T>(opcoes: OpcoesPaginacao<T>): PaginacaoDeslizante<T> {
@@ -306,6 +307,19 @@ const aoRolar = useCallback(() => {
     [chaveDeItem]
   );
 
+  const atualizarItem = useCallback(
+    (item: T) => {
+      const chave = chaveDeItem(item);
+      const indice = itensRef.current.findIndex((atual) => chaveDeItem(atual) === chave);
+      const proximos = [...itensRef.current];
+      if (indice === -1) proximos.unshift(item);
+      else proximos[indice] = item;
+      itensRef.current = proximos;
+      setItens(proximos);
+    },
+    [chaveDeItem]
+  );
+
   return {
     containerRef,
     sentinelaRef,
@@ -322,5 +336,6 @@ const aoRolar = useCallback(() => {
     voltarAoTopo,
     removerItem,
     restaurarItem,
+    atualizarItem,
   };
 }

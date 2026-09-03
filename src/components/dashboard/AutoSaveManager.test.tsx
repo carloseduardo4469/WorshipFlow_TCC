@@ -10,6 +10,7 @@ describe("AutoSaveManager", () => {
   it("salva um formulário alterado quando o usuário clica fora dele", () => {
     vi.useFakeTimers();
     const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    const onLeave = vi.fn();
 
     render(
       <>
@@ -19,7 +20,7 @@ describe("AutoSaveManager", () => {
           <button type="submit">Salvar</button>
           <button type="button">Cancelar</button>
         </form>
-        <button type="button">Fechar tela</button>
+        <button type="button" onPointerDown={onLeave}>Fechar tela</button>
       </>
     );
 
@@ -31,6 +32,7 @@ describe("AutoSaveManager", () => {
 
     fireEvent.pointerDown(screen.getByRole("button", { name: "Fechar tela" }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onLeave).not.toHaveBeenCalled();
     expect(screen.getByRole("status")).toHaveTextContent("Salvando alterações antes de sair");
   });
 

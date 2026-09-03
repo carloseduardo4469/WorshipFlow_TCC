@@ -33,15 +33,10 @@ export function MusicasManager({
   const [buscaEfetiva, setBuscaEfetiva] = useState("");
   const [campoFiltro, setCampoFiltro] = useState<CampoFiltro>("titulo");
   const [filtroAberto, setFiltroAberto] = useState(false);
-  const [revisaoLista, setRevisaoLista] = useState(0);
   const [erroExclusao, setErroExclusao] = useState<string | null>(null);
   const filtroRef = useRef<HTMLDivElement>(null);
   const exclusoesRef = useRef(new Map<number, { item: Musica; indiceOriginal: number }>());
   const formDialogRef = useDialogA11y(Boolean(musicaAberta), () => setMusicaAberta(null));
-  const aoSalvarMusica = useCallback(() => {
-    setMusicaAberta(null);
-    setRevisaoLista((atual) => atual + 1);
-  }, []);
 
   // Busca com debounce: só consulta o banco quando o usuário para de digitar.
   useEffect(() => {
@@ -54,6 +49,7 @@ export function MusicasManager({
       buscarMusicas({ busca: buscaEfetiva, campo: campoFiltro, offset, limit: limite }),
     [buscaEfetiva, campoFiltro]
   );
+  const chaveMusica = useCallback((musica: Musica) => musica.id, []);
 
   const {
     containerRef: listaRef,
@@ -71,16 +67,22 @@ export function MusicasManager({
     voltarAoTopo,
     removerItem,
     restaurarItem,
+    atualizarItem,
   } = usePaginacaoDeslizante<Musica>({
-    chaveDeItem: (musica) => musica.id,
+    chaveDeItem: chaveMusica,
     buscaPorPagina,
     tamanhoPagina: 25,
     limiteDom: 50,
     alturaPadraoLinha: 42,
-    reiniciarAo: `${campoFiltro}|${buscaEfetiva}|${revisaoLista}`,
+    reiniciarAo: `${campoFiltro}|${buscaEfetiva}`,
     itensIniciais: musicasIniciais,
     temMaisInicial,
   });
+
+  const aoSalvarMusica = useCallback((musica: Musica) => {
+    atualizarItem(musica);
+    setMusicaAberta(null);
+  }, [atualizarItem]);
 
   useEffect(() => {
     function fecharFiltroFora(event: MouseEvent) {
