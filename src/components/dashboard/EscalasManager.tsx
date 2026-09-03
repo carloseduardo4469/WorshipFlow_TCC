@@ -22,17 +22,24 @@ function formatDate(iso: string | null) {
 
 export function EscalasManager({
   escalas: escalasOriginais,
-  usuarios,
+  usuariosReferenciados,
+  usuariosIniciais,
+  temMaisUsuariosInicial,
 }: {
   escalas: Escala[];
-  usuarios: Usuario[];
+  usuariosReferenciados: Usuario[];
+  usuariosIniciais: Usuario[];
+  temMaisUsuariosInicial: boolean;
 }) {
   const [escalaAberta, setEscalaAberta] = useState<Escala | "nova" | null>(null);
   const [detalhe, setDetalhe] = useState<Escala | null>(null);
   const [escalaParaExcluir, setEscalaParaExcluir] = useState<Escala | null>(null);
   const formDialogRef = useDialogA11y(Boolean(escalaAberta), () => setEscalaAberta(null));
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
-  const nomesPorId = useMemo(() => new Map(usuarios.map((usuario) => [usuario.id, usuario.nome])), [usuarios]);
+  const nomesPorId = useMemo(
+    () => new Map(usuariosReferenciados.map((usuario) => [usuario.id, usuario.nome])),
+    [usuariosReferenciados]
+  );
 
   return (
     <>
@@ -89,7 +96,7 @@ export function EscalasManager({
         {escalas.length === 0 && <div className="db-empty db-empty-modern">Nenhuma escala cadastrada ainda.</div>}
       </div>
 
-      {detalhe && <EscalaDetailsDialog escala={detalhe} usuarios={usuarios} onClose={() => setDetalhe(null)} />}
+      {detalhe && <EscalaDetailsDialog escala={detalhe} usuarios={usuariosReferenciados} onClose={() => setDetalhe(null)} />}
 
       {escalaAberta && (
         <div role="presentation" className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-4" onMouseDown={() => setEscalaAberta(null)}>
@@ -105,7 +112,8 @@ export function EscalasManager({
               <EscalaForm
                 key={escalaAberta === "nova" ? "nova" : escalaAberta.id}
                 escala={escalaAberta === "nova" ? undefined : escalaAberta}
-                usuarios={usuarios}
+                usuarios={escalaAberta === "nova" ? usuariosIniciais : usuariosReferenciados}
+                temMaisUsuariosInicial={escalaAberta === "nova" && temMaisUsuariosInicial}
                 onCancel={() => setEscalaAberta(null)}
               />
             </div>

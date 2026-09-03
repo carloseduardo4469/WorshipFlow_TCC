@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { invalidateDataCache } from "@/lib/db/cache";
 import {
   FORM_LIMITS,
   normalizePersonName,
@@ -104,6 +105,16 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
     }
     return { error: "Não foi possível criar a conta. Tente novamente." };
   }
+
+  // O profile criado pelo trigger precisa entrar imediatamente nas listas de
+  // equipe e nos seletores de membros das escalas.
+  invalidateDataCache("usuarios");
+  revalidatePath("/dashboard/equipe");
+  revalidatePath("/dashboard/usuarios");
+  revalidatePath("/dashboard/admin/usuarios");
+  revalidatePath("/dashboard/admin/escalas");
+  revalidatePath("/dashboard/admin/escalas/novo");
+  revalidatePath("/dashboard/escalas/novo");
 
   // Projeto sem confirmação de email: o signUp já autentica o usuário. Nesse
   // caso vamos direto pro dashboard — mandar pro /login faria o proxy rebater
