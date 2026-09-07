@@ -27,6 +27,7 @@ const ARTIST_ALIASES: Record<string, string> = {
 const ORIGINAL_KEYS: Record<string, string> = {
   "florianopolis-house-of-prayer/fe": "C#m",
   "rodolfo-abrantes/pisaduras": "Em",
+  "tribalistas/velha-infancia": "F#m",
 };
 
 const KEY_SHAPES: Record<string, number> = {

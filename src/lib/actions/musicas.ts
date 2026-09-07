@@ -55,26 +55,51 @@ export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
   return repos.musicas.getByIds(idsLimpos);
 }
 
-function readMusicaForm(formData: FormData) {
+async function readMusicaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const artista = String(formData.get("artista") ?? "").trim();
   const tonalidade = String(formData.get("tonalidade") ?? "").trim();
 
-  const linkCifra = gerarLinkCifraClub({
+  const dadosBase = {
     titulo,
     artista: artista || null,
     tonalidade: tonalidade || null,
-  });
+  };
+  let linkCifra = gerarLinkCifraClub(dadosBase);
+  let tonalidadeFinal = dadosBase.tonalidade;
+
+  // Resolve a tonalidade antes de salvar. Assim, uma música menor escolhida
+  // em C já entra como Am (e não como C/Cm para ser corrigida depois).
+  if (titulo && artista && tonalidade) {
+    try {
+      const cifraOriginal = await resolverCifraOriginalSemCapotraste({ titulo, artista });
+      const cifraNoTomSelecionado = cifraOriginal
+        ? aplicarTonalidadeAoLinkCifra({
+            linkCifra: cifraOriginal.linkCifra,
+            tonalidadeOriginal: cifraOriginal.tonalidade,
+            tonalidadeSelecionada: tonalidade,
+          })
+        : null;
+      if (cifraNoTomSelecionado) {
+        linkCifra = cifraNoTomSelecionado.linkCifra;
+        tonalidadeFinal = cifraNoTomSelecionado.tonalidade;
+      } else if (cifraOriginal) {
+        linkCifra = gerarLinkCifraClub({ ...dadosBase, tomOriginal: cifraOriginal.tonalidade }) ?? linkCifra;
+      }
+    } catch (error) {
+      console.error("Falha ao resolver o tom original antes do cadastro:", error);
+    }
+  }
 
   return {
     titulo,
     artista: artista || null,
-    tonalidade: tonalidade || null,
+    tonalidade: tonalidadeFinal,
     linkCifra,
   };
 }
 
-async function criarMusicaAutorizada(data: ReturnType<typeof readMusicaForm>): Promise<Musica> {
+async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaForm>>): Promise<Musica> {
   const repos = await getRepositories();
   if (repos.backend === "local") {
     return repos.musicas.create(data);
@@ -162,11 +187,11 @@ export async function criarMusicaNaEscalaAction(
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
   if (artistaError) return { error: artistaError };
-  const data = readMusicaForm(formData);
+  const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
-  if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+  if (!isTonalidadeValida(String(formData.get("tonalidade") ?? "").trim())) return { error: TONALIDADE_INVALIDA_MESSAGE };
 
   let musica: Musica;
   try {
@@ -188,11 +213,11 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
   if (artistaError) return { error: artistaError };
-  const data = readMusicaForm(formData);
+  const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
-  if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+  if (!isTonalidadeValida(String(formData.get("tonalidade") ?? "").trim())) return { error: TONALIDADE_INVALIDA_MESSAGE };
   let musica: Musica;
   try {
     musica = await criarMusicaAutorizada(data);
@@ -222,11 +247,11 @@ export async function atualizarMusicaAction(
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
   if (artistaError) return { error: artistaError };
-  const data = readMusicaForm(formData);
+  const data = await readMusicaForm(formData);
   if (!data.titulo) return { error: "Informe o título da música." };
   if (!data.artista) return { error: "Informe o artista para gerar a cifra automaticamente." };
   if (!data.tonalidade) return { error: "Escolha uma tonalidade para a música." };
-  if (!isTonalidadeValida(data.tonalidade)) return { error: TONALIDADE_INVALIDA_MESSAGE };
+  if (!isTonalidadeValida(String(formData.get("tonalidade") ?? "").trim())) return { error: TONALIDADE_INVALIDA_MESSAGE };
   let musicaAtualizada: Musica;
   try {
     const repos = await getRepositories();
