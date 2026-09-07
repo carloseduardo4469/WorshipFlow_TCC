@@ -120,8 +120,14 @@ function agendarCifraComTomOriginal(musica: Musica) {
         tonalidadeOriginal: cifraOriginal.tonalidade,
         tonalidadeSelecionada: musica.tonalidade,
       });
-      const linkCifra = cifraNoTomSelecionado?.linkCifra ?? cifraOriginal.linkCifra;
-      const tonalidade = cifraNoTomSelecionado?.tonalidade ?? cifraOriginal.tonalidade;
+      // Nunca substitua o tom escolhido pelo tom original se a conversão falhar.
+      const linkCifra = cifraNoTomSelecionado?.linkCifra ?? gerarLinkCifraClub({
+        titulo: musica.titulo,
+        artista: musica.artista,
+        tonalidade: musica.tonalidade,
+        tomOriginal: cifraOriginal.tonalidade,
+      }) ?? cifraOriginal.linkCifra;
+      const tonalidade = cifraNoTomSelecionado?.tonalidade ?? musica.tonalidade;
       if (linkCifra === musica.linkCifra && tonalidade === musica.tonalidade) return;
 
       const repos = await getRepositories();

@@ -75,6 +75,7 @@ const SONG_SLUG_ALIASES: Record<string, string> = {
     "jesus-te-amo--nao-temo-ondas-pot-pourri",
   "ministerio-morada/e-tudo-sobre-voce-ser-mudado":
     "e-tudo-sobre-voce-ser-mudado-medley",
+  "ministerio-morada/e-tudo-sobre-voce": "e-tudo-sobre-voce-ser-mudado-medley",
   "ministerio-morada/para-onde-eu-irei": "pra-onde-eu-irei",
   "ministerio-morada/so-tu-es-santo": "so-tu-s-santo",
   "ministerio-morada/so-tu-es-santo-uma-coisa-deixa-queimar-quando-ele-vem-pot-pourri":
