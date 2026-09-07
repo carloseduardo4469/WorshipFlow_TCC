@@ -279,25 +279,22 @@ export function aplicarTonalidadeAoLinkCifra({
     return null;
   }
 
-  const originalKeyShape = Number(url.searchParams.get("keyShape"));
   const originalNote = noteFromKey(tonalidadeOriginal);
   const targetKey = targetKeyForSong(tonalidadeOriginal, tonalidadeSelecionada);
   const targetNote = targetKey ? noteFromKey(targetKey) : null;
   if (
-    !Number.isInteger(originalKeyShape) ||
-    originalKeyShape < 0 ||
-    originalKeyShape > 11 ||
     !originalNote ||
-    !targetNote
+    !targetNote ||
+    KEY_SHAPES[targetNote] === undefined
   ) {
     return null;
   }
 
-  const originalPosition = CHROMATIC_POSITIONS[originalNote];
-  const targetPosition = CHROMATIC_POSITIONS[targetNote];
-  if (originalPosition === undefined || targetPosition === undefined) return null;
-
-  const targetKeyShape = (originalKeyShape + targetPosition - originalPosition + 12) % 12;
+  // O keyShape do Cifra Club representa diretamente a forma/nota exibida
+  // no site. Não devemos calcular a partir do keyShape já salvo no link,
+  // pois links importados por SQL podem não possuir esse parâmetro ou podem
+  // tê-lo incorreto.
+  const targetKeyShape = KEY_SHAPES[targetNote];
   url.protocol = "https:";
   url.hostname = "www.cifraclub.com.br";
   url.hash = "";
@@ -342,8 +339,7 @@ export function gerarLinkCifraClub({
 
   if (tomAlvo) {
     const notaAlvo = noteFromKey(tomAlvo);
-    // Sem keyShape quando o tom alvo já é o tom original da música no site.
-    if (notaAlvo && originalKey !== tomAlvo) {
+    if (notaAlvo) {
       const keyShape = KEY_SHAPES[notaAlvo];
       if (keyShape !== undefined) url.searchParams.set("keyShape", String(keyShape));
     }
