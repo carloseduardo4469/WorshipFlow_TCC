@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   aplicarTonalidadeAoLinkCifra,
   gerarLinkCifraClub,
+  resolverArtistaCifraClub,
   resolverCifraOriginalSemCapotraste,
 } from "@/lib/music/cifraclub";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
@@ -60,9 +61,10 @@ async function readMusicaForm(formData: FormData) {
   const artista = String(formData.get("artista") ?? "").trim();
   const tonalidade = String(formData.get("tonalidade") ?? "").trim();
 
+  const artistaResolvido = artista ? resolverArtistaCifraClub(artista) : null;
   const dadosBase = {
     titulo,
-    artista: artista || null,
+    artista: artistaResolvido?.canonical_artist ?? null,
     tonalidade: tonalidade || null,
   };
   let linkCifra = gerarLinkCifraClub(dadosBase);

@@ -1,4 +1,5 @@
 import { ehTonalidadeMenor, relativaMenor } from "@/lib/music/tonalidades";
+import artistAliasData from "./worshipflow_artist_aliases.json";
 
 const CIFRA_CLUB_BASE_URL = "https://www.cifraclub.com.br";
 
@@ -9,8 +10,13 @@ const ARTIST_ALIASES: Record<string, string> = {
   "cultura-do-ceu-kaleb-e-josh-davi-fernandes":
     "cultura-do-ceu-kaleb-e-josh-e-davi-fernandes",
   "dunamis-music": "dunamis-movement",
+  "dunamis-sounds": "dunamis-movement",
   fhop: "florianopolis-house-of-prayer",
+  fohp: "florianopolis-house-of-prayer",
+  fhpo: "florianopolis-house-of-prayer",
   "fhop-music": "florianopolis-house-of-prayer",
+  "fohp-music": "florianopolis-house-of-prayer",
+  "fhpo-music": "florianopolis-house-of-prayer",
   fhopmusic: "florianopolis-house-of-prayer",
   "florianopolis-house-of-prayer": "florianopolis-house-of-prayer",
   "florianopolis-house-of-prayer-fhop": "florianopolis-house-of-prayer",
@@ -19,9 +25,12 @@ const ARTIST_ALIASES: Record<string, string> = {
   "kaleb-josh": "kaleb-e-josh",
   kemuel: "coral-kemuel",
   morada: "ministerio-morada",
+  "ministerio-morada": "ministerio-morada",
   "nic-rachael-billman": "nic-e-rachael-billman",
   "ministerio-voz-de-muitas-aguas": "voz-de-muitas-aguas",
   "pedras-vivas": "ministerio-pedras-vivas",
+  "ministerio-apascentar-de-louvor-toque-no-altar": "toque-no-altar",
+  "apascentar-de-louvor": "toque-no-altar",
 };
 
 const ORIGINAL_KEYS: Record<string, string> = {
@@ -122,6 +131,7 @@ function normalizeText(value: string) {
 
 export function toCifraClubSlug(value: string) {
   return normalizeText(value)
+    .replace(/&/g, " e ")
     .replace(/['"`]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
@@ -129,7 +139,31 @@ export function toCifraClubSlug(value: string) {
 
 function resolveArtistSlug(artista: string) {
   const slug = toCifraClubSlug(artista);
-  return ARTIST_ALIASES[slug] ?? slug;
+  const normalizedInput = normalizeText(artista).replace(/&/g, "e").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+  const resolved = artistAliasData.artists.find((artist) => {
+    const canonical = normalizeText(artist.canonical_artist).replace(/&/g, "e").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+    return canonical === normalizedInput || artist.aliases.some((alias) => {
+      const normalizedAlias = normalizeText(alias).replace(/&/g, "e").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+      return normalizedAlias === normalizedInput;
+    });
+  });
+  return resolved?.cifra_slug ?? ARTIST_ALIASES[slug] ?? null;
+}
+
+export function resolverArtistaCifraClub(artista: string) {
+  const normalizedInput = normalizeText(artista).replace(/&/g, "e").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+  const ambiguous = Object.keys(artistAliasData.ambiguous_aliases).some((alias) => {
+    const normalizedAlias = normalizeText(alias).replace(/&/g, "e").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+    return normalizedAlias === normalizedInput;
+  });
+  if (ambiguous) return null;
+  return artistAliasData.artists.find((artist) => {
+    const canonical = normalizeText(artist.canonical_artist).replace(/&/g, "e").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+    return canonical === normalizedInput || artist.aliases.some((alias) => {
+      const normalizedAlias = normalizeText(alias).replace(/&/g, "e").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+      return normalizedAlias === normalizedInput;
+    });
+  }) ?? null;
 }
 
 const CIFRA_CLUB_USER_AGENT =
