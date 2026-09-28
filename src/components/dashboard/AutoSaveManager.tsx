@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 const SAVE_BUTTON_PATTERN = /^(salvar|adicionar música)/i;
 
 function getSaveButton(form: HTMLFormElement): HTMLButtonElement | null {
+  // Formulários com rascunho próprio só enviam por confirmação explícita.
+  if (form.dataset.autosave === "off") return null;
   const buttons = form.querySelectorAll<HTMLButtonElement>('button[type="submit"]');
   return Array.from(buttons).find((button) => SAVE_BUTTON_PATTERN.test(button.textContent?.trim() ?? "")) ?? null;
 }

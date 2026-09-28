@@ -37,7 +37,7 @@ export function NovaMusicaEscalaDialog({ onClose, onCreated, rascunho, onRascunh
         <h2 id="nova-musica-escala-titulo" className="db-title mt-2 pr-12 text-2xl text-paper">Nova música</h2>
         <p className="mt-2 text-sm text-muted">Cadastre a música e ela será selecionada nesta escala.</p>
 
-        <form action={formAction} className="mt-5 flex flex-col gap-4">
+        <form action={formAction} data-autosave="off" className="mt-5 flex flex-col gap-4">
           <Input label="Título" name="titulo" value={titulo} onChange={(event) => onRascunho({ ...rascunho, titulo: event.target.value })} maxLength={FORM_LIMITS.musicaTitulo} required />
           <Input label="Artista" name="artista" value={artista} onChange={(event) => onRascunho({ ...rascunho, artista: event.target.value })} maxLength={FORM_LIMITS.artista} required />
           <div className="flex flex-col gap-2">

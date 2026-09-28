@@ -117,7 +117,7 @@ export function EscalaMusicasDialog({ escala, onClose, rascunho, onRascunho }: {
         <h2 id="musicas-escala-titulo" className="db-title mt-2 pr-12 text-2xl text-paper sm:text-3xl">Adicionar músicas</h2>
         <p className="mt-2 truncate text-sm text-muted">{escala.titulo}</p>
 
-        <form action={formAction} className="mt-5 flex flex-col gap-4">
+        <form action={formAction} data-autosave="off" className="mt-5 flex flex-col gap-4">
           <input type="hidden" name="escalaId" value={escala.id} />
           {[...selecionadas].map((id) => <input key={id} type="hidden" name="musicaIds" value={id} />)}
 
