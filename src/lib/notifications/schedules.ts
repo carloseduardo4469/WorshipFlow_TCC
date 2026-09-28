@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Escala } from "@/types/domain";
 import { criarAvisosEscala } from "./events";
 import { dispatchPush } from "./push";
+import { salvarEscalaSemNotificacoes } from "./legacy-schedules";
 
 function snapshot(escala: Escala | null) {
   if (!escala) return null;
@@ -17,6 +18,12 @@ export async function salvarEscalaNotificando(mode: "criar" | "editar" | "repert
     p_notices: criarAvisosEscala(antes, depois),
   });
   if (error) {
+    // PGRST202: a função não foi encontrada; nenhuma alteração foi executada.
+    // Não usar fallback em conflitos, erros internos ou falhas de conexão.
+    if (error.code === "PGRST202") {
+      console.warn("Migração de notificações pendente; salvando escala sem emitir avisos.");
+      return salvarEscalaSemNotificacoes(mode, antes, depois);
+    }
     console.error("Falha ao salvar escala e notificações", { code: error.code });
     return { error: error.message.includes("WF_CONFLICT")
       ? "Esta escala foi alterada por outra pessoa. Atualize a página antes de tentar novamente."

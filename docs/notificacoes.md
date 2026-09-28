@@ -2,9 +2,9 @@
 
 O sino no cabeçalho (computador e celular) mostra os 40 avisos mais recentes da pessoa autenticada. A caixa de entrada independe da permissão de push. O usuário ativa ou desativa as notificações somente para o aparelho atual, por um botão explícito. Não há solicitação de permissão ao abrir o site.
 
-## Ativação em produção — obrigatória antes de publicar o código
+## Ativação das notificações em produção
 
-1. No SQL Editor do **mesmo projeto Supabase** configurado na aplicação, execute `scripts/configurar-notificacoes-supabase.sql`. A migração é aditiva, transacional e pode ser executada novamente. Ela cria três tabelas privadas, índices e duas funções que somente `service_role` pode executar. As alterações das escalas passam a depender de `wf_save_schedule`: publique o código **depois** desta migração.
+1. No SQL Editor do **mesmo projeto Supabase** configurado na aplicação, execute `scripts/configurar-notificacoes-supabase.sql`. A migração é aditiva, transacional e pode ser executada novamente. Ela cria três tabelas privadas, índices e duas funções que somente `service_role` pode executar. Antes desta migração, as escalas e músicas continuam sendo salvas pelo modo de compatibilidade, sem gerar notificações. Esses avisos não são recuperados retroativamente.
 2. Execute `npm run notifications:configure -- https://ENDERECO-PUBLICO-DO-WORSHIPFLOW`. O script guarda o par VAPID e o segredo do agendador no `.env.local`, ignorado pelo Git, sem mostrar os segredos no terminal. Chaves existentes são preservadas.
 3. Configure na hospedagem as mesmas variáveis `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY`, `WEB_PUSH_SUBJECT` e `CRON_SECRET`. Elas são do servidor; nenhuma chave privada deve usar o prefixo `NEXT_PUBLIC_`. Mantenha `SUPABASE_SERVICE_ROLE_KEY` configurada. Não use a URL do Supabase como endereço público do site.
 4. Configure um agendador para chamar `GET https://ENDERECO-PUBLICO/api/notifications/dispatch`, de preferência a cada minuto, com o cabeçalho `Authorization: Bearer <CRON_SECRET>`. Em Vercel, cadastre um cron compatível com seu plano; a plataforma usa `CRON_SECRET`. Um agendador externo com cabeçalho secreto também serve. Sem o agendador, somente a tentativa imediata após salvar é executada: retentativas e filas com mais de 20 envios precisam dele.
@@ -25,7 +25,9 @@ A permissão deve ser concedida pela própria pessoa no celular. A instalação 
 
 ## Persistência e segurança
 
-`wf_save_schedule` salva escala, relações, avisos e entregas na mesma transação. Uma falha reverte tudo. A comparação com o estado anterior recusa edições concorrentes desatualizadas. Não há fallback silencioso que salve a escala sem criar seus avisos.
+Com a migração aplicada, `wf_save_schedule` salva escala, relações, avisos e entregas na mesma transação. Uma falha reverte tudo. A comparação com o estado anterior recusa edições concorrentes desatualizadas.
+
+Somente quando a função não existe (`PGRST202`), o servidor usa o modo de compatibilidade e registra que as notificações ainda não estão configuradas. Esse modo mantém as autorizações das Server Actions, grava nas tabelas existentes e tenta restaurar os dados anteriores se uma etapa falhar; não oferece a transação única nem a proteção de concorrência da migração. Erros de permissão, conflitos, falhas de rede ou falhas internas da função não acionam esse caminho alternativo.
 
 As tabelas têm RLS habilitada e não concedem acesso direto a `anon` ou `authenticated`. As Server Actions verificam autenticação/status de acesso e filtram consultas e marcações pelo ID obtido da sessão, nunca pelo usuário enviado pelo navegador. As ações de escala mantêm a autorização de administrador/cantor principal existente.
 
