@@ -6,6 +6,9 @@
 .db-schedule-row { transition: background-color .18s ease, box-shadow .18s ease; }
 .db-schedule-row:hover { background: rgba(83, 217, 235, .07) !important; }
 .db-schedule-row:focus-visible { outline: 2px solid #55d9ec; outline-offset: -2px; }
+.db-schedule-table .db-schedule-row-own { background: #392719; border-color: #ab622d; box-shadow: inset 4px 0 #fb923c; }
+.db-schedule-table .db-schedule-row-own:hover { background: #4b301c !important; }
+.db-schedule-own-label { display: block; width: fit-content; color: #fdba74; font-size: .73rem; font-weight: 750; }
 .db-schedule-row-title { color: #f5f7f8; font-weight: 750; line-height: 1.35; }
 .db-schedule-row-hint { color: #91a4b8; font-size: .73rem; line-height: 1.4; }
 .db-expand-hint { display: inline-flex; width: fit-content; max-width: 100%; align-items: center; gap: .3rem; border: 1px solid rgba(246, 190, 78, .48); border-radius: 999px; background: rgba(246,190,78,.1); padding: .28rem .55rem; color: #ffd978; font-size: .68rem; font-weight: 800; line-height: 1.25; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
@@ -42,6 +45,9 @@ html[data-dashboard-theme="light"] .db-schedule-table .db-table thead th { color
 html[data-dashboard-theme="light"] .db-schedule-table .db-table tbody { color: #263e56; }
 html[data-dashboard-theme="light"] .db-schedule-table .db-table tbody tr + tr { border-color: rgba(34,91,132,.16); }
 html[data-dashboard-theme="light"] .db-schedule-row:hover { background: #eef8fc !important; }
+html[data-dashboard-theme="light"] .db-schedule-table .db-schedule-row-own { background: #ffead5; border-color: #e9a66b; box-shadow: inset 4px 0 #ea580c; }
+html[data-dashboard-theme="light"] .db-schedule-table .db-schedule-row-own:hover { background: #ffdbb5 !important; }
+html[data-dashboard-theme="light"] .db-schedule-own-label { color: #9a3b0b; }
 html[data-dashboard-theme="light"] .db-schedule-row-title { color: #102c46; }
 html[data-dashboard-theme="light"] .db-schedule-row-hint { color: #587088; }
 html[data-dashboard-theme="light"] .db-expand-hint { border-color: rgba(181,112,8,.42); background: #fff3cc; color: #795000; }

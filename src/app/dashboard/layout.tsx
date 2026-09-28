@@ -1,8 +1,10 @@
+import { NotificationsProvider } from "@/components/dashboard/NotificationsProvider";
 import "@/styles/dashboard-core.css";
 import "@/styles/dashboard-components.css";
 import "@/styles/dashboard-schedules.css";
 import "@/styles/dashboard-mobile.css";
 import "@/styles/dialogs.css";
+import "@/styles/notifications.css";
 import { requireAuth } from "@/lib/auth/session";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { TopNavbar } from "@/components/dashboard/TopNavbar";
@@ -14,7 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { profile } = await requireAuth();
 
   return (
-    <>
+    <NotificationsProvider key={profile.id}>
       <div className="db-bg relative min-h-screen">
         <div aria-hidden className="db-grid pointer-events-none fixed inset-0" />
         <PresenceTracker />
@@ -29,6 +31,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </div>
       <SiteFooter dashboard />
-    </>
+    </NotificationsProvider>
   );
 }

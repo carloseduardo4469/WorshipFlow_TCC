@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { useDialogA11y } from "@/components/ui/useDialogA11y";
-import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
+import { TONALIDADES_SELECIONAVEIS, tomParaSelecao } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS } from "@/lib/validation/forms";
 
@@ -80,7 +80,7 @@ export function MusicaForm({
           aria-label="Tonalidade"
           options={[
             { value: "", label: "Selecione o tom" },
-            ...TONALIDADES_MAIORES.map((tonalidade) => ({
+            ...TONALIDADES_SELECIONAVEIS.map((tonalidade) => ({
               value: tonalidade,
               label: tonalidade,
             })),

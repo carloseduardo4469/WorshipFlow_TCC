@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Music2, Plus, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { adicionarMusicasNaEscalaAction } from "@/lib/actions/escalas";
@@ -9,24 +10,32 @@ import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { Select } from "@/components/ui/Select";
 import { useDialogA11y } from "@/components/ui/useDialogA11y";
-import { TONALIDADES_MAIORES, tomParaSelecao } from "@/lib/music/tonalidades";
+import { TONALIDADES_SELECIONAVEIS, tomParaSelecao } from "@/lib/music/tonalidades";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
-import { NovaMusicaEscalaDialog } from "./NovaMusicaEscalaDialog";
+import { NovaMusicaEscalaDialog, type NovaMusicaRascunho } from "./NovaMusicaEscalaDialog";
 import type { Escala, Musica } from "@/types/domain";
 
-export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClose: () => void }) {
+export type RepertorioRascunho = { ids: number[]; nomes: Musica[]; tons: Record<number, string>; busca: string; nova: NovaMusicaRascunho };
+
+export function EscalaMusicasDialog({ escala, onClose, rascunho, onRascunho }: { escala: Escala; onClose: () => void; rascunho?: RepertorioRascunho; onRascunho: (draft?: RepertorioRascunho) => void }) {
   const [state, formAction, pending] = useActionState(adicionarMusicasNaEscalaAction, null);
-  const [selecionadas, setSelecionadas] = useState(new Set(escala.musicaIds));
-  const [nomesSelecionados, setNomesSelecionados] = useState<Musica[]>([]);
+  const [selecionadas, setSelecionadas] = useState(new Set(rascunho?.ids ?? escala.musicaIds));
+  const [nomesSelecionados, setNomesSelecionados] = useState<Musica[]>(rascunho?.nomes ?? []);
   const [tonalidades, setTonalidades] = useState<Record<number, string>>(() =>
-    Object.fromEntries(escala.tonalidadesMusicas.map((item) => [item.musicaId, item.tonalidade]))
+    rascunho?.tons ?? Object.fromEntries(escala.tonalidadesMusicas.map((item) => [item.musicaId, item.tonalidade]))
   );
   const [novaMusicaAberta, setNovaMusicaAberta] = useState(false);
-  const [busca, setBusca] = useState("");
-  const [termo, setTermo] = useState("");
+  const [busca, setBusca] = useState(rascunho?.busca ?? "");
+  const [nova, setNova] = useState<NovaMusicaRascunho>(rascunho?.nova ?? { titulo: "", artista: "", tonalidade: "" });
+  const [termo, setTermo] = useState(rascunho?.busca.trim() ?? "");
   const router = useRouter();
-  const dialogRef = useDialogA11y(true, onClose);
+  const fechar = () => {
+    if (pending || novaMusicaAberta) return;
+    onRascunho({ ids: [...selecionadas], nomes: nomesSelecionados, tons: tonalidades, busca, nova });
+    onClose();
+  };
+  const dialogRef = useDialogA11y(true, fechar);
 
   useEffect(() => {
     const timer = setTimeout(() => setTermo(busca.trim()), 250);
@@ -36,7 +45,7 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
   useEffect(() => {
     if (escala.musicaIds.length === 0) return;
     buscarMusicasPorIds(escala.musicaIds).then((musicas) => {
-      setNomesSelecionados(musicas);
+      setNomesSelecionados((atuais) => [...atuais, ...musicas.filter((musica) => !atuais.some((item) => item.id === musica.id))]);
       setTonalidades((atuais) => {
         const proximas = { ...atuais };
         musicas.forEach((musica) => {
@@ -49,9 +58,10 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
 
   useEffect(() => {
     if (!state?.success) return;
+    onRascunho();
     router.refresh();
     onClose();
-  }, [state, router, onClose]);
+  }, [state, router, onClose, onRascunho]);
 
   const buscarPagina = useCallback(
     (offset: number, limit: number) => buscarMusicas({ busca: termo, offset, limit }),
@@ -98,11 +108,11 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
     }
   }
 
-  return (
+  return createPortal(
     <>
-    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-5" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#020817]/70 p-2 backdrop-blur-sm sm:p-5" onMouseDown={(event) => { event.stopPropagation(); if (event.target === event.currentTarget) fechar(); }}>
       <section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="musicas-escala-titulo" className="db-member-modal relative my-auto max-h-[calc(100dvh-1rem)] w-full max-w-2xl overflow-y-auto p-4 sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
-        <button type="button" onClick={onClose} className="db-icon-button absolute right-4 top-4 h-9 w-9" aria-label="Fechar"><X size={17} /></button>
+        <button type="button" onClick={fechar} disabled={pending} className="db-icon-button absolute right-4 top-4 h-9 w-9" aria-label="Fechar"><X size={17} /></button>
         <p className="db-label text-cyan-300">Repertório da escala</p>
         <h2 id="musicas-escala-titulo" className="db-title mt-2 pr-12 text-2xl text-paper sm:text-3xl">Adicionar músicas</h2>
         <p className="mt-2 truncate text-sm text-muted">{escala.titulo}</p>
@@ -125,7 +135,7 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
                       className="px-2 py-1.5 text-xs"
                       options={[
                         { value: "", label: "Escolha o tom" },
-                        ...TONALIDADES_MAIORES.map((tom) => ({ value: tom, label: tom })),
+                        ...TONALIDADES_SELECIONAVEIS.map((tom) => ({ value: tom, label: tom })),
                       ]}
                     />
                   </div>
@@ -162,18 +172,22 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
               </>}
           </div>
 
+          <p className="text-xs text-muted">Ao fechar, seu rascunho fica guardado enquanto esta página permanecer aberta.</p>
           {state?.error && <FormAlert>{state.error}</FormAlert>}
           <div className="db-form-actions">
             <Button type="submit" disabled={pending}><Music2 size={16} /> {pending ? "Salvando..." : "Salvar músicas"}</Button>
-            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button type="button" variant="ghost" onClick={fechar} disabled={pending}>Fechar</Button>
           </div>
         </form>
       </section>
     </div>
     {novaMusicaAberta && (
       <NovaMusicaEscalaDialog
+        rascunho={nova}
+        onRascunho={setNova}
         onClose={() => setNovaMusicaAberta(false)}
         onCreated={(musica) => {
+          setNova({ titulo: "", artista: "", tonalidade: "" });
           setSelecionadas((atuais) => new Set(atuais).add(musica.id));
           setNomesSelecionados((atuais) => [...atuais, musica]);
           setTonalidades((atuais) => ({ ...atuais, [musica.id]: tomParaSelecao(musica.tonalidade) }));
@@ -181,6 +195,6 @@ export function EscalaMusicasDialog({ escala, onClose }: { escala: Escala; onClo
         }}
       />
     )}
-    </>
+    </>, document.body
   );
 }

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowUpRight, CalendarDays, Music2, Plus, Users } from "lucide-react";
 import { normalizarEscalas } from "@/lib/escalas/normalize";
 import { EscalaDetailsDialog } from "./EscalaDetailsDialog";
-import { EscalaMusicasDialog } from "./EscalaMusicasDialog";
+import { EscalaMusicasDialog, type RepertorioRascunho } from "./EscalaMusicasDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { Escala, Usuario } from "@/types/domain";
 
@@ -26,6 +26,7 @@ export function EscalasTable({
   usuarios: Usuario[];
   currentUserId: string;
 }) {
+  const [rascunhos, setRascunhos] = useState<Record<number, RepertorioRascunho | undefined>>({});
   const [selecionada, setSelecionada] = useState<Escala | null>(null);
   const [escalaParaMusicas, setEscalaParaMusicas] = useState<Escala | null>(null);
   const escalas = useMemo(() => normalizarEscalas(escalasOriginais), [escalasOriginais]);
@@ -46,6 +47,7 @@ export function EscalasTable({
           </thead>
           <tbody>
             {escalas.map((escala) => {
+              const estaEscalado = escala.usuarioIds.includes(currentUserId);
               const nomes = escala.usuarioIds.map((id) => nomesPorId.get(id)).filter((nome): nome is string => Boolean(nome));
               const podeAdicionarMusicas = escala.funcoesUsuarios.some(
                 ({ usuarioId, funcao }) => usuarioId === currentUserId && funcao.split(",").includes("voz-principal")
@@ -63,10 +65,11 @@ export function EscalasTable({
                       setSelecionada(escala);
                     }
                   }}
-                  className="db-responsive-row db-schedule-row cursor-pointer"
+                  className={`db-responsive-row db-schedule-row cursor-pointer${estaEscalado ? " db-schedule-row-own" : ""}`}
                 >
                   <td data-label="Escala" className="px-4 py-3.5">
                     <strong className="db-schedule-row-title block">{escala.titulo}</strong>
+                    {estaEscalado && <span className="db-schedule-own-label mt-2">Você está nesta escala</span>}
                     <span className="db-expand-hint mt-2"><ArrowUpRight size={13} /> Clique para ver equipe e repertório</span>
                     {podeAdicionarMusicas && (
                       <button type="button" onClick={(event) => { event.stopPropagation(); setEscalaParaMusicas(escala); }} className="db-btn-sm mt-3 text-xs">
@@ -103,7 +106,7 @@ export function EscalasTable({
         />
       )}
 
-      {escalaParaMusicas && <EscalaMusicasDialog escala={escalaParaMusicas} onClose={() => setEscalaParaMusicas(null)} />}
+      {escalaParaMusicas && <EscalaMusicasDialog key={escalaParaMusicas.id} rascunho={rascunhos[escalaParaMusicas.id]} onRascunho={(draft) => setRascunhos((atuais) => ({ ...atuais, [escalaParaMusicas.id]: draft }))} escala={escalaParaMusicas} onClose={() => setEscalaParaMusicas(null)} />}
     </>
   );
 }

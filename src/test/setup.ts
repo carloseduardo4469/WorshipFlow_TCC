@@ -4,6 +4,7 @@ import { afterEach } from "vitest";
 
 afterEach(() => {
   cleanup();
+  if (typeof document === "undefined") return;
   document.body.style.overflow = "";
   window.localStorage.clear();
 });

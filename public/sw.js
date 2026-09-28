@@ -134,3 +134,34 @@ function staleWhileRevalidate(request, cacheName) {
     })
   );
 }
+
+// Avisos visíveis mesmo quando o WorshipFlow não está aberto.
+self.addEventListener("push", (event) => {
+  event.waitUntil((async () => {
+    let payload = {};
+    try { payload = event.data?.json() ?? {}; } catch { /* Usar um aviso seguro. */ }
+    const id = typeof payload.id === "string" ? payload.id : "update";
+    await self.registration.showNotification(typeof payload.title === "string" ? payload.title : "WorshipFlow", {
+      body: typeof payload.body === "string" ? payload.body : "Há novidades nas suas escalas. Abra o WorshipFlow para conferir.",
+      icon: "/icon-512.webp",
+      tag: `worshipflow-${id}`,
+      renotify: false,
+      data: { url: "/dashboard/escalas" },
+    });
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    windows.forEach((client) => client.postMessage({ type: "WF_NOTIFICATION" }));
+  })());
+});
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    // Destino local fixo: não aceitar URLs externas vindas do payload.
+    const url = new URL("/dashboard/escalas", self.location.origin).href;
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
+    if (existing) {
+      await existing.navigate(url);
+      await existing.focus();
+    } else await self.clients.openWindow(url);
+  })());
+});

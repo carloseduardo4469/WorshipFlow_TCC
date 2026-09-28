@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { salvarEscalaNotificando } from "@/lib/notifications/schedules";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { FuncaoUsuario, TonalidadeMusica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
@@ -121,22 +121,12 @@ export async function criarEscalaAction(_prev: ActionState, formData: FormData):
   const repos = await getRepositories();
   const vinculosError = await validarVinculos(repos, data);
   if (vinculosError) return { error: vinculosError };
-  const escala = await repos.escalas.create({
-    titulo: data.titulo,
-    dataEscala: data.dataEscala,
-    status: "PUBLICADA",
-    observacoes: data.observacoes,
-    funcoesUsuarios: data.funcoesUsuarios,
-    tonalidadesMusicas: data.tonalidadesMusicas,
+  const resultado = await salvarEscalaNotificando("criar", null, {
+    id: 0, createdAt: "", titulo: data.titulo, dataEscala: data.dataEscala, status: "PUBLICADA",
+    observacoes: data.observacoes, funcoesUsuarios: data.funcoesUsuarios,
+    tonalidadesMusicas: data.tonalidadesMusicas, usuarioIds: data.usuarioIds, musicaIds: data.musicaIds,
   });
-  try {
-    await repos.escalas.setUsuarios(escala.id, data.usuarioIds);
-    await repos.escalas.setMusicas(escala.id, data.musicaIds);
-  } catch (error) {
-    await repos.escalas.remove(escala.id).catch(() => {});
-    console.error("Falha ao vincular dados da nova escala:", error);
-    return { error: "Não foi possível concluir o cadastro da escala. Nenhuma escala incompleta foi mantida." };
-  }
+  if (resultado.error) return { error: resultado.error };
 
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
@@ -165,28 +155,11 @@ export async function atualizarEscalaAction(
   }
   const vinculosError = await validarVinculos(repos, data);
   if (vinculosError) return { error: vinculosError };
-  try {
-    await repos.escalas.update(id, {
-      titulo: data.titulo,
-      dataEscala: data.dataEscala,
-      observacoes: data.observacoes,
-      funcoesUsuarios: data.funcoesUsuarios,
-      // Músicas não são mais editadas neste formulário; preserve as existentes.
-    });
-    await repos.escalas.setUsuarios(id, data.usuarioIds);
-  } catch (error) {
-    await repos.escalas.update(id, {
-      titulo: escalaAtual.titulo,
-      dataEscala: escalaAtual.dataEscala,
-      status: escalaAtual.status,
-      observacoes: escalaAtual.observacoes,
-      funcoesUsuarios: escalaAtual.funcoesUsuarios,
-      tonalidadesMusicas: escalaAtual.tonalidadesMusicas,
-    }).catch(() => {});
-    await repos.escalas.setUsuarios(id, escalaAtual.usuarioIds).catch(() => {});
-    console.error("Falha ao atualizar escala:", error);
-    return { error: "Não foi possível salvar a escala. Os dados anteriores foram preservados." };
-  }
+  const resultado = await salvarEscalaNotificando("editar", escalaAtual, {
+    ...escalaAtual, titulo: data.titulo, dataEscala: data.dataEscala,
+    observacoes: data.observacoes, funcoesUsuarios: data.funcoesUsuarios, usuarioIds: data.usuarioIds,
+  });
+  if (resultado.error) return { error: resultado.error };
 
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
@@ -203,7 +176,8 @@ export async function removerEscalaAction(formData: FormData) {
   const repos = await getRepositories();
   const escala = await repos.escalas.getById(id);
   if (!escala) throw new Error("Escala não encontrada.");
-  await repos.escalas.remove(id);
+  const resultado = await salvarEscalaNotificando("excluir", escala, null);
+  if (resultado.error) throw new Error(resultado.error);
 
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
@@ -250,53 +224,8 @@ export async function adicionarMusicasNaEscalaAction(
   if (musicas.length !== musicaIds.length) {
     return { error: "Uma ou mais músicas selecionadas não existem mais." };
   }
-  try {
-    if (repos.backend === "supabase") {
-      const admin = createAdminClient();
-      if (musicaIds.length > 0) {
-        const { error: insertError } = await admin
-          .from("escala_musicas")
-          .upsert(
-            musicaIds.map((musicaId) => ({ escala_id: escalaId, musica_id: musicaId })),
-            { onConflict: "escala_id,musica_id", ignoreDuplicates: true }
-          );
-        if (insertError) throw insertError;
-      }
-
-      let removerAntigas = admin.from("escala_musicas").delete().eq("escala_id", escalaId);
-      if (musicaIds.length > 0) removerAntigas = removerAntigas.not("musica_id", "in", `(${musicaIds.join(",")})`);
-      const { error: deleteError } = await removerAntigas;
-      if (deleteError) throw deleteError;
-
-      const { error: updateError } = await admin
-        .from("escalas")
-        .update({ tonalidades_musicas: tonalidadesMusicas })
-        .eq("id", escalaId);
-      if (updateError) throw updateError;
-    } else {
-      await repos.escalas.setMusicas(escalaId, musicaIds);
-      await repos.escalas.update(escalaId, { tonalidadesMusicas });
-    }
-  } catch {
-    try {
-      if (repos.backend === "supabase") {
-        const admin = createAdminClient();
-        await admin.from("escala_musicas").delete().eq("escala_id", escalaId);
-        if (escala.musicaIds.length > 0) {
-          await admin.from("escala_musicas").insert(
-            escala.musicaIds.map((musicaId) => ({ escala_id: escalaId, musica_id: musicaId }))
-          );
-        }
-        await admin.from("escalas").update({ tonalidades_musicas: escala.tonalidadesMusicas }).eq("id", escalaId);
-      } else {
-        await repos.escalas.setMusicas(escalaId, escala.musicaIds);
-        await repos.escalas.update(escalaId, { tonalidadesMusicas: escala.tonalidadesMusicas });
-      }
-    } catch (rollbackError) {
-      console.error("Falha ao restaurar músicas da escala:", rollbackError);
-    }
-    return { error: "Não foi possível salvar as músicas da escala. Tente novamente." };
-  }
+  const resultado = await salvarEscalaNotificando("repertorio", escala, { ...escala, musicaIds, tonalidadesMusicas });
+  if (resultado.error) return { error: resultado.error };
   invalidateDataCache("escalas");
   revalidatePath("/dashboard/escalas");
   revalidatePath("/dashboard/historico");

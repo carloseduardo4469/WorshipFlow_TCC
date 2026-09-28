@@ -1,5 +1,7 @@
 "use server";
 
+import { detachPushDevice } from "@/lib/notifications/device";
+
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -133,6 +135,7 @@ export async function cadastroAction(_prev: ActionState, formData: FormData): Pr
 }
 
 export async function logoutAction() {
+  await detachPushDevice();
   const supabase = await createClient();
   await supabase.auth.signOut();
 

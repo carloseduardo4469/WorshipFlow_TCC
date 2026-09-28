@@ -24,6 +24,8 @@ function isPublicPath(pathname: string) {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { pathname } = request.nextUrl;
+  // Este endpoint autentica o agendador com CRON_SECRET, sem sessão de navegador.
+  if (pathname === "/api/notifications/dispatch") return response;
   const publicPath = isPublicPath(pathname) || pathname === "/";
   const authEntryPath = pathname === "/login" || pathname === "/cadastro";
 

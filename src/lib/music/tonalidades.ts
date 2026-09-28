@@ -24,6 +24,7 @@ const POSICOES: Record<string, number> = {
 
 /** Tons selecionáveis no sistema: sempre maiores, com sustenidos (sem B#/E#, que não existem). */
 export const TONALIDADES_MAIORES = CROMATICA;
+export const TONALIDADES_SELECIONAVEIS = ["Indefinido", ...CROMATICA] as const;
 
 const TOM_REGEX = /^([A-Ga-g])([#b]?)(m?)$/;
 
@@ -64,6 +65,7 @@ export function relativaMaior(tom: string): string | null {
  */
 export function tomParaSelecao(tom: string | null | undefined): string {
   if (!tom) return "";
+  if (tom === "Indefinido") return tom;
   const normalizado = normalizarTom(tom);
   if (!normalizado) return "";
   const menor = normalizado.endsWith("m");
@@ -73,8 +75,8 @@ export function tomParaSelecao(tom: string | null | undefined): string {
 }
 
 export function isTonalidadeValida(tonalidade: string | null | undefined) {
-  return Boolean(tonalidade && (TONALIDADES_MAIORES as readonly string[]).includes(tonalidade));
+  return Boolean(tonalidade && (TONALIDADES_SELECIONAVEIS as readonly string[]).includes(tonalidade));
 }
 
 export const TONALIDADE_INVALIDA_MESSAGE =
-  "Escolha um tom maior: C, C#, D, D#, E, F, F#, G, G#, A, A# ou B.";
+  "Escolha Indefinido ou um tom maior: C, C#, D, D#, E, F, F#, G, G#, A, A# ou B.";

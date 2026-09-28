@@ -1,5 +1,7 @@
 "use client";
 
+import { NotificationBell } from "./NotificationsProvider";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -109,7 +111,7 @@ export function DashboardNav({ perfil, usuario }: { perfil: PerfilUsuario; usuar
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[278px] border-r border-white/10 bg-[#071525]/95 px-3 py-5 lg:block"><Brand /><NavigationContent perfil={perfil} /></aside>
       <div className="db-mobile-header fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#07101e]/90 px-4 backdrop-blur lg:hidden">
         <Brand />
-        <div className="flex shrink-0 items-center gap-2"><DashboardThemeToggle compact /><ProfileAvatar usuario={usuario} /><button type="button" aria-label="Abrir menu" onClick={() => setOpen(true)} className="db-icon-button h-10 w-10"><Menu size={20} /></button></div>
+        <div className="flex shrink-0 items-center gap-2"><NotificationBell /><DashboardThemeToggle compact /><ProfileAvatar usuario={usuario} /><button type="button" aria-label="Abrir menu" onClick={() => setOpen(true)} className="db-icon-button h-10 w-10"><Menu size={20} /></button></div>
       </div>
 
       {open && (

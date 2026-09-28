@@ -1,0 +1,28 @@
+﻿.wf-notification-bell { position: relative; flex-shrink: 0; }
+.wf-notification-count { position: absolute; top: -3px; right: -3px; display: grid; place-items: center; min-width: 17px; height: 17px; padding: 0 3px; border-radius: 999px; background: #fb923c; color: #241307; font-size: 10px; font-weight: 800; box-shadow: 0 0 0 2px #07101e; }
+.wf-notification-overlay { position: fixed; inset: 0; z-index: 130; display: flex; align-items: flex-start; justify-content: flex-end; padding: 5.25rem 1.5rem 1.5rem; background: rgba(2,8,23,.65); backdrop-filter: blur(5px); }
+.wf-notification-panel { display: flex; flex-direction: column; width: 100%; max-width: 460px; max-height: 100%; overflow: hidden; color: #edf2f7; }
+.wf-notification-header { display: flex; align-items: center; gap: 12px; padding: 20px; }
+.wf-notification-settings { margin: 0 20px; padding: 16px; border: 1px solid rgba(251,146,60,.28); border-radius: 14px; background: rgba(251,146,60,.07); color: #f6d6b9; }
+.wf-notification-feedback { margin: 12px 20px 0; border-radius: 10px; padding: 12px; background: rgba(83,217,235,.1); font-size: .8rem; }
+.wf-notification-list { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+.wf-notification-item { display: flex; gap: 12px; padding: 16px 20px; border-top: 1px solid rgba(148,163,184,.15); transition: background-color .15s; }
+.wf-notification-unread { background: rgba(251,146,60,.09); box-shadow: inset 3px 0 #fb923c; }
+.wf-notification-item:hover { background: rgba(251,146,60,.16); }
+html[data-dashboard-theme="light"] .wf-notification-panel { color: #19334a; }
+html[data-dashboard-theme="light"] .wf-notification-settings { background: #fff3e6; border-color: #efc49a; color: #734117; }
+html[data-dashboard-theme="light"] .wf-notification-unread { background: #fff3e6; }
+html[data-dashboard-theme="light"] .wf-notification-item:hover { background: #ffe8d0; }
+@media (max-width: 639px) {
+  .wf-notification-overlay { padding: max(.5rem, env(safe-area-inset-top)) .5rem max(.5rem, env(safe-area-inset-bottom)); align-items: center; }
+  .wf-notification-panel { max-height: calc(100dvh - 2rem); }
+  .wf-notification-header { padding: 16px; }
+  .wf-notification-settings { margin-inline: 16px; }
+  .wf-notification-bell { width: 34px; height: 36px; }
+  .db-mobile-header .db-brand-subtitle { display: none; }
+}
+@media (max-width: 479px) { .db-mobile-header .db-brand-title { display: none; } }
+@media (max-height: 540px) {
+  .wf-notification-panel { display: block; overflow-y: auto; }
+  .wf-notification-list { overflow: visible; }
+}
