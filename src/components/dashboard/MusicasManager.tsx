@@ -221,7 +221,7 @@ export function MusicasManager({
                               <ExternalLink size={13} className="mt-0.5 shrink-0" />
                             </a>
                           ) : (
-                            "—"
+                            "Cifra indisponível"
                           )}
                         </td>
                         <td className="col-span-2 px-4 pb-3 pt-1.5 text-right md:table-cell md:py-3.5">

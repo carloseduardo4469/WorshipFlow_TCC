@@ -177,7 +177,7 @@ export function EscalaDetailsDialog({
                       {musica.artista && <small className="block break-words">{musica.artista}</small>}
                     </span>
                     <span className="db-schedule-tone">{tonalidadeDaEscala ?? "—"}</span>
-                    {linkCifra && (
+                    {linkCifra ? (
                       <a
                         href={linkCifra}
                         target="_blank"
@@ -186,7 +186,7 @@ export function EscalaDetailsDialog({
                       >
                         <ExternalLink size={16} /> <span className="hidden sm:inline">Cifra</span>
                       </a>
-                    )}
+                    ) : <span className="text-xs text-muted">Cifra indisponível</span>}
                   </li>
                 );
               })}

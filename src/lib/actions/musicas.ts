@@ -7,12 +7,8 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  aplicarTonalidadeAoLinkCifra,
-  gerarLinkCifraClub,
-  resolverArtistaCifraClub,
-  resolverCifraOriginalSemCapotraste,
-} from "@/lib/music/cifraclub";
+import { aplicarTonalidadeAoLinkCifra } from "@/lib/music/cifraclub";
+import { resolverCifraValidada } from "@/lib/music/resolver-cifra";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
@@ -61,44 +57,9 @@ async function readMusicaForm(formData: FormData) {
   const artista = String(formData.get("artista") ?? "").trim();
   const tonalidade = String(formData.get("tonalidade") ?? "").trim();
 
-  const artistaResolvido = artista ? resolverArtistaCifraClub(artista) : null;
-  const dadosBase = {
-    titulo,
-    artista: artistaResolvido?.canonical_artist ?? null,
-    tonalidade: tonalidade || null,
-  };
-  let linkCifra = gerarLinkCifraClub(dadosBase);
-  let tonalidadeFinal = dadosBase.tonalidade;
-
-  // Resolve a tonalidade antes de salvar. Assim, uma música menor escolhida
-  // em C já entra como Am (e não como C/Cm para ser corrigida depois).
-  if (titulo && artista && tonalidade) {
-    try {
-      const cifraOriginal = await resolverCifraOriginalSemCapotraste({ titulo, artista });
-      const cifraNoTomSelecionado = cifraOriginal
-        ? aplicarTonalidadeAoLinkCifra({
-            linkCifra: cifraOriginal.linkCifra,
-            tonalidadeOriginal: cifraOriginal.tonalidade,
-            tonalidadeSelecionada: tonalidade,
-          })
-        : null;
-      if (cifraNoTomSelecionado) {
-        linkCifra = cifraNoTomSelecionado.linkCifra;
-        tonalidadeFinal = cifraNoTomSelecionado.tonalidade;
-      } else if (cifraOriginal) {
-        linkCifra = gerarLinkCifraClub({ ...dadosBase, tomOriginal: cifraOriginal.tonalidade }) ?? linkCifra;
-      }
-    } catch (error) {
-      console.error("Falha ao resolver o tom original antes do cadastro:", error);
-    }
-  }
-
-  return {
-    titulo,
-    artista: artista || null,
-    tonalidade: tonalidadeFinal,
-    linkCifra,
-  };
+  const cifra = titulo && artista && isTonalidadeValida(tonalidade)
+    ? await resolverCifraValidada({ titulo, artista, tonalidade }) : null;
+  return { titulo, artista: artista || null, tonalidade: cifra?.tonalidade ?? (tonalidade || null), linkCifra: cifra?.linkCifra ?? null };
 }
 
 async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaForm>>): Promise<Musica> {
@@ -136,39 +97,26 @@ async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaF
 function agendarCifraComTomOriginal(musica: Musica) {
   after(async () => {
     try {
-      if (!musica.artista || !musica.tonalidade) return;
-      const cifraOriginal = await resolverCifraOriginalSemCapotraste({
-        titulo: musica.titulo,
-        artista: musica.artista,
-      });
-      if (!cifraOriginal) return;
-      const cifraNoTomSelecionado = aplicarTonalidadeAoLinkCifra({
-        linkCifra: cifraOriginal.linkCifra,
-        tonalidadeOriginal: cifraOriginal.tonalidade,
-        tonalidadeSelecionada: musica.tonalidade,
-      });
-      // Nunca substitua o tom escolhido pelo tom original se a conversão falhar.
-      const linkCifra = cifraNoTomSelecionado?.linkCifra ?? gerarLinkCifraClub({
-        titulo: musica.titulo,
-        artista: musica.artista,
-        tonalidade: musica.tonalidade,
-        tomOriginal: cifraOriginal.tonalidade,
-      }) ?? cifraOriginal.linkCifra;
-      const tonalidade = cifraNoTomSelecionado?.tonalidade ?? musica.tonalidade;
-      if (linkCifra === musica.linkCifra && tonalidade === musica.tonalidade) return;
-
+      if (musica.linkCifra || !musica.artista || !musica.tonalidade) return;
+      const cifra = await resolverCifraValidada({ titulo: musica.titulo, artista: musica.artista, tonalidade: musica.tonalidade });
+      if (!cifra) return;
+      const { linkCifra, tonalidade } = cifra;
       const repos = await getRepositories();
       if (repos.backend === "supabase") {
         const admin = createAdminClient();
         const query = admin
           .from("musicas")
           .update({ link_cifra: linkCifra, tonalidade })
-          .eq("id", musica.id);
+          .eq("id", musica.id)
+          .eq("titulo", musica.titulo)
+          .eq("artista", musica.artista)
+          .eq("tonalidade", musica.tonalidade)
+          .is("link_cifra", null);
         const { error } = await query;
         if (error) throw error;
       } else {
         const atual = await repos.musicas.getById(musica.id);
-        if (atual) await repos.musicas.update(musica.id, { linkCifra, tonalidade });
+        if (atual && !atual.linkCifra && atual.titulo === musica.titulo && atual.artista === musica.artista && atual.tonalidade === musica.tonalidade) await repos.musicas.update(musica.id, { linkCifra, tonalidade });
       }
       invalidateDataCache("musicas");
       revalidatePath("/dashboard");
@@ -274,7 +222,7 @@ export async function atualizarMusicaAction(
       titulo: data.titulo,
       artista: data.artista,
       tonalidade: cifraNoNovoTom?.tonalidade ?? data.tonalidade,
-      linkCifra: cifraNoNovoTom?.linkCifra ?? data.linkCifra,
+      linkCifra: cifraNoNovoTom?.linkCifra ?? data.linkCifra ?? (mesmaCifra ? atual.linkCifra : null),
     };
     musicaAtualizada = await repos.musicas.update(id, musica);
     // Se título ou artista mudou, a página também pode ter mudado e precisa ser

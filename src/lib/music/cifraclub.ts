@@ -4,6 +4,8 @@ import artistAliasData from "./worshipflow_artist_aliases.json";
 const CIFRA_CLUB_BASE_URL = "https://www.cifraclub.com.br";
 
 const ARTIST_ALIASES: Record<string, string> = {
+  "harpa-crista": "harpa-crista",
+  harpa: "harpa-crista",
   "adoracao-adoradores": "adoracao-e-adoradores",
   "altomonte-music": "altomonte",
   "attos-2-worship": "attos2-worship",
@@ -60,6 +62,8 @@ const KEY_SHAPES: Record<string, number> = {
 };
 
 const SONG_SLUG_ALIASES: Record<string, string> = {
+  "harpa-crista/porque-ele-vive-545": "porque-ele-vive",
+  "harpa-crista/545-porque-ele-vive": "porque-ele-vive",
   "alessandro-vilas-boas/deixa-queimar-part-brunao-morada": "deixa-queimar",
   "alessandro-vilas-boas/quero-conhecer-jesus":
     "quero-conhecer-jesus-o-meu-amado--o-mais-belo",
