@@ -69,9 +69,9 @@ export async function listarUsuariosComPresenca(): Promise<Array<Pick<Usuario, "
   const repos = await getRepositories();
   const usuarios = await repos.usuarios.list();
   
-  // Dev accounts só são visíveis para admins
+  // Contas DEV só são visíveis para admins
   const filtrados = usuarios.filter(
-    (u) => !u.isDevAccount || current.profile.perfil === "ADMIN"
+    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN"
   );
   
   return filtrados.map(({ id, ultimaAtividade }) => ({ id, ultimaAtividade }));
@@ -85,9 +85,9 @@ export async function buscarUsuarios(offset: number, limit: number): Promise<Usu
   const repos = await getRepositories();
   const usuarios = await repos.usuarios.search({ offset: offsetSeguro, limit: limiteSeguro });
   
-  // Dev accounts só são visíveis para admins
+  // Contas DEV só são visíveis para admins
   return usuarios.filter(
-    (u) => !u.isDevAccount || current.profile.perfil === "ADMIN"
+    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN"
   );
 }
 
@@ -99,9 +99,9 @@ export async function buscarUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
   const repos = await getRepositories();
   const usuarios = await repos.usuarios.getByIds(idsLimpos);
   
-  // Dev accounts só são visíveis para admins
+  // Contas DEV só são visíveis para admins
   return usuarios.filter(
-    (u) => !u.isDevAccount || current.profile.perfil === "ADMIN"
+    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN"
   );
 }
 

@@ -1,13 +1,15 @@
--- Script para adicionar campo is_dev_account e marcar caduwerneck42@gmail.com como dev
+-- Script para criar role DEV e marcar caduwerneck42@gmail.com como dev
 -- Execute isso no SQL Editor do Supabase console
 
--- 1. Adicionar coluna is_dev_account à tabela profiles (se não existir)
-ALTER TABLE IF EXISTS profiles ADD COLUMN IF NOT EXISTS is_dev_account BOOLEAN DEFAULT false;
+-- 1. Alterar constraint para aceitar DEV
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_perfil_check;
+ALTER TABLE profiles ADD CONSTRAINT profiles_perfil_check CHECK (perfil IN ('ADMIN', 'MEMBRO', 'DEV'));
 
--- 2. Marcar caduwerneck42@gmail.com como dev account
+-- 2. Mudar perfil para DEV (não aparece para ninguém, apenas para admin)
 UPDATE profiles 
-SET is_dev_account = true 
+SET perfil = 'DEV' 
 WHERE email = 'caduwerneck42@gmail.com';
 
--- Verificar se foi atualizado
-SELECT id, nome, email, is_dev_account, perfil FROM profiles WHERE email = 'caduwerneck42@gmail.com';
+-- 3. Verificar se foi atualizado
+SELECT id, nome, email, perfil FROM profiles WHERE email = 'caduwerneck42@gmail.com';
+

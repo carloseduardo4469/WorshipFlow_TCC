@@ -2,7 +2,7 @@
 // Compartilhados pelas duas implementações de repositório (Supabase e SQLite local),
 // então nada aqui pode depender de um backend específico.
 
-export type PerfilUsuario = "ADMIN" | "MEMBRO";
+export type PerfilUsuario = "ADMIN" | "MEMBRO" | "DEV";
 export type StatusAcesso = "PENDENTE" | "ATIVO";
 export type StatusEscala = "RASCUNHO" | "PUBLICADA" | "CONCLUIDA" | "CANCELADA";
 
@@ -18,7 +18,6 @@ export interface Usuario {
   perfil: PerfilUsuario;
   fotoPerfilUrl: string | null;
   ultimaAtividade: string | null; // ISO — usado para mostrar Online/Offline na equipe
-  isDevAccount: boolean; // Conta de desenvolvedor — não aparece para membros normais
   createdAt: string;
 }
 

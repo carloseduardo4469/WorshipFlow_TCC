@@ -19,7 +19,6 @@ type SupabaseUsuarioRow = {
   perfil: Usuario["perfil"];
   foto_perfil_url: string | null;
   ultima_atividade: string | null;
-  is_dev_account: boolean | null;
   created_at: string;
 };
 
@@ -36,7 +35,6 @@ function mapSupabaseRow(row: SupabaseUsuarioRow): Usuario {
     perfil: row.perfil,
     fotoPerfilUrl: row.foto_perfil_url ?? null,
     ultimaAtividade: row.ultima_atividade ?? null,
-    isDevAccount: Boolean(row.is_dev_account),
     createdAt: row.created_at,
   };
 }
@@ -54,7 +52,6 @@ function mapLocalRow(row: typeof usuariosTable.$inferSelect): Usuario {
     perfil: row.perfil as Usuario["perfil"],
     fotoPerfilUrl: row.fotoPerfilUrl ?? null,
     ultimaAtividade: row.ultimaAtividade ?? null,
-    isDevAccount: Boolean(row.isDevAccount),
     createdAt: row.createdAt,
   };
 }

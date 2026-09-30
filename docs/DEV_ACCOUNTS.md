@@ -1,6 +1,12 @@
-# Como Marcar Uma Conta Como Dev Account
+# Role DEV - Contas de Desenvolvedor
 
-A conta dev não aparece para membros normais em escalas e equipes, mas aparece para admins.
+Contas com perfil **DEV** não aparecem para ninguém no sistema, apenas para **ADMIN**.
+
+## Como Funciona
+
+- **Membros normais**: Não veem contas DEV em equipe, escalas ou seletores
+- **Admins**: Veem todas as contas, incluindo DEV
+- **Permissão**: Um DEV pode ser adicionado a escalas apenas por admins
 
 ## Passo 1: Executar Script SQL no Supabase
 
@@ -9,44 +15,41 @@ A conta dev não aparece para membros normais em escalas e equipes, mas aparece 
 3. Cole o conteúdo do arquivo `scripts/marcar-dev-account.sql`
 4. Clique em **Run**
 
-Você verá a confirmação de qual usuário foi marcado como dev account.
-
-## Passo 2: Como Funciona
-
-Após executar o script:
-
-- **Usuários normais (MEMBRO)** não verão a conta em:
-  - Lista de equipe
-  - Seletores para adicionar à escala
-  - Listagens de usuários
-
-- **Usuários ADMIN** verão:
-  - A conta em todas as listagens
-  - Podem adicionar a conta em escalas
-  - Perfil e dados completos
-
-## Reverter (Desfazer)
-
-Se quiser que a conta volte a aparecer para todos:
-
 ```sql
 UPDATE profiles 
-SET is_dev_account = false 
+SET perfil = 'DEV' 
 WHERE email = 'caduwerneck42@gmail.com';
 ```
 
-## Marcar Outras Contas Como Dev
+## Reverter (Desfazer)
+
+Se quiser que a conta volte a ser normal:
 
 ```sql
 UPDATE profiles 
-SET is_dev_account = true 
+SET perfil = 'MEMBRO' 
+WHERE email = 'caduwerneck42@gmail.com';
+```
+
+## Marcar Outras Contas Como DEV
+
+```sql
+UPDATE profiles 
+SET perfil = 'DEV' 
 WHERE email = 'seu-email@exemplo.com';
 ```
 
-## Verificar Dev Accounts
+## Verificar Contas DEV
 
 ```sql
-SELECT id, nome, email, is_dev_account, perfil 
+SELECT id, nome, email, perfil 
 FROM profiles 
-WHERE is_dev_account = true;
+WHERE perfil = 'DEV';
 ```
+
+## Listar Todos os Perfis
+
+```sql
+SELECT perfil, COUNT(*) as total FROM profiles GROUP BY perfil;
+```
+
