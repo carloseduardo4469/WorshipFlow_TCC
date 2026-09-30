@@ -65,28 +65,44 @@ export async function registrarAtividade(): Promise<void> {
 
 /** Lista os usuários com presença fresca (sem cache) para a equipe. */
 export async function listarUsuariosComPresenca(): Promise<Array<Pick<Usuario, "id" | "ultimaAtividade">>> {
-  await requireAuth();
+  const current = await requireAuth();
   const repos = await getRepositories();
   const usuarios = await repos.usuarios.list();
-  return usuarios.map(({ id, ultimaAtividade }) => ({ id, ultimaAtividade }));
+  
+  // Dev accounts só são visíveis para admins
+  const filtrados = usuarios.filter(
+    (u) => !u.isDevAccount || current.profile.perfil === "ADMIN"
+  );
+  
+  return filtrados.map(({ id, ultimaAtividade }) => ({ id, ultimaAtividade }));
 }
 
 /** Busca uma página de usuários para seletores roláveis, sem carregar a tabela inteira. */
 export async function buscarUsuarios(offset: number, limit: number): Promise<Usuario[]> {
-  await requireAuth();
+  const current = await requireAuth();
   const offsetSeguro = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
   const limiteSeguro = Number.isFinite(limit) ? Math.min(100, Math.max(1, Math.floor(limit))) : 20;
   const repos = await getRepositories();
-  return repos.usuarios.search({ offset: offsetSeguro, limit: limiteSeguro });
+  const usuarios = await repos.usuarios.search({ offset: offsetSeguro, limit: limiteSeguro });
+  
+  // Dev accounts só são visíveis para admins
+  return usuarios.filter(
+    (u) => !u.isDevAccount || current.profile.perfil === "ADMIN"
+  );
 }
 
 export async function buscarUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
-  await requireAuth();
+  const current = await requireAuth();
   const idsLimpos = [...new Set(Array.isArray(ids) ? ids.map(String).filter(Boolean) : [])]
     .slice(0, FORM_LIMITS.selecoes);
   if (idsLimpos.length === 0) return [];
   const repos = await getRepositories();
-  return repos.usuarios.getByIds(idsLimpos);
+  const usuarios = await repos.usuarios.getByIds(idsLimpos);
+  
+  // Dev accounts só são visíveis para admins
+  return usuarios.filter(
+    (u) => !u.isDevAccount || current.profile.perfil === "ADMIN"
+  );
 }
 
 export async function atualizarPerfilAction(

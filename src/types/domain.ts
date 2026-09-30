@@ -18,6 +18,7 @@ export interface Usuario {
   perfil: PerfilUsuario;
   fotoPerfilUrl: string | null;
   ultimaAtividade: string | null; // ISO — usado para mostrar Online/Offline na equipe
+  isDevAccount: boolean; // Conta de desenvolvedor — não aparece para membros normais
   createdAt: string;
 }
 
