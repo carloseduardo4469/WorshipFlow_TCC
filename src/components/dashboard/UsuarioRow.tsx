@@ -73,7 +73,7 @@ export function UsuarioRow({ usuario }: { usuario: Usuario }) {
           {pending ? "..." : "Salvar"}
         </button>
 
-        {usuario.perfil !== "ADMIN" && (
+        {usuario.perfil !== "ADMIN" && usuario.perfil !== "DEV" && (
           <button
             type="button"
             disabled={pending || deletePending}

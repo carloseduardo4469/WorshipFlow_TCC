@@ -216,7 +216,7 @@ export async function adicionarMusicasNaEscalaAction(
     ({ usuarioId, funcao }) =>
       usuarioId === current.authId && funcao.split(",").includes("voz-principal")
   );
-  if (!cantorPrincipal && current.profile.perfil !== "ADMIN") {
+  if (!cantorPrincipal && current.profile.perfil !== "ADMIN" && current.profile.perfil !== "DEV") {
     return { error: "Somente o cantor principal desta escala pode adicionar músicas." };
   }
 

@@ -50,6 +50,6 @@ export async function requireAuth(): Promise<CurrentUser> {
 /** Garante sessão + perfil ADMIN; redireciona pro dashboard se for MEMBRO. */
 export async function requireAdmin(): Promise<CurrentUser> {
   const current = await requireAuth();
-  if (current.profile.perfil !== "ADMIN") redirect("/dashboard");
+  if (current.profile.perfil !== "ADMIN" && current.profile.perfil !== "DEV") redirect("/dashboard");
   return current;
 }

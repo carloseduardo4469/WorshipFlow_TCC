@@ -88,7 +88,7 @@ function NavigationContent({ perfil, onClick }: { perfil: PerfilUsuario; onClick
     <nav className="mt-9">
       <p className="db-label mb-3 px-3 !text-[9px] text-[#aeb8ca]">Membro</p>
       <NavLinks items={memberItems} pathname={pathname} onClick={onClick} />
-      {perfil === "ADMIN" && <><p className="db-label mb-3 mt-9 px-3 !text-[9px] text-[#aeb8ca]">Administrador</p><NavLinks items={adminItems} pathname={pathname} onClick={onClick} /></>}
+      {(perfil === "ADMIN" || perfil === "DEV") && <><p className="db-label mb-3 mt-9 px-3 !text-[9px] text-[#aeb8ca]">Administrador</p><NavLinks items={adminItems} pathname={pathname} onClick={onClick} /></>}
     </nav>
   );
 }
