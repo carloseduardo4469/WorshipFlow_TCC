@@ -190,7 +190,7 @@ export async function atualizarUsuarioAdminAction(
   const isSuspended = formData.get("isSuspended") === "true";
 
   if (!id) return { error: "Usuário inválido." };
-  if (!(["MEMBRO", "ADMIN"] as string[]).includes(perfil)) return { error: "Perfil inválido." };
+  if (!(["MEMBRO", "ADMIN", "DEV"] as string[]).includes(perfil)) return { error: "Perfil inválido." };
 
   const repos = await getRepositories();
   if (id === current.authId && isSuspended) {
