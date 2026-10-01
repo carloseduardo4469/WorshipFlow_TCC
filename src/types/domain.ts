@@ -2,7 +2,7 @@
 // Compartilhados pelas duas implementações de repositório (Supabase e SQLite local),
 // então nada aqui pode depender de um backend específico.
 
-export type PerfilUsuario = "ADMIN" | "MEMBRO";
+export type PerfilUsuario = "ADMIN" | "MEMBRO" | "DEV";
 export type StatusAcesso = "PENDENTE" | "ATIVO";
 export type StatusEscala = "RASCUNHO" | "PUBLICADA" | "CONCLUIDA" | "CANCELADA";
 
