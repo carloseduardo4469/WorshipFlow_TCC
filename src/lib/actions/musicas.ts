@@ -79,13 +79,15 @@ async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaF
   // que uma política RLS desatualizada impeça membros autorizados de cadastrar
   // repertório pelo celular.
   const admin = createAdminClient();
+  // Ensure we always persist a best-effort CifraClub link when possible.
+  const fallbackLink = data.linkCifra ?? gerarLinkCifraClub({ titulo: data.titulo, artista: data.artista ?? null, tonalidade: data.tonalidade ?? null });
   const { data: row, error } = await admin
     .from("musicas")
     .insert({
       titulo: data.titulo,
       artista: data.artista,
       tonalidade: data.tonalidade,
-      link_cifra: data.linkCifra,
+      link_cifra: fallbackLink,
     })
     .select("*")
     .single();
