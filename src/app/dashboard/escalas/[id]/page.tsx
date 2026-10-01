@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EscalaForm } from "@/components/dashboard/EscalaForm";
+import { ocultarParticipantesIndisponiveis } from "@/lib/escalas/visibilidade";
 
 export default async function EditarEscalaPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -12,11 +13,12 @@ export default async function EditarEscalaPage({ params }: { params: Promise<{ i
   const escala = await repos.escalas.getById(Number(id));
   if (!escala) notFound();
   const usuarios = await repos.usuarios.getByIds(escala.usuarioIds);
+  const [escalaVisivel] = ocultarParticipantesIndisponiveis([escala], usuarios.map((usuario) => usuario.id));
 
   return (
     <div className="mx-auto max-w-[860px] lg:mx-0">
       <PageHeader title={`Editar: ${escala.titulo}`} />
-      <EscalaForm escala={escala} usuarios={usuarios} />
+      <EscalaForm escala={escalaVisivel} usuarios={usuarios} />
     </div>
   );
 }

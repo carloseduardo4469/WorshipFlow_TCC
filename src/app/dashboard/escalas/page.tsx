@@ -4,6 +4,7 @@ import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-au
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EscalasTable } from "@/components/dashboard/EscalasTable";
 import { listEscalasCached } from "@/lib/db/queries";
+import { ocultarParticipantesIndisponiveis } from "@/lib/escalas/visibilidade";
 
 export default async function EscalasPage() {
   const { authId } = await requireAuth();
@@ -15,12 +16,13 @@ export default async function EscalasPage() {
   );
   const usuarioIds = [...new Set(proximasEscalas.flatMap((escala) => escala.usuarioIds))];
   const usuarios = await repos.usuarios.getByIds(usuarioIds);
+  const escalasVisiveis = ocultarParticipantesIndisponiveis(proximasEscalas, usuarios.map((usuario) => usuario.id));
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">
       <PageHeader title="Escalas" description="Próximas equipes publicadas para cultos e compromissos." />
       {proximasEscalas.length === 0
         ? <div className="db-empty db-empty-modern">Nenhuma próxima escala publicada.</div>
-        : <EscalasTable escalas={proximasEscalas} usuarios={usuarios} currentUserId={authId} />}
+        : <EscalasTable escalas={escalasVisiveis} usuarios={usuarios} currentUserId={authId} />}
     </div>
   );
 }

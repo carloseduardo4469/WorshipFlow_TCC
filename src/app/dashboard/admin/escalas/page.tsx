@@ -3,6 +3,7 @@ import { getRepositories } from "@/lib/db/repositories";
 import { EscalasManager } from "@/components/dashboard/EscalasManager";
 import { firstUsuariosPageCached, listEscalasCached } from "@/lib/db/queries";
 import { concluirEscalasVencidas } from "@/lib/escalas/status-automatico";
+import { ocultarParticipantesIndisponiveis } from "@/lib/escalas/visibilidade";
 
 const TAMANHO_PAGINA_USUARIOS = 20;
 
@@ -15,11 +16,12 @@ export default async function RegistrosEscalasPage() {
     repos.usuarios.getByIds(usuarioIds),
     firstUsuariosPageCached(repos, TAMANHO_PAGINA_USUARIOS + 1),
   ]);
+  const escalasVisiveis = ocultarParticipantesIndisponiveis(escalas, usuariosReferenciados.map((usuario) => usuario.id));
 
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">
       <EscalasManager
-        escalas={escalas}
+        escalas={escalasVisiveis}
         usuariosReferenciados={usuariosReferenciados}
         usuariosIniciais={resultadoUsuariosIniciais.slice(0, TAMANHO_PAGINA_USUARIOS)}
         temMaisUsuariosInicial={resultadoUsuariosIniciais.length > TAMANHO_PAGINA_USUARIOS}

@@ -92,6 +92,14 @@ export function MusicaForm({
         Só tons maiores. Música em tom menor? Escolha o tom maior relativo (ex.: E) e a cifra abre na relativa menor (C#m).
       </p>
 
+      <p role="status" aria-live="polite" className="text-xs leading-relaxed text-muted">
+        {pending
+          ? "Buscando a cifra com os dados informados e salvando a música..."
+          : musica && !musica.linkCifra
+            ? "Cifra indisponível. Confira o título e o artista e clique em Salvar para buscar novamente. Você também pode tentar sem alterar os dados."
+            : "Ao salvar, a cifra será consultada novamente com o título, artista e tom informados."}
+      </p>
+
       <div className="db-form-actions mt-2 flex gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando..." : "Salvar"}

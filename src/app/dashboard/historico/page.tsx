@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { HistoricoCalendar } from "@/components/dashboard/HistoricoCalendar";
 import { concluirEscalasVencidas, hojeEmSaoPaulo } from "@/lib/escalas/status-automatico";
 import { listEscalasCached } from "@/lib/db/queries";
+import { ocultarParticipantesIndisponiveis } from "@/lib/escalas/visibilidade";
 
 export default async function HistoricoPage() {
   await requireAuth();
@@ -15,11 +16,12 @@ export default async function HistoricoPage() {
   );
   const usuarioIds = [...new Set(historico.flatMap((escala) => escala.usuarioIds))];
   const usuarios = await repos.usuarios.getByIds(usuarioIds);
+  const historicoVisivel = ocultarParticipantesIndisponiveis(historico, usuarios.map((usuario) => usuario.id));
 
   return (
     <div className="db-schedule-page mx-auto max-w-[1240px]">
       <PageHeader title="Histórico" description="Escalas concluídas ou que já passaram da data programada." />
-      <HistoricoCalendar escalas={historico} usuarios={usuarios} hoje={limite} />
+      <HistoricoCalendar escalas={historicoVisivel} usuarios={usuarios} hoje={limite} />
     </div>
   );
 }

@@ -1,11 +1,14 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, asc, count, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDb } from "@/lib/db/local/client";
 import { usuarios as usuariosTable } from "@/lib/db/local/schema";
 import type { Usuario, UpdateUsuario } from "@/types/domain";
 import type { Backend, UsuariosRepository } from "./types";
+import { EMAILS_OCULTOS_DA_EQUIPE, filtrarUsuariosVisiveis } from "@/lib/usuarios/visibilidade";
+
+const EMAIL_OCULTO_DA_EQUIPE = EMAILS_OCULTOS_DA_EQUIPE[0];
 
 type SupabaseUsuarioRow = {
   id: string;
@@ -84,17 +87,18 @@ function createLocalRepository(): UsuariosRepository {
       const rows = await localDb
         .select({ count: count() })
         .from(usuariosTable)
-        .where(eq(usuariosTable.statusAcesso, "ATIVO"));
+        .where(and(eq(usuariosTable.statusAcesso, "ATIVO"), ne(usuariosTable.email, EMAIL_OCULTO_DA_EQUIPE)));
       return rows[0]?.count ?? 0;
     },
     async list() {
       const rows = await localDb
         .select()
         .from(usuariosTable)
-        .where(eq(usuariosTable.statusAcesso, "ATIVO"));
-      return rows.map(mapLocalRow).sort((a, b) => a.nome.localeCompare(b.nome));
+        .where(and(eq(usuariosTable.statusAcesso, "ATIVO"), ne(usuariosTable.email, EMAIL_OCULTO_DA_EQUIPE)));
+      return filtrarUsuariosVisiveis(rows.map(mapLocalRow)).sort((a, b) => a.nome.localeCompare(b.nome));
     },
     async listAll() {
+      // A tela administrativa de registros é o único local que pode listar a conta ocultada.
       const rows = await localDb.select().from(usuariosTable);
       return rows.map(mapLocalRow).sort((a, b) => a.nome.localeCompare(b.nome));
     },
@@ -102,17 +106,17 @@ function createLocalRepository(): UsuariosRepository {
       const query = localDb
         .select()
         .from(usuariosTable)
-        .where(eq(usuariosTable.statusAcesso, "ATIVO"));
+        .where(and(eq(usuariosTable.statusAcesso, "ATIVO"), ne(usuariosTable.email, EMAIL_OCULTO_DA_EQUIPE)));
       const rows = await query.orderBy(asc(usuariosTable.nome)).limit(limit).offset(offset);
-      return rows.map(mapLocalRow);
+      return filtrarUsuariosVisiveis(rows.map(mapLocalRow));
     },
     async getByIds(ids) {
       if (ids.length === 0) return [];
       const rows = await localDb
         .select()
         .from(usuariosTable)
-        .where(and(inArray(usuariosTable.id, ids), eq(usuariosTable.statusAcesso, "ATIVO")));
-      return rows.map(mapLocalRow);
+        .where(and(inArray(usuariosTable.id, ids), eq(usuariosTable.statusAcesso, "ATIVO"), ne(usuariosTable.email, EMAIL_OCULTO_DA_EQUIPE)));
+      return filtrarUsuariosVisiveis(rows.map(mapLocalRow));
     },
     async getById(id) {
       const rows = await localDb.select().from(usuariosTable).where(eq(usuariosTable.id, id));
@@ -150,18 +154,20 @@ function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository 
       const query = supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
-        .eq("status_ministerio", "ATIVO");
+        .eq("status_ministerio", "ATIVO")
+        .neq("email", EMAIL_OCULTO_DA_EQUIPE);
       const { count: total, error } = await query;
       if (error) throw error;
       return total ?? 0;
     },
     async list() {
-      const query = supabase.from("profiles").select("*").eq("status_ministerio", "ATIVO").order("nome");
+      const query = supabase.from("profiles").select("*").eq("status_ministerio", "ATIVO").neq("email", EMAIL_OCULTO_DA_EQUIPE).order("nome");
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []).map(mapSupabaseRow);
+      return filtrarUsuariosVisiveis((data ?? []).map(mapSupabaseRow));
     },
     async listAll() {
+      // A tela administrativa de registros é o único local que pode listar a conta ocultada.
       const query = supabase.from("profiles").select("*").order("nome");
       const { data, error } = await query;
       if (error) throw error;
@@ -172,11 +178,12 @@ function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository 
         .from("profiles")
         .select("*")
         .eq("status_ministerio", "ATIVO")
+        .neq("email", EMAIL_OCULTO_DA_EQUIPE)
         .order("nome")
         .range(offset, offset + limit - 1);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []).map(mapSupabaseRow);
+      return filtrarUsuariosVisiveis((data ?? []).map(mapSupabaseRow));
     },
     async getByIds(ids) {
       if (ids.length === 0) return [];
@@ -184,9 +191,10 @@ function createSupabaseRepository(supabase: SupabaseClient): UsuariosRepository 
         .from("profiles")
         .select("*")
         .in("id", ids)
-        .eq("status_ministerio", "ATIVO");
+        .eq("status_ministerio", "ATIVO")
+        .neq("email", EMAIL_OCULTO_DA_EQUIPE);
       if (error) throw error;
-      return (data ?? []).map(mapSupabaseRow);
+      return filtrarUsuariosVisiveis((data ?? []).map(mapSupabaseRow));
     },
     async getById(id) {
       const { data, error } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
