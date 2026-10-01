@@ -7,7 +7,7 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { aplicarTonalidadeAoLinkCifra } from "@/lib/music/cifraclub";
+import { aplicarTonalidadeAoLinkCifra, gerarLinkCifraClub } from "@/lib/music/cifraclub";
 import { resolverCifraValidada } from "@/lib/music/resolver-cifra";
 import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
@@ -59,11 +59,14 @@ async function readMusicaForm(formData: FormData) {
 
   // Always try to discover a cifra when title+artist are present. If the
   // provided tonalidade isn't one of the selectable majors, pass `null` so
-  // the resolver may detect the original key itself.
+  // the resolver may detect the original key itself. Additionally, if the
+  // resolver doesn't return a validated link, generate the canonical CifraClub
+  // URL (artist/song) so the created music has a useful link immediately.
   const cifra = titulo && artista
     ? await resolverCifraValidada({ titulo, artista, tonalidade: isTonalidadeValida(tonalidade) ? tonalidade : null })
     : null;
-  return { titulo, artista: artista || null, tonalidade: cifra?.tonalidade ?? (tonalidade || null), linkCifra: cifra?.linkCifra ?? null };
+  const generated = gerarLinkCifraClub({ titulo, artista: artista || null, tonalidade: isTonalidadeValida(tonalidade) ? tonalidade : null, tomOriginal: cifra?.tonalidade ?? null });
+  return { titulo, artista: artista || null, tonalidade: cifra?.tonalidade ?? (tonalidade || null), linkCifra: cifra?.linkCifra ?? generated ?? null };
 }
 
 async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaForm>>): Promise<Musica> {

@@ -227,7 +227,11 @@ export async function resolverCifraOriginalSemCapotraste({
   titulo: string;
   artista: string;
 }) {
-  const artistSlug = resolveArtistSlug(artista);
+  // Use mapped artist slug when available, otherwise fall back to a
+  // deterministic slug generated from the provided artist name. This
+  // ensures we always produce a CifraClub-style URL like
+  // `/legiao-urbana/tempo-perdido/` when the user provides title+artist.
+  let artistSlug = resolveArtistSlug(artista) ?? toCifraClubSlug(artista);
   const songSlug = resolveSongSlug(artistSlug, titulo);
   if (!artistSlug || !songSlug) return null;
 
