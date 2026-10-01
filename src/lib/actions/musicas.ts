@@ -57,8 +57,12 @@ async function readMusicaForm(formData: FormData) {
   const artista = String(formData.get("artista") ?? "").trim();
   const tonalidade = String(formData.get("tonalidade") ?? "").trim();
 
-  const cifra = titulo && artista && isTonalidadeValida(tonalidade)
-    ? await resolverCifraValidada({ titulo, artista, tonalidade }) : null;
+  // Always try to discover a cifra when title+artist are present. If the
+  // provided tonalidade isn't one of the selectable majors, pass `null` so
+  // the resolver may detect the original key itself.
+  const cifra = titulo && artista
+    ? await resolverCifraValidada({ titulo, artista, tonalidade: isTonalidadeValida(tonalidade) ? tonalidade : null })
+    : null;
   return { titulo, artista: artista || null, tonalidade: cifra?.tonalidade ?? (tonalidade || null), linkCifra: cifra?.linkCifra ?? null };
 }
 
@@ -97,20 +101,22 @@ async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaF
 function agendarCifraComTomOriginal(musica: Musica) {
   after(async () => {
     try {
-      if (musica.linkCifra || !musica.artista || !musica.tonalidade) return;
+      // Agendar tentativa apenas se não houver link; permitir tentativa mesmo
+      // se a tonalidade não foi informada — o resolvedor pode detectá-la.
+      if (musica.linkCifra || !musica.artista) return;
       const cifra = await resolverCifraValidada({ titulo: musica.titulo, artista: musica.artista, tonalidade: musica.tonalidade });
       if (!cifra) return;
       const { linkCifra, tonalidade } = cifra;
+      console.debug("agendarCifraComTomOriginal: encontrada cifra para", musica.id, { linkCifra, tonalidade });
       const repos = await getRepositories();
       if (repos.backend === "supabase") {
         const admin = createAdminClient();
+        // Atualizar pela PK (id) e apenas se `link_cifra IS NULL` para evitar
+        // que pequenas diferenças de normalização impeçam a atualização.
         const query = admin
           .from("musicas")
           .update({ link_cifra: linkCifra, tonalidade })
           .eq("id", musica.id)
-          .eq("titulo", musica.titulo)
-          .eq("artista", musica.artista)
-          .eq("tonalidade", musica.tonalidade)
           .is("link_cifra", null);
         const { error } = await query;
         if (error) throw error;
@@ -125,6 +131,42 @@ function agendarCifraComTomOriginal(musica: Musica) {
       console.error("Falha ao atualizar o tom original da cifra:", error);
     }
   });
+}
+
+/**
+ * Tenta resolver a cifra imediatamente com timeout curto (não bloqueante),
+ * atualiza se encontrar; caso contrário, `agendarCifraComTomOriginal` fará
+ * uma tentativa posterior.
+ */
+async function tentarResolverCifraAgora(musica: Musica, timeoutMs = 5000) {
+  try {
+    if (musica.linkCifra || !musica.artista) return;
+    const tentativa = resolverCifraValidada({ titulo: musica.titulo, artista: musica.artista, tonalidade: musica.tonalidade });
+    const resultado = await Promise.race([
+      tentativa,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+    ]);
+    if (!resultado) return;
+    const { linkCifra, tonalidade } = resultado;
+    const repos = await getRepositories();
+    if (repos.backend === "supabase") {
+      const admin = createAdminClient();
+      const { error } = await admin
+        .from("musicas")
+        .update({ link_cifra: linkCifra, tonalidade })
+        .eq("id", musica.id)
+        .is("link_cifra", null);
+      if (error) throw error;
+    } else {
+      const atual = await repos.musicas.getById(musica.id);
+      if (atual && !atual.linkCifra) await repos.musicas.update(musica.id, { linkCifra, tonalidade });
+    }
+    invalidateDataCache("musicas");
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/musicas");
+  } catch (error) {
+    console.debug("tentarResolverCifraAgora: falha ou timeout", musica.id, error);
+  }
 }
 
 /** Cria uma música sem redirecionar, para uso dentro do modal de uma escala. */
@@ -150,6 +192,8 @@ export async function criarMusicaNaEscalaAction(
     console.error("Falha ao cadastrar música na escala:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
+  // Tenta resolver rapidamente e agenda uma tentativa posterior caso falhe.
+  void tentarResolverCifraAgora(musica, 2500);
   agendarCifraComTomOriginal(musica);
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
@@ -175,6 +219,8 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
     console.error("Falha ao cadastrar música:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
+  // Tenta resolver rapidamente e agenda uma tentativa posterior caso falhe.
+  void tentarResolverCifraAgora(musica, 2500);
   agendarCifraComTomOriginal(musica);
 
   invalidateDataCache("musicas");
