@@ -303,8 +303,8 @@ export async function removerUsuarioAdminAction(
     const usuario = await repos.usuarios.getById(id);
 
     if (!usuario) return { error: "Usuário não encontrado." };
-    if (usuario.perfil === "ADMIN") {
-      return { error: "Administradores não podem ser removidos por esta tela." };
+    if (usuario.perfil === "ADMIN" || usuario.perfil === "DEV") {
+      return { error: "Administradores e contas Dev não podem ser removidos por esta tela." };
     }
 
     if (repos.backend === "supabase") {
