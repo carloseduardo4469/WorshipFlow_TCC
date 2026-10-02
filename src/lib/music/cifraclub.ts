@@ -1,4 +1,4 @@
-import { ehTonalidadeMenor, relativaMenor } from "@/lib/music/tonalidades";
+import { ehTonalidadeMenor, relativaMenor, normalizarTom, keyShapeDaTonalidade } from "@/lib/music/tonalidades";
 import artistAliasData from "./worshipflow_artist_aliases.json";
 
 const CIFRA_CLUB_BASE_URL = "https://www.cifraclub.com.br";
@@ -39,26 +39,6 @@ const ORIGINAL_KEYS: Record<string, string> = {
   "florianopolis-house-of-prayer/fe": "C#m",
   "rodolfo-abrantes/pisaduras": "Em",
   "tribalistas/velha-infancia": "F#m",
-};
-
-const KEY_SHAPES: Record<string, number> = {
-  A: 0,
-  "A#": 1,
-  Bb: 1,
-  B: 2,
-  C: 3,
-  "C#": 4,
-  Db: 4,
-  D: 5,
-  "D#": 6,
-  Eb: 6,
-  E: 7,
-  F: 8,
-  "F#": 9,
-  Gb: 9,
-  G: 10,
-  "G#": 11,
-  Ab: 11,
 };
 
 const SONG_SLUG_ALIASES: Record<string, string> = {
@@ -103,26 +83,6 @@ const SONG_SLUG_ALIASES: Record<string, string> = {
   "nengo-vieira/tempo-de-adorar": "tempo-de-perdoar",
   "one-sounds/como-eu-te-amo": "como-eu-te-amo-",
   "pr-w-junior/tu-es-o-rei": "tu-s-o-rei",
-};
-
-const CHROMATIC_POSITIONS: Record<string, number> = {
-  C: 0,
-  "C#": 1,
-  Db: 1,
-  D: 2,
-  "D#": 3,
-  Eb: 3,
-  E: 4,
-  F: 5,
-  "F#": 6,
-  Gb: 6,
-  G: 7,
-  "G#": 8,
-  Ab: 8,
-  A: 9,
-  "A#": 10,
-  Bb: 10,
-  B: 11,
 };
 
 function normalizeText(value: string) {
@@ -174,7 +134,7 @@ const CIFRA_CLUB_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 // O tom da cifra fica num botão logo após o rótulo "Tom:" da barra do site.
-const TOM_PADRAO = /Tom(?:<!--\s*-->)?\s*:\s*<\/span>\s*<button[^>]*>\s*([A-G][#b]?m?)\s*<\/button>/;
+const TOM_PADRAO = /Tom(?:<!--\s*-->)?\s*:\s*<\/span>\s*<button[^>]*>\s*([A-G][#b♯♭]?m?)\s*<\/button>/;
 
 /**
  * Detecta o tom original da música direto no CifraClub (sem keyShape a página
@@ -196,7 +156,7 @@ async function detectarTomNaUrl(url: URL): Promise<string | null> {
     if (noBotao) return normalizeKey(noBotao[1]);
 
     const texto = html.replace(/<[^>]+>/g, " ");
-    const noTexto = texto.match(/\bTom:?\s+([A-G][#b]?m?)\b/);
+    const noTexto = texto.match(/\bTom:?\s+([A-G][#b♯♭]?m?)(?=\s|$)/);
     return noTexto ? normalizeKey(noTexto[1]) : null;
   } catch {
     return null;
@@ -219,7 +179,7 @@ export async function detectarTomOriginalCifraClub(path: string): Promise<string
   return detectarTomNaUrl(new URL(`${CIFRA_CLUB_BASE_URL}/${path}/`));
 }
 
-/** Descobre o deslocamento específico da página e monta sua versão original sem capotraste. */
+/** Detecta o tom original e aplica o mesmo mapeamento de shapes sem capotraste. */
 export async function resolverCifraOriginalSemCapotraste({
   titulo,
   artista,
@@ -236,23 +196,9 @@ export async function resolverCifraOriginalSemCapotraste({
   if (!artistSlug || !songSlug) return null;
 
   const urlOriginal = new URL(`${CIFRA_CLUB_BASE_URL}/${artistSlug}/${songSlug}/`);
-  const urlFormaZero = new URL(urlOriginal);
-  urlFormaZero.searchParams.set("capo", "0");
-  urlFormaZero.searchParams.set("keyShape", "0");
-  const [tomOriginal, tomFormaZero] = await Promise.all([
-    detectarTomNaUrl(urlOriginal),
-    detectarTomNaUrl(urlFormaZero),
-  ]);
-  if (!tomOriginal || !tomFormaZero) return null;
-
-  const notaOriginal = noteFromKey(tomOriginal);
-  const notaFormaZero = noteFromKey(tomFormaZero);
-  if (!notaOriginal || !notaFormaZero) return null;
-  const posicaoOriginal = CHROMATIC_POSITIONS[notaOriginal];
-  const posicaoFormaZero = CHROMATIC_POSITIONS[notaFormaZero];
-  if (posicaoOriginal === undefined || posicaoFormaZero === undefined) return null;
-
-  const keyShape = (posicaoOriginal - posicaoFormaZero + 12) % 12;
+  const tomOriginal = await detectarTomNaUrl(urlOriginal);
+  const keyShape = tomOriginal ? keyShapeDaTonalidade(tomOriginal) : null;
+  if (!tomOriginal || keyShape === null) return null;
   urlOriginal.searchParams.set("capo", "0");
   urlOriginal.searchParams.set("keyShape", String(keyShape));
   return { linkCifra: urlOriginal.toString(), tonalidade: tomOriginal };
@@ -274,11 +220,7 @@ export async function resolverTomOriginal({
 }
 
 function normalizeKey(tonalidade: string) {
-  const match = tonalidade.trim().match(/^([A-Ga-g])([#b]?)(m?)$/);
-  if (!match) return null;
-
-  const [, note, accidental, minor] = match;
-  return `${note.toUpperCase()}${accidental}${minor}`;
+  return normalizarTom(tonalidade);
 }
 
 function noteFromKey(tonalidade: string) {
@@ -299,9 +241,8 @@ function targetKeyForSong(originalKey: string, selectedKey: string) {
 }
 
 /**
- * Troca o tom sem recriar o caminho da cifra. O keyShape do Cifra Club tem um
- * deslocamento próprio em cada página; por isso o cálculo parte do keyShape já
- * validado e salvo, em vez de assumir que ele é absoluto.
+ * Troca o shape sem recriar o caminho nem remover outros parâmetros.
+ * A seleção maior representa a relativa maior quando a cifra é menor.
  */
 export function aplicarTonalidadeAoLinkCifra({
   linkCifra,
@@ -326,12 +267,8 @@ export function aplicarTonalidadeAoLinkCifra({
 
   const originalNote = noteFromKey(tonalidadeOriginal);
   const targetKey = targetKeyForSong(tonalidadeOriginal, tonalidadeSelecionada);
-  const targetNote = targetKey ? noteFromKey(targetKey) : null;
-  if (
-    !originalNote ||
-    !targetNote ||
-    KEY_SHAPES[targetNote] === undefined
-  ) {
+  const targetKeyShape = targetKey ? keyShapeDaTonalidade(targetKey) : null;
+  if (!originalNote || !targetKey || targetKeyShape === null) {
     return null;
   }
 
@@ -339,11 +276,9 @@ export function aplicarTonalidadeAoLinkCifra({
   // no site. Não devemos calcular a partir do keyShape já salvo no link,
   // pois links importados por SQL podem não possuir esse parâmetro ou podem
   // tê-lo incorreto.
-  const targetKeyShape = KEY_SHAPES[targetNote];
   url.protocol = "https:";
   url.hostname = "www.cifraclub.com.br";
-  url.hash = "";
-  url.searchParams.set("capo", "0");
+  if (!url.searchParams.has("capo")) url.searchParams.set("capo", "0");
   url.searchParams.set("keyShape", String(targetKeyShape));
   return { linkCifra: url.toString(), tonalidade: targetKey };
 }
@@ -386,8 +321,8 @@ export function gerarLinkCifraClub({
   if (tomAlvo) {
     const notaAlvo = noteFromKey(tomAlvo);
     if (notaAlvo) {
-      const keyShape = KEY_SHAPES[notaAlvo];
-      if (keyShape !== undefined) url.searchParams.set("keyShape", String(keyShape));
+      const keyShape = keyShapeDaTonalidade(tomAlvo);
+      if (keyShape !== null) url.searchParams.set("keyShape", String(keyShape));
     }
   }
 

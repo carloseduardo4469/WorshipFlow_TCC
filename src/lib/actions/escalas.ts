@@ -6,7 +6,7 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { salvarEscalaNotificando } from "@/lib/notifications/schedules";
-import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
+import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida, normalizarTom } from "@/lib/music/tonalidades";
 import type { FuncaoUsuario, TonalidadeMusica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
 
@@ -61,7 +61,7 @@ function readEscalaForm(formData: FormData) {
   const tonalidadesMusicas: TonalidadeMusica[] = musicaIds
     .map((musicaId) => ({
       musicaId,
-      tonalidade: String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
+      tonalidade: normalizarTom(String(formData.get(`tonalidade_${musicaId}`) ?? "")) ?? String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
     }))
     .filter((t) => t.tonalidade);
 
@@ -202,7 +202,7 @@ export async function adicionarMusicasNaEscalaAction(
   }
   const tonalidadesMusicas: TonalidadeMusica[] = musicaIds.map((musicaId) => ({
     musicaId,
-    tonalidade: String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
+    tonalidade: normalizarTom(String(formData.get(`tonalidade_${musicaId}`) ?? "")) ?? String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
   }));
   if (tonalidadesMusicas.some(({ tonalidade }) => !isTonalidadeValida(tonalidade))) {
     return { error: "Escolha um tom maior para cada música selecionada." };

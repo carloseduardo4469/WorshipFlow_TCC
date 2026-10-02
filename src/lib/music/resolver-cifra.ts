@@ -51,8 +51,8 @@ export function conferirPaginaCifra(html: string, url: string, titulo: string, a
   if (!composition || !recording) return null;
   const canonical = typeof composition.url === "string" ? safeUrl(composition.url) : null;
   if (!canonical || canonical.pathname !== target.pathname) return null;
-  const tom = html.match(/Tom(?:<!--\s*-->)?\s*:\s*<\/span>\s*<button[^>]*>\s*([A-G][#b]?m?)\s*<\/button>/)?.[1]
-    ?? html.replace(/<[^>]+>/g, " ").match(/\bTom:?\s+([A-G][#b]?m?)\b/)?.[1];
+  const tom = html.match(/Tom(?:<!--\s*-->)?\s*:\s*<\/span>\s*<button[^>]*>\s*([A-G][#b♯♭]?m?)\s*<\/button>/)?.[1]
+    ?? html.replace(/<[^>]+>/g, " ").match(/\bTom:?\s+([A-G][#b♯♭]?m?)(?=\s|$)/)?.[1];
   return tom ? { url: canonical.toString(), tom } : null;
 }
 

@@ -23,7 +23,7 @@ export function EscalaMusicasDialog({ escala, onClose, rascunho, onRascunho }: {
   const [selecionadas, setSelecionadas] = useState(new Set(rascunho?.ids ?? escala.musicaIds));
   const [nomesSelecionados, setNomesSelecionados] = useState<Musica[]>(rascunho?.nomes ?? []);
   const [tonalidades, setTonalidades] = useState<Record<number, string>>(() =>
-    rascunho?.tons ?? Object.fromEntries(escala.tonalidadesMusicas.map((item) => [item.musicaId, item.tonalidade]))
+    rascunho?.tons ?? Object.fromEntries(escala.tonalidadesMusicas.map((item) => [item.musicaId, tomParaSelecao(item.tonalidade)]))
   );
   const [novaMusicaAberta, setNovaMusicaAberta] = useState(false);
   const [busca, setBusca] = useState(rascunho?.busca ?? "");
@@ -129,7 +129,7 @@ export function EscalaMusicasDialog({ escala, onClose, rascunho, onRascunho }: {
                   <div className="w-28 shrink-0">
                     <Select
                       name={`tonalidade_${musica.id}`}
-                      value={tonalidades[musica.id] ?? ""}
+                      value={tomParaSelecao(tonalidades[musica.id])}
                       onValueChange={(tom) => setTonalidades((atuais) => ({ ...atuais, [musica.id]: tom }))}
                       aria-label={`Tom de ${musica.titulo}`}
                       className="px-2 py-1.5 text-xs"

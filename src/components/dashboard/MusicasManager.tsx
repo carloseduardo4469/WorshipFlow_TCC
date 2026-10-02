@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUp, ChevronDown, ExternalLink, Pencil, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { buscarMusicas, removerMusicaAction } from "@/lib/actions/musicas";
 import { MusicaForm } from "./MusicaForm";
+import { normalizarTom } from "@/lib/music/tonalidades";
 import { usePaginacaoDeslizante } from "./usePaginacaoDeslizante";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, normalizeSearch } from "@/lib/validation/forms";
@@ -211,7 +212,7 @@ export function MusicasManager({
                         </td>
                         <td className="px-4 py-1.5 font-mono text-amber md:table-cell md:py-3.5">
                           <span className="mr-2 font-sans text-xs uppercase text-muted/70 md:hidden">Tom:</span>
-                          {musica.tonalidade ?? "—"}
+                          {musica.tonalidade === "Indefinido" ? "Indefinido" : normalizarTom(musica.tonalidade ?? "") ?? "—"}
                         </td>
                         <td className="px-4 py-1.5 text-muted md:table-cell md:py-3.5">
                           <span className="mb-1 block text-xs uppercase text-muted/70 md:hidden">Cifra:</span>

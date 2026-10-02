@@ -9,7 +9,7 @@ import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { aplicarTonalidadeAoLinkCifra, gerarLinkCifraClub } from "@/lib/music/cifraclub";
 import { resolverCifraValidada } from "@/lib/music/resolver-cifra";
-import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
+import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida, normalizarTom } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
 
@@ -55,7 +55,8 @@ export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
 async function readMusicaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const artista = String(formData.get("artista") ?? "").trim();
-  const tonalidade = String(formData.get("tonalidade") ?? "").trim();
+  const tomInformado = String(formData.get("tonalidade") ?? "").trim();
+  const tonalidade = normalizarTom(tomInformado) ?? tomInformado;
 
   // Always try to discover a cifra when title+artist are present. If the
   // provided tonalidade isn't one of the selectable majors, pass `null` so
