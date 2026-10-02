@@ -27,6 +27,34 @@ export const RATE_LIMITS = {
 type Policy = keyof typeof RATE_LIMITS;
 export type RateLimitError = { error: string; retryAfter: number };
 
+const localBuckets = new Map<string, { hits: number; expiresAt: number }>();
+
+function checkLocalRateLimit(policy: Policy, identity: string): RateLimitError | null {
+  const now = Date.now();
+  const { limit, window } = RATE_LIMITS[policy];
+  const key = `${policy}:${identity}`;
+  let bucket = localBuckets.get(key);
+
+  if (!bucket || bucket.expiresAt <= now) {
+    bucket = { hits: 0, expiresAt: now + window * 1000 };
+    localBuckets.set(key, bucket);
+  }
+  if (bucket.hits >= limit) {
+    return {
+      error: `Muitas tentativas. Aguarde ${Math.max(1, Math.ceil((bucket.expiresAt - now) / 1000))} segundos e tente novamente.`,
+      retryAfter: Math.max(1, Math.ceil((bucket.expiresAt - now) / 1000)),
+    };
+  }
+
+  bucket.hits += 1;
+  if (localBuckets.size > 1000) {
+    for (const [bucketKey, value] of localBuckets) {
+      if (value.expiresAt <= now) localBuckets.delete(bucketKey);
+    }
+  }
+  return null;
+}
+
 /** Só confiar no IP sobrescrito pela infraestrutura configurada pelo operador. */
 async function requestIdentity() {
   const headerName = process.env.VERCEL === "1"
@@ -46,9 +74,9 @@ async function requestIdentity() {
 /** Contagem atômica no banco; falhas nunca liberam uma operação desprotegida. */
 export async function checkRateLimit(policy: Policy, authId?: string): Promise<RateLimitError | null> {
   try {
+    const identity = authId ? `user:${authId}` : await requestIdentity();
     const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!secret) throw new Error("Contador não configurado.");
-    const identity = authId ? `user:${authId}` : await requestIdentity();
     const key = createHmac("sha256", secret).update(`${policy}:${identity}`).digest("hex");
     const { limit, window } = RATE_LIMITS[policy];
     const { data, error } = await createAdminClient().rpc("consume_form_rate_limit", {
@@ -62,6 +90,9 @@ export async function checkRateLimit(policy: Policy, authId?: string): Promise<R
     const retryAfter = Math.max(1, data.retry_after);
     return { error: `Muitas tentativas. Aguarde ${retryAfter} segundos e tente novamente.`, retryAfter };
   } catch {
+    if (policy === "consultar") {
+      return checkLocalRateLimit(policy, authId ? `user:${authId}` : "ip:consulta");
+    }
     // Não registrar IP, email, sessão, chaves nem payloads dos formulários.
     console.error("[rate-limit] Não foi possível verificar o limite de envios.");
     return { error: "Não foi possível verificar o limite de envios. Tente novamente em instantes.", retryAfter: 30 };
