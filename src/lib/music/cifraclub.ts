@@ -136,7 +136,7 @@ function normalizeText(value: string) {
 export function toCifraClubSlug(value: string) {
   return normalizeText(value)
     .replace(/&/g, " e ")
-    .replace(/['"`]/g, "")
+    .replace(/['’‘"`]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
@@ -231,7 +231,7 @@ export async function resolverCifraOriginalSemCapotraste({
   // deterministic slug generated from the provided artist name. This
   // ensures we always produce a CifraClub-style URL like
   // `/legiao-urbana/tempo-perdido/` when the user provides title+artist.
-  let artistSlug = resolveArtistSlug(artista) ?? toCifraClubSlug(artista);
+  const artistSlug = resolveArtistSlug(artista) ?? toCifraClubSlug(artista);
   const songSlug = resolveSongSlug(artistSlug, titulo);
   if (!artistSlug || !songSlug) return null;
 
@@ -267,8 +267,9 @@ export async function resolverTomOriginal({
   artista: string;
 }): Promise<string | null> {
   const artistSlug = resolveArtistSlug(artista);
+  if (!artistSlug) return null;
   const songSlug = resolveSongSlug(artistSlug, titulo);
-  if (!artistSlug || !songSlug) return null;
+  if (!songSlug) return null;
   return detectarTomOriginalCifraClub(`${artistSlug}/${songSlug}`);
 }
 
@@ -361,8 +362,9 @@ export function gerarLinkCifraClub({
   if (!titulo.trim() || !artista?.trim()) return null;
 
   const artistSlug = resolveArtistSlug(artista);
+  if (!artistSlug) return null;
   const songSlug = resolveSongSlug(artistSlug, titulo);
-  if (!artistSlug || !songSlug) return null;
+  if (!songSlug) return null;
 
   const path = `${artistSlug}/${songSlug}`;
   const url = new URL(`${CIFRA_CLUB_BASE_URL}/${path}/`);

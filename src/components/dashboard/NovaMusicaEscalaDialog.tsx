@@ -47,6 +47,11 @@ export function NovaMusicaEscalaDialog({ onClose, onCreated, rascunho, onRascunh
               ...TONALIDADES_SELECIONAVEIS.map((tom) => ({ value: tom, label: tom })),
             ]} />
           </div>
+          <p role="status" aria-live="polite" className="text-xs leading-relaxed text-muted">
+            {pending
+              ? "Buscando a cifra no Cifra Club e salvando a música..."
+              : "A cifra será buscada pelo título e artista. Se a consulta falhar, você poderá tentar novamente editando a música no catálogo."}
+          </p>
           {state?.error && <FormAlert>{state.error}</FormAlert>}
           <div className="db-form-actions mt-2">
             <Button type="submit" disabled={pending}><Music2 size={16} /> {pending ? "Adicionando..." : "Adicionar música"}</Button>

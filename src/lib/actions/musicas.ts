@@ -139,38 +139,53 @@ function agendarCifraComTomOriginal(musica: Musica) {
 }
 
 /**
- * Tenta resolver a cifra imediatamente com timeout curto (não bloqueante),
- * atualiza se encontrar; caso contrário, `agendarCifraComTomOriginal` fará
- * uma tentativa posterior.
+ * Aguarda uma recuperação curta e devolve o registro atualizado à interface.
+ * Se o prazo terminar, `agendarCifraComTomOriginal` fará uma tentativa posterior.
  */
 async function tentarResolverCifraAgora(musica: Musica, timeoutMs = 5000) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     if (musica.linkCifra || !musica.artista) return;
     const tentativa = resolverCifraValidada({ titulo: musica.titulo, artista: musica.artista, tonalidade: musica.tonalidade });
     const resultado = await Promise.race([
       tentativa,
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+      new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), timeoutMs); }),
     ]);
     if (!resultado) return;
     const { linkCifra, tonalidade } = resultado;
     const repos = await getRepositories();
+    let atualizada: Musica | null;
     if (repos.backend === "supabase") {
       const admin = createAdminClient();
-      const { error } = await admin
+      let query = admin
         .from("musicas")
         .update({ link_cifra: linkCifra, tonalidade })
         .eq("id", musica.id)
+        .eq("titulo", musica.titulo)
+        .eq("artista", musica.artista)
         .is("link_cifra", null);
+      query = musica.tonalidade === null
+        ? query.is("tonalidade", null)
+        : query.eq("tonalidade", musica.tonalidade);
+      const { error } = await query;
       if (error) throw error;
+      atualizada = await repos.musicas.getById(musica.id);
     } else {
       const atual = await repos.musicas.getById(musica.id);
-      if (atual && !atual.linkCifra) await repos.musicas.update(musica.id, { linkCifra, tonalidade });
+      if (atual && !atual.linkCifra && atual.titulo === musica.titulo && atual.artista === musica.artista && atual.tonalidade === musica.tonalidade) {
+        atualizada = await repos.musicas.update(musica.id, { linkCifra, tonalidade });
+      } else {
+        return atual;
+      }
     }
     invalidateDataCache("musicas");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/musicas");
+    return atualizada;
   } catch (error) {
     console.debug("tentarResolverCifraAgora: falha ou timeout", musica.id, error);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
   }
 }
 
@@ -198,7 +213,7 @@ export async function criarMusicaNaEscalaAction(
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
   // Tenta resolver rapidamente e agenda uma tentativa posterior caso falhe.
-  void tentarResolverCifraAgora(musica, 2500);
+  musica = await tentarResolverCifraAgora(musica, 2500) ?? musica;
   agendarCifraComTomOriginal(musica);
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
@@ -225,7 +240,7 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
   // Tenta resolver rapidamente e agenda uma tentativa posterior caso falhe.
-  void tentarResolverCifraAgora(musica, 2500);
+  musica = await tentarResolverCifraAgora(musica, 2500) ?? musica;
   agendarCifraComTomOriginal(musica);
 
   invalidateDataCache("musicas");

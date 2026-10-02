@@ -27,13 +27,13 @@ describe("cifra da Harpa no cadastro da escala", () => {
     expect(result?.musica?.tonalidade).toBe("Indefinido");
     expect(result?.musica?.linkCifra).toBe("https://www.cifraclub.com.br/harpa-crista/porque-ele-vive/?capo=0&keyShape=0");
   });
-  it("salva a música sem inventar uma cifra quando o serviço está indisponível", async () => {
+  it("salva a URL canônica conhecida quando o serviço está indisponível", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("offline"); }));
     const form = new FormData();
     form.set("titulo", "Porque ele vive - 545"); form.set("artista", "Harpa Cristã"); form.set("tonalidade", "G");
     const result = await criarMusicaNaEscalaAction(null, form);
     expect(result?.success).toBe(true);
-    expect(result?.musica?.linkCifra).toBeNull();
+    expect(result?.musica?.linkCifra).toBe("https://www.cifraclub.com.br/harpa-crista/porque-ele-vive/?capo=0&keyShape=10");
   });
   it("não inventa endereço de artista desconhecido", () => {
     expect(gerarLinkCifraClub({ titulo: "Porque Ele Vive", artista: "artista inexistente teste", tonalidade: "G" })).toBeNull();

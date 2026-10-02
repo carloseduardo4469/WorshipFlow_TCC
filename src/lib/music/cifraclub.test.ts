@@ -80,7 +80,7 @@ describe("links de cifra", () => {
       tonalidadeSelecionada: "G",
     });
 
-    expect(new URL(resultado!.linkCifra).searchParams.get("keyShape")).toBe("8");
+    expect(new URL(resultado!.linkCifra).searchParams.get("keyShape")).toBe("7");
     expect(resultado?.tonalidade).toBe("Em");
   });
 

@@ -4,8 +4,11 @@ const BASE = "https://www.cifraclub.com.br";
 const SLUG = /^[a-z0-9][a-z0-9-]*$/;
 
 function decode(value: string) {
-  return value.replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&")
-    .replace(/&#(\d+);/g, (_, code) => { const n = Number(code); return n <= 0x10ffff ? String.fromCodePoint(n) : ""; });
+  return value.replace(/&quot;/g, '"').replace(/&apos;|&rsquo;|&lsquo;/g, "'").replace(/&nbsp;/g, " ")
+    .replace(/&#(x[0-9a-f]+|\d+);/gi, (_, code: string) => {
+      const n = code[0].toLowerCase() === "x" ? parseInt(code.slice(1), 16) : Number(code);
+      return n <= 0x10ffff ? String.fromCodePoint(n) : "";
+    }).replace(/&amp;/g, "&");
 }
 /** Normaliza apresentação, sem aproximação que possa escolher outra música. */
 export function normalizarTituloCifra(value: string) {
@@ -30,7 +33,10 @@ export function conferirPaginaCifra(html: string, url: string, titulo: string, a
   for (const match of html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
     try {
       const parsed = JSON.parse(match[1]);
-      records.push(...(Array.isArray(parsed) ? parsed : parsed["@graph"] ?? [parsed]));
+      const entries = Array.isArray(parsed) ? parsed : parsed?.["@graph"] ?? [parsed];
+      if (Array.isArray(entries)) {
+        records.push(...entries.filter((entry) => entry && typeof entry === "object" && !Array.isArray(entry)));
+      }
     } catch { /* Não aceitar metadados quebrados. */ }
   }
   const hasType = (record: Record<string, unknown>, type: string) => [record?.["@type"]].flat().includes(type);
@@ -38,8 +44,9 @@ export function conferirPaginaCifra(html: string, url: string, titulo: string, a
     && normalizarTituloCifra(record.name) === normalizarTituloCifra(titulo));
   const recording = records.find((record) => {
     if (!hasType(record, "MusicRecording") || !record.byArtist || typeof record.byArtist !== "object") return false;
-    const artist = record.byArtist as { url?: string };
-    return typeof artist.url === "string" && safeUrl(artist.url)?.pathname.replace(/\/$/, "") === `/${artistSlug}`;
+    const artists = Array.isArray(record.byArtist) ? record.byArtist : [record.byArtist];
+    return artists.some((artist) => artist && typeof artist.url === "string"
+      && safeUrl(artist.url)?.pathname.replace(/\/$/, "") === `/${artistSlug}`);
   });
   if (!composition || !recording) return null;
   const canonical = typeof composition.url === "string" ? safeUrl(composition.url) : null;
@@ -56,18 +63,32 @@ export async function resolverCifraValidada({ titulo, artista, tonalidade }: { t
   const visited = new Set<string>();
   let requests = 0;
   async function read(url: URL, redirects = 0): Promise<{ html: string; url: string } | null> {
-    if (!safeUrl(url.toString()) || requests++ >= 8 || signal.aborted || redirects > 2) return null;
-    try {
-      const response = await fetch(url, { signal, cache: "no-store", redirect: "manual" });
-      if ([301, 302, 307, 308].includes(response.status)) {
-        const location = response.headers.get("location");
-        const next = location ? safeUrl(new URL(location, url).toString()) : null;
-        return next ? read(next, redirects + 1) : null;
-      }
-      if (!response.ok) return null;
-      const html = await response.text();
-      return html.length <= 2_000_000 ? { html, url: url.toString() } : null;
-    } catch { return null; }
+    if (!safeUrl(url.toString()) || signal.aborted || redirects > 2) return null;
+    // Uma conexão interrompida ou um 5xx não deve descartar uma cifra existente.
+    // O prazo por requisição deixa tempo para a segunda tentativa e o catálogo.
+    for (let attempt = 0; attempt < 2 && requests < 8 && !signal.aborted; attempt++) {
+      requests++;
+      try {
+        const response = await fetch(url, {
+          signal: AbortSignal.any([signal, AbortSignal.timeout(4000)]),
+          cache: "no-store",
+          redirect: "manual",
+        });
+        if ([301, 302, 307, 308].includes(response.status)) {
+          const location = response.headers.get("location");
+          const next = location ? safeUrl(new URL(location, url).toString()) : null;
+          return next ? read(next, redirects + 1) : null;
+        }
+        if (response.status >= 500) {
+          await response.body?.cancel();
+          continue;
+        }
+        if (!response.ok) return null;
+        const html = await response.text();
+        return html.length <= 2_000_000 ? { html, url: url.toString() } : null;
+      } catch { /* Repetir somente dentro dos limites de tempo e requisições. */ }
+    }
+    return null;
   }
   const known = gerarLinkCifraClub({ titulo, artista, tonalidade: null });
   let artistSlug = known ? new URL(known).pathname.split("/")[1] : toCifraClubSlug(artista);
@@ -90,11 +111,14 @@ export async function resolverCifraValidada({ titulo, artista, tonalidade }: { t
     if (found) return found;
   }
   // Descoberta pública usada pelo próprio Cifra Club. Não aceitar o primeiro resultado por aproximação.
-  if (!known && !signal.aborted) {
+  if (!signal.aborted) {
     try {
       const search = new URL("https://solr.sscdn.co/cifraclub-explore/v1/artists/suggest");
       search.searchParams.set("q", artista);
-      const response = await fetch(search, { signal, cache: "no-store", redirect: "error" });
+      const response = await fetch(search, {
+        signal: AbortSignal.any([signal, AbortSignal.timeout(2000)]),
+        cache: "no-store", redirect: "error",
+      });
       const data = response.ok ? await response.json() : null;
       const artists = Array.isArray(data?.artists) ? data.artists.filter((item: { name?: unknown; slug?: unknown }) =>
         typeof item.name === "string" && typeof item.slug === "string" && SLUG.test(item.slug) && toCifraClubSlug(item.name) === toCifraClubSlug(artista)) : [];
