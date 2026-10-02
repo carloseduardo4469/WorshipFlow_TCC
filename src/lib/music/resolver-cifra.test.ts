@@ -86,6 +86,14 @@ describe("resolução geral de cifras", () => {
 
     expect(result).toEqual({ tonalidade: "G", linkCifra: `${url}?capo=0&keyShape=10` });
   });
+  it("preserva o modo menor e os bemóis Unicode ao aplicar o tom escolhido", async () => {
+    const url = `${base}/alessandro-vilas-boas/ser-mudado/`;
+    mockPages({ [url]: paginaFormatoAtual("Ser Mudado", "alessandro-vilas-boas", "ser-mudado", "B♭m") });
+
+    const result = await resolverCifraValidada({ titulo: "Ser Mudado", artista: "Alessandro Vilas Boas", tonalidade: "C#" });
+
+    expect(result).toEqual({ tonalidade: "A#m", linkCifra: `${url}?capo=0&keyShape=1` });
+  });
   it("descobre o slug real do artista pela busca pública", async () => {
     mockPages({
       "https://solr.sscdn.co/cifraclub-explore/v1/artists/suggest?q=Artista+Teste": JSON.stringify({ artists: [{ name: "Artista Teste", slug: "outro-slug" }] }),

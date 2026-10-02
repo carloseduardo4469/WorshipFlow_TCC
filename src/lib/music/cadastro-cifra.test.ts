@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn(), getById: vi.fn() }));
+const mocks = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn(), getById: vi.fn(), checkRateLimit: vi.fn(async () => null) }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
-vi.mock("@/lib/auth/session", () => ({ requireAuth: vi.fn(), requireAdmin: vi.fn() }));
+vi.mock("@/lib/auth/session", () => ({ requireAuth: vi.fn(async () => ({ authId: "user-1" })), requireAdmin: vi.fn(async () => ({ authId: "user-1" })) }));
+vi.mock("@/lib/security/rate-limit", () => ({ checkRateLimit: mocks.checkRateLimit }));
 vi.mock("@/lib/db/cache", () => ({ invalidateDataCache: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
 vi.mock("@/lib/db/repositories", () => ({

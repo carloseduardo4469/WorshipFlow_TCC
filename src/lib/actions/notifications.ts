@@ -8,9 +8,12 @@ import { pushConfig } from "@/lib/notifications/push";
 import { subscriptionSchema } from "@/lib/notifications/subscription";
 import type { NotificationItem } from "@/lib/notifications/events";
 import { detachPushDevice } from "@/lib/notifications/device";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export async function listarNotificacoes() {
   const { authId } = await requireAuth();
+  const rateLimit = await checkRateLimit("notificacoes", authId);
+  if (rateLimit) return { error: rateLimit.error };
   const db = createAdminClient();
   const device = (await cookies()).get("wf-push-device")?.value;
   const [notices, count, subscription] = await Promise.all([
@@ -24,6 +27,8 @@ export async function listarNotificacoes() {
 
 export async function marcarNotificacoesLidas(ids: string[]) {
   const { authId } = await requireAuth();
+  const rateLimit = await checkRateLimit("notificacoes", authId);
+  if (rateLimit) return { error: rateLimit.error };
   if (!Array.isArray(ids) || ids.length > 40 || ids.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) return { error: "Seleção inválida." };
   const { error } = await createAdminClient().from("notifications").update({ read_at: new Date().toISOString() }).eq("usuario_id", authId).in("id", ids).is("read_at", null);
   return error ? { error: "Não foi possível marcar os avisos como lidos." } : { success: true };
@@ -31,6 +36,8 @@ export async function marcarNotificacoesLidas(ids: string[]) {
 
 export async function ativarPush(input: unknown) {
   const { authId } = await requireAuth();
+  const rateLimit = await checkRateLimit("push", authId);
+  if (rateLimit) return { error: rateLimit.error };
   const parsed = subscriptionSchema.safeParse(input);
   if (!parsed.success || !pushConfig()) return { error: "Não foi possível ativar as notificações neste aparelho." };
   const { endpoint, keys } = parsed.data;
@@ -49,6 +56,8 @@ export async function ativarPush(input: unknown) {
 }
 export async function desativarPush() {
   const { authId } = await requireAuth();
+  const rateLimit = await checkRateLimit("push", authId);
+  if (rateLimit) return { error: rateLimit.error };
   try { await detachPushDevice(authId); return { success: true }; }
   catch { return { error: "Não foi possível desativar. Tente novamente." }; }
 }

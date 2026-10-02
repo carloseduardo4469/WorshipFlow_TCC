@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { invalidateDataCache } from "@/lib/db/cache";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import {
   FORM_LIMITS,
   normalizePersonName,
@@ -43,6 +44,9 @@ function safeNextPath(value: string, fallback = "/dashboard"): string {
 }
 
 export async function loginAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const rateLimit = await checkRateLimit("login");
+  if (rateLimit) return { error: rateLimit.error };
+
   const email = String(formData.get("email") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
   const next = safeNextPath(String(formData.get("next") ?? ""));
@@ -68,6 +72,9 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
 }
 
 export async function cadastroAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const rateLimit = await checkRateLimit("cadastro");
+  if (rateLimit) return { error: rateLimit.error };
+
   const nomeRaw = String(formData.get("nome") ?? "");
   const nome = normalizePersonName(nomeRaw).trim();
   const email = String(formData.get("email") ?? "").trim();
@@ -149,6 +156,9 @@ export async function esqueciSenhaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const rateLimit = await checkRateLimit("recuperarSenha");
+  if (rateLimit) return { error: rateLimit.error };
+
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Informe seu email." };
   const emailLengthError = validateMaxLength(email, FORM_LIMITS.email, "Email");
@@ -174,6 +184,9 @@ export async function redefinirSenhaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const rateLimit = await checkRateLimit("redefinirSenha");
+  if (rateLimit) return { error: rateLimit.error };
+
   const senha = String(formData.get("senha") ?? "");
   const confirmarSenha = String(formData.get("confirmarSenha") ?? "");
 
@@ -202,8 +215,11 @@ export async function redefinirSenhaAction(
 }
 
 export async function loginComGoogleAction(formData: FormData) {
-  const next = safeNextPath(String(formData.get("next") ?? ""));
   const intent = formData.get("intent") === "signup" ? "signup" : "login";
+  const rateLimit = await checkRateLimit("google");
+  if (rateLimit) redirect(intent === "signup" ? "/cadastro?error=rate-limit" : "/login?error=rate-limit");
+
+  const next = safeNextPath(String(formData.get("next") ?? ""));
   const supabase = await createClient();
   const siteUrl = await getSiteUrl();
 

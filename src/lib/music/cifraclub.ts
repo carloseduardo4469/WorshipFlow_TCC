@@ -1,4 +1,4 @@
-import { ehTonalidadeMenor, relativaMenor, normalizarTom, keyShapeDaTonalidade } from "@/lib/music/tonalidades";
+import { ehTonalidadeMenor, keyShapeDaTonalidade, normalizarTom, relativaMenor } from "@/lib/music/tonalidades";
 import artistAliasData from "./worshipflow_artist_aliases.json";
 
 const CIFRA_CLUB_BASE_URL = "https://www.cifraclub.com.br";
@@ -39,6 +39,26 @@ const ORIGINAL_KEYS: Record<string, string> = {
   "florianopolis-house-of-prayer/fe": "C#m",
   "rodolfo-abrantes/pisaduras": "Em",
   "tribalistas/velha-infancia": "F#m",
+};
+
+const KEY_SHAPES: Record<string, number> = {
+  A: 0,
+  "A#": 1,
+  Bb: 1,
+  B: 2,
+  C: 3,
+  "C#": 4,
+  Db: 4,
+  D: 5,
+  "D#": 6,
+  Eb: 6,
+  E: 7,
+  F: 8,
+  "F#": 9,
+  Gb: 9,
+  G: 10,
+  "G#": 11,
+  Ab: 11,
 };
 
 const SONG_SLUG_ALIASES: Record<string, string> = {
@@ -156,7 +176,7 @@ async function detectarTomNaUrl(url: URL): Promise<string | null> {
     if (noBotao) return normalizeKey(noBotao[1]);
 
     const texto = html.replace(/<[^>]+>/g, " ");
-    const noTexto = texto.match(/\bTom:?\s+([A-G][#b♯♭]?m?)(?=\s|$)/);
+    const noTexto = texto.match(/\bTom:?\s+([A-G][#b♯♭]?m?)\b/);
     return noTexto ? normalizeKey(noTexto[1]) : null;
   } catch {
     return null;
@@ -179,7 +199,7 @@ export async function detectarTomOriginalCifraClub(path: string): Promise<string
   return detectarTomNaUrl(new URL(`${CIFRA_CLUB_BASE_URL}/${path}/`));
 }
 
-/** Detecta o tom original e aplica o mesmo mapeamento de shapes sem capotraste. */
+/** Detecta o tom original e aplica o mapeamento de shapes sem capotraste. */
 export async function resolverCifraOriginalSemCapotraste({
   titulo,
   artista,
@@ -190,7 +210,7 @@ export async function resolverCifraOriginalSemCapotraste({
   // Use mapped artist slug when available, otherwise fall back to a
   // deterministic slug generated from the provided artist name. This
   // ensures we always produce a CifraClub-style URL like
-  // `/legiao-urbana/tempo-perdido/` when the user provides title+artist.
+
   const artistSlug = resolveArtistSlug(artista) ?? toCifraClubSlug(artista);
   const songSlug = resolveSongSlug(artistSlug, titulo);
   if (!artistSlug || !songSlug) return null;
@@ -241,8 +261,9 @@ function targetKeyForSong(originalKey: string, selectedKey: string) {
 }
 
 /**
- * Troca o shape sem recriar o caminho nem remover outros parâmetros.
- * A seleção maior representa a relativa maior quando a cifra é menor.
+ * Troca o tom sem recriar o caminho da cifra. O keyShape do Cifra Club tem um
+ * deslocamento próprio em cada página; por isso o cálculo parte do keyShape já
+ * validado e salvo, em vez de assumir que ele é absoluto.
  */
 export function aplicarTonalidadeAoLinkCifra({
   linkCifra,
@@ -267,8 +288,12 @@ export function aplicarTonalidadeAoLinkCifra({
 
   const originalNote = noteFromKey(tonalidadeOriginal);
   const targetKey = targetKeyForSong(tonalidadeOriginal, tonalidadeSelecionada);
-  const targetKeyShape = targetKey ? keyShapeDaTonalidade(targetKey) : null;
-  if (!originalNote || !targetKey || targetKeyShape === null) {
+  const targetNote = targetKey ? noteFromKey(targetKey) : null;
+  if (
+    !originalNote ||
+    !targetNote ||
+    KEY_SHAPES[targetNote] === undefined
+  ) {
     return null;
   }
 
@@ -276,6 +301,7 @@ export function aplicarTonalidadeAoLinkCifra({
   // no site. Não devemos calcular a partir do keyShape já salvo no link,
   // pois links importados por SQL podem não possuir esse parâmetro ou podem
   // tê-lo incorreto.
+  const targetKeyShape = KEY_SHAPES[targetNote];
   url.protocol = "https:";
   url.hostname = "www.cifraclub.com.br";
   if (!url.searchParams.has("capo")) url.searchParams.set("capo", "0");
@@ -321,8 +347,8 @@ export function gerarLinkCifraClub({
   if (tomAlvo) {
     const notaAlvo = noteFromKey(tomAlvo);
     if (notaAlvo) {
-      const keyShape = keyShapeDaTonalidade(tomAlvo);
-      if (keyShape !== null) url.searchParams.set("keyShape", String(keyShape));
+      const keyShape = KEY_SHAPES[notaAlvo];
+      if (keyShape !== undefined) url.searchParams.set("keyShape", String(keyShape));
     }
   }
 

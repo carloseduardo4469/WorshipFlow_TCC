@@ -11,7 +11,6 @@ export const RATE_LIMITS = {
   recuperarSenha: { limit: 3, window: 900 },
   redefinirSenha: { limit: 5, window: 900 },
   google: { limit: 10, window: 300 },
-  logout: { limit: 30, window: 60 },
   musicas: { limit: 10, window: 60 },
   escalas: { limit: 20, window: 60 },
   repertorios: { limit: 20, window: 60 },

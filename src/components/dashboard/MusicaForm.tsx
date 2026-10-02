@@ -69,9 +69,9 @@ export function MusicaForm({
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} maxLength={FORM_LIMITS.musicaTitulo} required />
       <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} maxLength={FORM_LIMITS.artista} required />
 
-      <p className="db-panel bg-[#07101e]/60 p-3 text-sm text-muted">
-        A cifra será buscada no Cifra Club pelo título e artista. Acentos e maiúsculas são tratados automaticamente. Se a consulta falhar, você pode salvar novamente para tentar outra vez.
-      </p>
+          <div className="db-panel bg-[#07101e]/60 p-3 text-sm text-muted">
+            <strong className="db-label">Aviso:</strong> O link da cifra só será gerado corretamente se o <em>Título</em> e o <em>Artista</em> estiverem escritos exatamente como no CifraClub. Ex.: <span className="font-semibold">Pisaduras - Rodolfo Abrantes</span>.
+          </div>
 
       <div className="flex w-full flex-col gap-2 sm:w-48">
         <label htmlFor="tonalidade" className="db-label">
@@ -100,7 +100,7 @@ export function MusicaForm({
         {pending
           ? "Buscando a cifra com os dados informados e salvando a música..."
           : musica && !musica.linkCifra
-            ? "A cifra ainda não foi localizada. A consulta ao Cifra Club pode ter falhado mesmo com os nomes corretos. Clique em Salvar para tentar novamente, sem precisar alterar os dados."
+            ? "Cifra indisponível. Confira o título e o artista e clique em Salvar para buscar novamente. Você também pode tentar sem alterar os dados."
             : "Ao salvar, a cifra será consultada novamente com o título, artista e tom informados."}
       </p>
 

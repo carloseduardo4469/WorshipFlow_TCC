@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   resolve: vi.fn(), getById: vi.fn(), update: vi.fn(), create: vi.fn(), invalidate: vi.fn(),
-  admin: vi.fn(), backend: "local" as "local" | "supabase",
+  admin: vi.fn(), checkRateLimit: vi.fn(), backend: "local" as "local" | "supabase",
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
-vi.mock("@/lib/auth/session", () => ({ requireAuth: vi.fn(), requireAdmin: vi.fn() }));
+vi.mock("@/lib/auth/session", () => ({ requireAuth: vi.fn(async () => ({ authId: "user-1" })), requireAdmin: vi.fn(async () => ({ authId: "user-1" })) }));
+vi.mock("@/lib/security/rate-limit", () => ({ checkRateLimit: mocks.checkRateLimit }));
 vi.mock("@/lib/db/cache", () => ({ invalidateDataCache: mocks.invalidate }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.admin }));
 vi.mock("@/lib/music/resolver-cifra", () => ({ resolverCifraValidada: mocks.resolve }));
@@ -25,6 +26,7 @@ function form(changes: Record<string, string> = {}) {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.checkRateLimit.mockResolvedValue(null);
   mocks.backend = "local";
   mocks.getById.mockResolvedValue(original);
   mocks.update.mockImplementation(async (id, data) => ({ ...original, ...data, id }));
@@ -33,6 +35,16 @@ beforeEach(() => {
 });
 
 describe("criação e persistência da cifra", () => {
+  it("bloqueia uma gravação quando a cota por usuário foi excedida", async () => {
+    mocks.checkRateLimit.mockResolvedValue({ error: "Muitas tentativas.", retryAfter: 30 });
+
+    await expect(criarMusicaAction(null, form())).resolves.toEqual({ error: "Muitas tentativas." });
+
+    expect(mocks.checkRateLimit).toHaveBeenCalledWith("musicas", "user-1");
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.resolve).not.toHaveBeenCalled();
+  });
+
   it.each([criarMusicaAction, criarMusicaNaEscalaAction])("retorna o link recuperado também no Supabase", async (action) => {
     mocks.backend = "supabase";
     mocks.resolve.mockResolvedValueOnce(null);
@@ -90,7 +102,7 @@ describe("criação e persistência da cifra", () => {
   });
 
   it("salva a URL canônica de fallback ao criar pela escala", async () => {
-    mocks.resolve.mockResolvedValueOnce(null);
+    mocks.resolve.mockResolvedValue(null);
     const data = form({ titulo: "Fé", artista: "FHOP" });
 
     const result = await criarMusicaNaEscalaAction(null, data);
@@ -99,6 +111,30 @@ describe("criação e persistência da cifra", () => {
       linkCifra: expect.stringContaining("/florianopolis-house-of-prayer/fe/"),
     }));
     expect(result).toMatchObject({ success: true, musica: { linkCifra: expect.stringContaining("/florianopolis-house-of-prayer/fe/") } });
+  });
+
+  it("não força tom maior no link provisório quando não consegue detectar o modo", async () => {
+    mocks.resolve.mockResolvedValue(null);
+    const data = form({ titulo: "Ser Mudado", artista: "Alessandro Vilas Boas", tonalidade: "C#" });
+
+    const result = await criarMusicaNaEscalaAction(null, data);
+
+    expect(result).toMatchObject({ success: true });
+    const link = new URL(mocks.create.mock.calls[0][0].linkCifra);
+    expect(link.searchParams.has("keyShape")).toBe(false);
+  });
+
+  it("corrige o link provisório quando a tentativa seguinte detecta a relativa menor", async () => {
+    const url = "https://www.cifraclub.com.br/alessandro-vilas-boas/ser-mudado/";
+    const provisional = { ...original, id: 2, titulo: "Ser Mudado", artista: "Alessandro Vilas Boas", tonalidade: "C#", linkCifra: `${url}?capo=0` };
+    mocks.create.mockResolvedValue(provisional);
+    mocks.getById.mockResolvedValue(provisional);
+    mocks.resolve.mockResolvedValueOnce(null).mockResolvedValueOnce({ linkCifra: `${url}?capo=0&keyShape=1`, tonalidade: "A#m" });
+
+    const result = await criarMusicaNaEscalaAction(null, form({ titulo: "Ser Mudado", artista: "Alessandro Vilas Boas", tonalidade: "C#" }));
+
+    expect(mocks.update).toHaveBeenCalledWith(2, { linkCifra: `${url}?capo=0&keyShape=1`, tonalidade: "A#m" });
+    expect(result).toMatchObject({ success: true, musica: { tonalidade: "A#m", linkCifra: `${url}?capo=0&keyShape=1` } });
   });
 });
 

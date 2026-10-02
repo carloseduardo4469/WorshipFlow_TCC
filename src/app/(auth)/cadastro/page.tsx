@@ -34,7 +34,9 @@ export default function CadastroPage() {
       ? "O Google confirmou sua conta, mas não foi possível criar seu perfil. Tente novamente; se o erro continuar, procure um administrador."
       : erroGoogle === "google-signup"
         ? "Não foi possível concluir o cadastro com o Google. Tente novamente."
-        : null;
+        : erroGoogle === "rate-limit"
+          ? "Muitas tentativas. Aguarde alguns minutos e tente novamente."
+          : null;
 
   return (
     <AuthShell>
