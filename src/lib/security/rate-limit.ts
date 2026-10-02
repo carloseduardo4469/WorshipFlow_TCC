@@ -28,6 +28,7 @@ type Policy = keyof typeof RATE_LIMITS;
 export type RateLimitError = { error: string; retryAfter: number };
 
 const localBuckets = new Map<string, { hits: number; expiresAt: number }>();
+let fallbackWarningLogged = false;
 
 function checkLocalRateLimit(policy: Policy, identity: string): RateLimitError | null {
   const now = Date.now();
@@ -40,9 +41,10 @@ function checkLocalRateLimit(policy: Policy, identity: string): RateLimitError |
     localBuckets.set(key, bucket);
   }
   if (bucket.hits >= limit) {
+    const retryAfter = Math.max(1, Math.ceil((bucket.expiresAt - now) / 1000));
     return {
-      error: `Muitas tentativas. Aguarde ${Math.max(1, Math.ceil((bucket.expiresAt - now) / 1000))} segundos e tente novamente.`,
-      retryAfter: Math.max(1, Math.ceil((bucket.expiresAt - now) / 1000)),
+      error: `Muitas tentativas. Aguarde ${retryAfter} segundos e tente novamente.`,
+      retryAfter,
     };
   }
 
@@ -71,10 +73,11 @@ async function requestIdentity() {
   return `ip:${ip}`;
 }
 
-/** Contagem atômica no banco; falhas nunca liberam uma operação desprotegida. */
+/** Usa o contador compartilhado e recorre a limites locais se a RPC falhar. */
 export async function checkRateLimit(policy: Policy, authId?: string): Promise<RateLimitError | null> {
+  let identity = authId ? `user:${authId}` : null;
   try {
-    const identity = authId ? `user:${authId}` : await requestIdentity();
+    identity ??= await requestIdentity();
     const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!secret) throw new Error("Contador não configurado.");
     const key = createHmac("sha256", secret).update(`${policy}:${identity}`).digest("hex");
@@ -90,11 +93,12 @@ export async function checkRateLimit(policy: Policy, authId?: string): Promise<R
     const retryAfter = Math.max(1, data.retry_after);
     return { error: `Muitas tentativas. Aguarde ${retryAfter} segundos e tente novamente.`, retryAfter };
   } catch {
-    if (policy === "consultar") {
-      return checkLocalRateLimit(policy, authId ? `user:${authId}` : "ip:consulta");
+    if (!fallbackWarningLogged) {
+      fallbackWarningLogged = true;
+      console.warn("[rate-limit] Contador compartilhado indisponível; usando limite local temporário.");
     }
-    // Não registrar IP, email, sessão, chaves nem payloads dos formulários.
-    console.error("[rate-limit] Não foi possível verificar o limite de envios.");
-    return { error: "Não foi possível verificar o limite de envios. Tente novamente em instantes.", retryAfter: 30 };
+    // Sem IP confiável, não use uma chave global que bloqueie todos os visitantes.
+    if (!identity) return null;
+    return checkLocalRateLimit(policy, identity);
   }
 }
