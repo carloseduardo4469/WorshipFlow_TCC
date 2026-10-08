@@ -4,8 +4,11 @@ const BASE = "https://www.cifraclub.com.br";
 const SLUG = /^[a-z0-9][a-z0-9-]*$/;
 
 function decode(value: string) {
-  return value.replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&")
-    .replace(/&#(\d+);/g, (_, code) => { const n = Number(code); return n <= 0x10ffff ? String.fromCodePoint(n) : ""; });
+  return value.replace(/&quot;/g, '"').replace(/&apos;|&rsquo;|&lsquo;/g, "'").replace(/&nbsp;/g, " ")
+    .replace(/&#(x[0-9a-f]+|\d+);/gi, (_, code: string) => {
+      const n = code[0].toLowerCase() === "x" ? parseInt(code.slice(1), 16) : Number(code);
+      return n <= 0x10ffff ? String.fromCodePoint(n) : "";
+    }).replace(/&amp;/g, "&");
 }
 /** Normaliza apresentação, sem aproximação que possa escolher outra música. */
 export function normalizarTituloCifra(value: string) {
@@ -41,7 +44,9 @@ export function conferirPaginaCifra(html: string, url: string, titulo: string, a
     try {
       const parsed = JSON.parse(match[1]);
       const entries = Array.isArray(parsed) ? parsed : parsed?.["@graph"] ?? [parsed];
-      if (Array.isArray(entries)) records.push(...entries.filter((entry) => entry && typeof entry === "object"));
+      if (Array.isArray(entries)) {
+        records.push(...entries.filter((entry) => entry && typeof entry === "object" && !Array.isArray(entry)));
+      }
     } catch { /* Não aceitar metadados quebrados. */ }
   }
   const hasType = (record: Record<string, unknown>, type: string) => [record?.["@type"]].flat().includes(type);
@@ -57,8 +62,8 @@ export function conferirPaginaCifra(html: string, url: string, titulo: string, a
   if (!composition || !recording) return null;
   const canonical = typeof composition.url === "string" ? safeUrl(composition.url) : null;
   if (!canonical || canonical.pathname !== target.pathname) return null;
-  const tom = html.match(/Tom(?:<!--\s*-->)?\s*:\s*<\/span>\s*<button[^>]*>\s*([A-G][#b]?m?)\s*<\/button>/)?.[1]
-    ?? html.replace(/<[^>]+>/g, " ").match(/\bTom:?\s+([A-G][#b]?m?)\b/)?.[1];
+  const tom = html.match(/Tom(?:<!--\s*-->)?\s*:\s*<\/span>\s*<button[^>]*>\s*([A-G][#b♯♭]?m?)\s*<\/button>/)?.[1]
+    ?? html.replace(/<[^>]+>/g, " ").match(/\bTom:?\s+([A-G][#b♯♭]?m?)(?=\s|$)/)?.[1];
   return tom ? { url: canonical.toString(), tom } : null;
 }
 
@@ -116,7 +121,10 @@ export async function resolverCifraValidada({ titulo, artista, tonalidade }: { t
     try {
       const search = new URL("https://solr.sscdn.co/cifraclub-explore/v1/artists/suggest");
       search.searchParams.set("q", artista);
-      const response = await fetch(search, { signal: AbortSignal.any([signal, AbortSignal.timeout(3000)]), cache: "no-store", redirect: "error" });
+      const response = await fetch(search, {
+        signal: AbortSignal.any([signal, AbortSignal.timeout(2000)]),
+        cache: "no-store", redirect: "error",
+      });
       const data = response.ok ? await response.json() : null;
       const artists = Array.isArray(data?.artists) ? data.artists.filter((item: { name?: unknown; slug?: unknown }) =>
         typeof item.name === "string" && typeof item.slug === "string" && SLUG.test(item.slug) && toCifraClubSlug(item.name) === toCifraClubSlug(artista)) : [];

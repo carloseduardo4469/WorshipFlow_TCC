@@ -39,6 +39,7 @@ export function LoginForm() {
   const resetMsg = searchParams.get("reset");
   const authError = searchParams.get("error");
   const oauthError = authError === "google" || authError === "suspended" ? authError : null;
+  const rateLimitError = authError === "rate-limit";
   const verificationError = authError === "verification";
   const callbackError = authError === "callback";
   const approvalError = authError === "approval";
@@ -108,6 +109,11 @@ export function LoginForm() {
           {approvalError && (
             <div className="mb-5">
               <FormAlert>Não foi possível registrar sua solicitação de acesso. Tente novamente.</FormAlert>
+            </div>
+          )}
+          {rateLimitError && (
+            <div className="mb-5">
+              <FormAlert>Muitas tentativas. Aguarde alguns minutos e tente novamente.</FormAlert>
             </div>
           )}
           {oauthError === "suspended" && (

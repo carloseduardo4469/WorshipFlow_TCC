@@ -14,6 +14,7 @@ import {
   validatePersonName,
   validatePhone,
 } from "@/lib/validation/forms";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export type ActionState = { error?: string; success?: boolean } | null;
 
@@ -56,7 +57,9 @@ async function uploadProfilePhoto(userId: string, file: File) {
 
 /** Registra a última atividade do usuário logado (heartbeat de presença). */
 export async function registrarAtividade(): Promise<void> {
-  const { profile } = await requireAuth();
+  const { authId, profile } = await requireAuth();
+  const rateLimit = await checkRateLimit("presenca", authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const repos = await getRepositories();
   await repos.usuarios.update(profile.id, {
     ultimaAtividade: new Date().toISOString(),
@@ -66,12 +69,14 @@ export async function registrarAtividade(): Promise<void> {
 /** Lista os usuários com presença fresca (sem cache) para a equipe. */
 export async function listarUsuariosComPresenca(): Promise<Array<Pick<Usuario, "id" | "ultimaAtividade">>> {
   const current = await requireAuth();
+  const rateLimit = await checkRateLimit("consultar", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const repos = await getRepositories();
   const usuarios = await repos.usuarios.list();
   
-  // Contas DEV só são visíveis para admins
+  // Contas DEV só são visíveis para admins e devs (devs têm privilégios equivalentes)
   const filtrados = usuarios.filter(
-    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN"
+    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN" || current.profile.perfil === "DEV"
   );
   
   return filtrados.map(({ id, ultimaAtividade }) => ({ id, ultimaAtividade }));
@@ -80,28 +85,32 @@ export async function listarUsuariosComPresenca(): Promise<Array<Pick<Usuario, "
 /** Busca uma página de usuários para seletores roláveis, sem carregar a tabela inteira. */
 export async function buscarUsuarios(offset: number, limit: number): Promise<Usuario[]> {
   const current = await requireAuth();
+  const rateLimit = await checkRateLimit("consultar", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const offsetSeguro = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
   const limiteSeguro = Number.isFinite(limit) ? Math.min(100, Math.max(1, Math.floor(limit))) : 20;
   const repos = await getRepositories();
   const usuarios = await repos.usuarios.search({ offset: offsetSeguro, limit: limiteSeguro });
   
-  // Contas DEV só são visíveis para admins
+  // Contas DEV só são visíveis para admins e devs (devs têm privilégios equivalentes)
   return usuarios.filter(
-    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN"
+    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN" || current.profile.perfil === "DEV"
   );
 }
 
 export async function buscarUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
   const current = await requireAuth();
+  const rateLimit = await checkRateLimit("consultar", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const idsLimpos = [...new Set(Array.isArray(ids) ? ids.map(String).filter(Boolean) : [])]
     .slice(0, FORM_LIMITS.selecoes);
   if (idsLimpos.length === 0) return [];
   const repos = await getRepositories();
   const usuarios = await repos.usuarios.getByIds(idsLimpos);
   
-  // Contas DEV só são visíveis para admins
+  // Contas DEV só são visíveis para admins e devs (devs têm privilégios equivalentes)
   return usuarios.filter(
-    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN"
+    (u) => u.perfil !== "DEV" || current.profile.perfil === "ADMIN" || current.profile.perfil === "DEV"
   );
 }
 
@@ -109,7 +118,9 @@ export async function atualizarPerfilAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const { profile } = await requireAuth();
+  const { authId, profile } = await requireAuth();
+  const rateLimit = await checkRateLimit("perfil", authId);
+  if (rateLimit) return { error: rateLimit.error };
 
   const nomeRaw = String(formData.get("nome") ?? "");
   const nome = normalizePersonName(nomeRaw).trim();
@@ -184,13 +195,15 @@ export async function atualizarUsuarioAdminAction(
   formData: FormData
 ): Promise<ActionState> {
   const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("administrarUsuarios", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
 
   const id = String(formData.get("id"));
   const perfil = String(formData.get("perfil")) as PerfilUsuario;
   const isSuspended = formData.get("isSuspended") === "true";
 
   if (!id) return { error: "Usuário inválido." };
-  if (!(["MEMBRO", "ADMIN"] as string[]).includes(perfil)) return { error: "Perfil inválido." };
+  if (!(["MEMBRO", "ADMIN", "DEV"] as string[]).includes(perfil)) return { error: "Perfil inválido." };
 
   const repos = await getRepositories();
   if (id === current.authId && isSuspended) {
@@ -222,7 +235,9 @@ export async function aprovarSolicitacaoCadastroAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("administrarUsuarios", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const id = String(formData.get("id") ?? "").trim();
   if (!UUID_PATTERN.test(id)) return { error: "Solicitação inválida." };
 
@@ -256,6 +271,8 @@ export async function negarSolicitacaoCadastroAction(
   formData: FormData
 ): Promise<ActionState> {
   const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("administrarUsuarios", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const id = String(formData.get("id") ?? "").trim();
   if (!UUID_PATTERN.test(id) || id === current.authId) {
     return { error: "Solicitação inválida." };
@@ -303,8 +320,8 @@ export async function removerUsuarioAdminAction(
     const usuario = await repos.usuarios.getById(id);
 
     if (!usuario) return { error: "Usuário não encontrado." };
-    if (usuario.perfil === "ADMIN") {
-      return { error: "Administradores não podem ser removidos por esta tela." };
+    if (usuario.perfil === "ADMIN" || usuario.perfil === "DEV") {
+      return { error: "Administradores e contas Dev não podem ser removidos por esta tela." };
     }
 
     if (repos.backend === "supabase") {
@@ -338,6 +355,8 @@ export async function excluirMinhaContaAction(
   formData: FormData
 ): Promise<ActionState> {
   const { authId } = await requireAuth();
+  const rateLimit = await checkRateLimit("excluirConta", authId);
+  if (rateLimit) return { error: rateLimit.error };
   const confirmacao = String(formData.get("confirmacao") ?? "").trim();
 
   if (confirmacao.length > FORM_LIMITS.confirmacaoExclusao) {

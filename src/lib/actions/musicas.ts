@@ -7,11 +7,12 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { aplicarTonalidadeAoLinkCifra } from "@/lib/music/cifraclub";
+import { aplicarTonalidadeAoLinkCifra, extrairUrlCifraClub } from "@/lib/music/cifraclub";
 import { resolverCifraValidada } from "@/lib/music/resolver-cifra";
-import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
+import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida, normalizarTom } from "@/lib/music/tonalidades";
 import type { Musica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export type ActionState = { error?: string; success?: boolean; musica?: Musica } | null;
 
@@ -24,7 +25,9 @@ export type BuscarMusicasInput = {
 
 /** Busca paginada de músicas para listas e seletores com rolagem infinita. */
 export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]> {
-  await requireAuth();
+  const current = await requireAuth();
+  const rateLimit = await checkRateLimit("consultar", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const busca = String(input?.busca ?? "").trim();
   if (busca.length > FORM_LIMITS.busca) throw new Error("Busca muito longa.");
   const offset = Number.isFinite(input?.offset) ? Math.max(0, Math.floor(input.offset)) : 0;
@@ -43,7 +46,9 @@ export async function buscarMusicas(input: BuscarMusicasInput): Promise<Musica[]
 
 /** Retorna as músicas já vinculadas (ids) para exibir como chips no seletor. */
 export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
-  await requireAuth();
+  const current = await requireAuth();
+  const rateLimit = await checkRateLimit("consultar", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const idsLimpos = [...new Set(Array.isArray(ids) ? ids : [])]
     .filter((id) => Number.isInteger(id) && id > 0)
     .slice(0, FORM_LIMITS.selecoes);
@@ -55,7 +60,8 @@ export async function buscarMusicasPorIds(ids: number[]): Promise<Musica[]> {
 async function readMusicaForm(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const artista = String(formData.get("artista") ?? "").trim();
-  const tonalidade = String(formData.get("tonalidade") ?? "").trim();
+  const tomInformado = String(formData.get("tonalidade") ?? "").trim();
+  const tonalidade = normalizarTom(tomInformado) ?? tomInformado;
 
   const cifra = titulo && artista && isTonalidadeValida(tonalidade)
     ? await resolverCifraValidada({ titulo, artista, tonalidade }).catch((error: unknown) => {
@@ -63,6 +69,15 @@ async function readMusicaForm(formData: FormData) {
         return null;
       }) : null;
   return { titulo, artista: artista || null, tonalidade: cifra?.tonalidade ?? (tonalidade || null), linkCifra: cifra?.linkCifra ?? null };
+}
+
+function cifraTemTomAplicado(musica: Pick<Musica, "linkCifra">) {
+  if (!musica.linkCifra) return false;
+  try {
+    return new URL(extrairUrlCifraClub(musica.linkCifra)).searchParams.has("keyShape");
+  } catch {
+    return false;
+  }
 }
 
 async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaForm>>): Promise<Musica> {
@@ -100,26 +115,27 @@ async function criarMusicaAutorizada(data: Awaited<ReturnType<typeof readMusicaF
 function agendarCifraComTomOriginal(musica: Musica) {
   after(async () => {
     try {
-      if (musica.linkCifra || !musica.artista || !musica.tonalidade) return;
+      // Links sem keyShape ainda precisam de uma tentativa para detectar o modo.
+      if (cifraTemTomAplicado(musica) || !musica.artista) return;
       const cifra = await resolverCifraValidada({ titulo: musica.titulo, artista: musica.artista, tonalidade: musica.tonalidade });
       if (!cifra) return;
       const { linkCifra, tonalidade } = cifra;
+      console.debug("agendarCifraComTomOriginal: encontrada cifra para", musica.id, { linkCifra, tonalidade });
       const repos = await getRepositories();
       if (repos.backend === "supabase") {
         const admin = createAdminClient();
-        const query = admin
+        let query = admin
           .from("musicas")
           .update({ link_cifra: linkCifra, tonalidade })
-          .eq("id", musica.id)
-          .eq("titulo", musica.titulo)
-          .eq("artista", musica.artista)
-          .eq("tonalidade", musica.tonalidade)
-          .is("link_cifra", null);
+          .eq("id", musica.id);
+        query = musica.linkCifra === null
+          ? query.is("link_cifra", null)
+          : query.eq("link_cifra", musica.linkCifra);
         const { error } = await query;
         if (error) throw error;
       } else {
         const atual = await repos.musicas.getById(musica.id);
-        if (atual && !atual.linkCifra && atual.titulo === musica.titulo && atual.artista === musica.artista && atual.tonalidade === musica.tonalidade) await repos.musicas.update(musica.id, { linkCifra, tonalidade });
+        if (atual && atual.linkCifra === musica.linkCifra && atual.titulo === musica.titulo && atual.artista === musica.artista && atual.tonalidade === musica.tonalidade) await repos.musicas.update(musica.id, { linkCifra, tonalidade });
       }
       invalidateDataCache("musicas");
       revalidatePath("/dashboard");
@@ -130,12 +146,67 @@ function agendarCifraComTomOriginal(musica: Musica) {
   });
 }
 
+/**
+ * Aguarda uma recuperação curta e devolve o registro atualizado à interface.
+ * Se o prazo terminar, `agendarCifraComTomOriginal` fará uma tentativa posterior.
+ */
+async function tentarResolverCifraAgora(musica: Musica, timeoutMs = 5000) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    if (cifraTemTomAplicado(musica) || !musica.artista) return;
+    const tentativa = resolverCifraValidada({ titulo: musica.titulo, artista: musica.artista, tonalidade: musica.tonalidade });
+    const resultado = await Promise.race([
+      tentativa,
+      new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), timeoutMs); }),
+    ]);
+    if (!resultado) return;
+    const { linkCifra, tonalidade } = resultado;
+    const repos = await getRepositories();
+    let atualizada: Musica | null;
+    if (repos.backend === "supabase") {
+      const admin = createAdminClient();
+      let query = admin
+        .from("musicas")
+        .update({ link_cifra: linkCifra, tonalidade })
+        .eq("id", musica.id)
+        .eq("titulo", musica.titulo)
+        .eq("artista", musica.artista);
+      query = musica.linkCifra === null
+        ? query.is("link_cifra", null)
+        : query.eq("link_cifra", musica.linkCifra);
+      query = musica.tonalidade === null
+        ? query.is("tonalidade", null)
+        : query.eq("tonalidade", musica.tonalidade);
+      const { error } = await query;
+      if (error) throw error;
+      atualizada = await repos.musicas.getById(musica.id);
+    } else {
+      const atual = await repos.musicas.getById(musica.id);
+      if (atual && atual.linkCifra === musica.linkCifra && atual.titulo === musica.titulo && atual.artista === musica.artista && atual.tonalidade === musica.tonalidade) {
+        atualizada = await repos.musicas.update(musica.id, { linkCifra, tonalidade });
+      } else {
+        return atual;
+      }
+    }
+    invalidateDataCache("musicas");
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/musicas");
+    return atualizada;
+  } catch (error) {
+    console.debug("tentarResolverCifraAgora: falha ou timeout", musica.id, error);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 /** Cria uma música sem redirecionar, para uso dentro do modal de uma escala. */
 export async function criarMusicaNaEscalaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAuth();
+  const current = await requireAuth();
+  const rateLimit = await checkRateLimit("musicas", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
@@ -153,6 +224,8 @@ export async function criarMusicaNaEscalaAction(
     console.error("Falha ao cadastrar música na escala:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
+  // Tenta resolver rapidamente e agenda uma tentativa posterior caso falhe.
+  musica = await tentarResolverCifraAgora(musica, 2500) ?? musica;
   agendarCifraComTomOriginal(musica);
   invalidateDataCache("musicas");
   revalidatePath("/dashboard/musicas");
@@ -161,7 +234,9 @@ export async function criarMusicaNaEscalaAction(
 }
 
 export async function criarMusicaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAuth();
+  const current = await requireAuth();
+  const rateLimit = await checkRateLimit("musicas", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
   if (tituloError) return { error: tituloError };
   const artistaError = validateMaxLength(String(formData.get("artista") ?? "").trim(), FORM_LIMITS.artista, "Artista");
@@ -178,6 +253,8 @@ export async function criarMusicaAction(_prev: ActionState, formData: FormData):
     console.error("Falha ao cadastrar música:", error);
     return { error: "Não foi possível salvar a música. Tente novamente." };
   }
+  // Tenta resolver rapidamente e agenda uma tentativa posterior caso falhe.
+  musica = await tentarResolverCifraAgora(musica, 2500) ?? musica;
   agendarCifraComTomOriginal(musica);
 
   invalidateDataCache("musicas");
@@ -193,7 +270,9 @@ export async function atualizarMusicaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAuth();
+  const current = await requireAuth();
+  const rateLimit = await checkRateLimit("musicas", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) return { error: "Música inválida." };
   const tituloError = validateMaxLength(String(formData.get("titulo") ?? "").trim(), FORM_LIMITS.musicaTitulo, "Título");
@@ -245,7 +324,9 @@ export async function atualizarMusicaAction(
 }
 
 export async function removerMusicaAction(formData: FormData) {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("excluir", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) throw new Error("Música inválida.");
 

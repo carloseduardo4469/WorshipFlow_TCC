@@ -6,9 +6,10 @@ import { requireAdmin, requireAuth } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { salvarEscalaNotificando } from "@/lib/notifications/schedules";
-import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida } from "@/lib/music/tonalidades";
+import { TONALIDADE_INVALIDA_MESSAGE, isTonalidadeValida, normalizarTom } from "@/lib/music/tonalidades";
 import type { FuncaoUsuario, TonalidadeMusica } from "@/types/domain";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export type ActionState = { error?: string; success?: boolean } | null;
 
@@ -61,7 +62,7 @@ function readEscalaForm(formData: FormData) {
   const tonalidadesMusicas: TonalidadeMusica[] = musicaIds
     .map((musicaId) => ({
       musicaId,
-      tonalidade: String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
+      tonalidade: normalizarTom(String(formData.get(`tonalidade_${musicaId}`) ?? "")) ?? String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
     }))
     .filter((t) => t.tonalidade);
 
@@ -111,7 +112,9 @@ async function validarVinculos(
 }
 
 export async function criarEscalaAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("escalas", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const data = readEscalaForm(formData);
   const escalaError = validarEscala(data);
   if (escalaError) return { error: escalaError };
@@ -139,7 +142,9 @@ export async function atualizarEscalaAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("escalas", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) return { error: "Escala inválida." };
   const data = readEscalaForm(formData);
@@ -169,7 +174,9 @@ export async function atualizarEscalaAction(
 }
 
 export async function removerEscalaAction(formData: FormData) {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("escalas", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) throw new Error("Escala inválida.");
 
@@ -190,6 +197,8 @@ export async function adicionarMusicasNaEscalaAction(
   formData: FormData
 ): Promise<ActionState> {
   const current = await requireAuth();
+  const rateLimit = await checkRateLimit("escalas", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const escalaId = Number(formData.get("escalaId"));
   if (!Number.isInteger(escalaId) || escalaId <= 0) return { error: "Escala inválida." };
 
@@ -202,7 +211,7 @@ export async function adicionarMusicasNaEscalaAction(
   }
   const tonalidadesMusicas: TonalidadeMusica[] = musicaIds.map((musicaId) => ({
     musicaId,
-    tonalidade: String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
+    tonalidade: normalizarTom(String(formData.get(`tonalidade_${musicaId}`) ?? "")) ?? String(formData.get(`tonalidade_${musicaId}`) ?? "").trim(),
   }));
   if (tonalidadesMusicas.some(({ tonalidade }) => !isTonalidadeValida(tonalidade))) {
     return { error: "Escolha um tom maior para cada música selecionada." };
@@ -216,7 +225,7 @@ export async function adicionarMusicasNaEscalaAction(
     ({ usuarioId, funcao }) =>
       usuarioId === current.authId && funcao.split(",").includes("voz-principal")
   );
-  if (!cantorPrincipal && current.profile.perfil !== "ADMIN") {
+  if (!cantorPrincipal && current.profile.perfil !== "ADMIN" && current.profile.perfil !== "DEV") {
     return { error: "Somente o cantor principal desta escala pode adicionar músicas." };
   }
 

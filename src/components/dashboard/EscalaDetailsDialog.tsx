@@ -6,6 +6,7 @@ import { buscarMusicasPorIds } from "@/lib/actions/musicas";
 import { useDialogA11y } from "@/components/ui/useDialogA11y";
 import { normalizarEscala } from "@/lib/escalas/normalize";
 import { aplicarTonalidadeAoLinkCifra } from "@/lib/music/cifraclub";
+import { normalizarTom } from "@/lib/music/tonalidades";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { Escala, Musica, Usuario } from "@/types/domain";
 
@@ -162,7 +163,8 @@ export function EscalaDetailsDialog({
           ) : (
             <ol className="db-schedule-song-list mt-3 space-y-2">
               {musicas.map((musica, index) => {
-                const tonalidadeDaEscala = tonsPorMusica.get(musica.id) ?? musica.tonalidade;
+                const tomSalvo = tonsPorMusica.get(musica.id) ?? musica.tonalidade;
+                const tonalidadeDaEscala = tomSalvo === "Indefinido" ? tomSalvo : normalizarTom(tomSalvo ?? "");
                 const cifraNoTomDaEscala = aplicarTonalidadeAoLinkCifra({
                   linkCifra: musica.linkCifra,
                   tonalidadeOriginal: musica.tonalidade,

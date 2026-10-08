@@ -40,6 +40,8 @@ export function UsuarioRow({ usuario }: { usuario: Usuario }) {
         >
           <option value="MEMBRO">Membro</option>
           <option value="ADMIN">Admin</option>
+          {/** DEV só é mostrado para admins; o servidor também valida. */}
+          {usuario.perfil === "DEV" && <option value="DEV">Dev</option>}
         </Select>
 
         <label className={`relative flex w-[116px] shrink-0 cursor-pointer items-center gap-2 text-xs font-bold transition-colors ${isSuspended ? "text-orange-300" : "text-emerald-300"}`}>
@@ -71,7 +73,7 @@ export function UsuarioRow({ usuario }: { usuario: Usuario }) {
           {pending ? "..." : "Salvar"}
         </button>
 
-        {usuario.perfil !== "ADMIN" && (
+        {usuario.perfil !== "ADMIN" && usuario.perfil !== "DEV" && (
           <button
             type="button"
             disabled={pending || deletePending}

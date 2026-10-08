@@ -8,7 +8,7 @@ const TAMANHO_PAGINA = 25;
 
 export default async function MusicasPage() {
   const { profile } = await requireAuth();
-  const isAdmin = profile.perfil === "ADMIN";
+  const isAdmin = profile.perfil === "ADMIN" || profile.perfil === "DEV";
   const repos = await getRepositories();
   const resultadoInicial = await firstMusicasPageCached(
     repos,

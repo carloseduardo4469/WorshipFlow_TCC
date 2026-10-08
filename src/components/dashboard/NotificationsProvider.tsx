@@ -11,12 +11,8 @@ import type { NotificationItem } from "@/lib/notifications/events";
 import logo from "@/app/icon.webp";
 
 const NotificationContext = createContext({ unread: 0, open: () => {} });
-export function NotificationBell() {
-  const { unread, open } = useContext(NotificationContext);
-  return <button type="button" onClick={open} className="db-icon-button wf-notification-bell" aria-label={`Notificações${unread ? `, ${unread} não lidas` : ""}`} aria-haspopup="dialog">
-    <Bell size={19} />{unread > 0 && <span className="wf-notification-count" aria-hidden>{unread > 9 ? "9+" : unread}</span>}
-  </button>;
-}
+// NotificationBell intentionally hidden — no UI export.
+export function NotificationBell() { return null; }
 
 type PushSupport = "checking" | "supported" | "install" | "unsupported";
 function subscribeBrowserStatus(callback: () => void) {

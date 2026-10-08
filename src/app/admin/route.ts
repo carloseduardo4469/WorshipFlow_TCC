@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  if (currentUser.profile.perfil !== "ADMIN") {
+  if (currentUser.profile.perfil !== "ADMIN" && currentUser.profile.perfil !== "DEV") {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
   }
 

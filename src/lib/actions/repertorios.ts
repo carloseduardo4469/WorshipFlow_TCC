@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { getRepositories } from "@/lib/db/repositories";
 import { invalidateDataCache } from "@/lib/db/cache";
 import { FORM_LIMITS, validateMaxLength } from "@/lib/validation/forms";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export type ActionState = { error?: string } | null;
 
@@ -33,7 +34,9 @@ export async function criarRepertorioAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("repertorios", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const nome = String(formData.get("nome") ?? "").trim();
   const descricao = String(formData.get("descricao") ?? "").trim();
   const musicaIds = readMusicaIds(formData);
@@ -67,7 +70,9 @@ export async function atualizarRepertorioAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("repertorios", current.authId);
+  if (rateLimit) return { error: rateLimit.error };
   const id = Number(formData.get("id"));
   const nome = String(formData.get("nome") ?? "").trim();
   const descricao = String(formData.get("descricao") ?? "").trim();
@@ -106,7 +111,9 @@ export async function atualizarRepertorioAction(
 }
 
 export async function removerRepertorioAction(formData: FormData) {
-  await requireAdmin();
+  const current = await requireAdmin();
+  const rateLimit = await checkRateLimit("repertorios", current.authId);
+  if (rateLimit) throw new Error(rateLimit.error);
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) throw new Error("Repertório inválido.");
 

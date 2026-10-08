@@ -69,6 +69,10 @@ export function MusicaForm({
       <Input label="Título" name="titulo" defaultValue={musica?.titulo} maxLength={FORM_LIMITS.musicaTitulo} required />
       <Input label="Artista" name="artista" defaultValue={musica?.artista ?? ""} maxLength={FORM_LIMITS.artista} required />
 
+          <div className="db-panel bg-[#07101e]/60 p-3 text-sm text-muted">
+            <strong className="db-label">Aviso:</strong> O link da cifra só será gerado corretamente se o <em>Título</em> e o <em>Artista</em> estiverem escritos exatamente como no CifraClub. Ex.: <span className="font-semibold">Pisaduras - Rodolfo Abrantes</span>.
+          </div>
+
       <div className="flex w-full flex-col gap-2 sm:w-48">
         <label htmlFor="tonalidade" className="db-label">
           Tonalidade
