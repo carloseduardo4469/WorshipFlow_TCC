@@ -73,14 +73,14 @@ describe("links de cifra", () => {
     expect(resultado?.tonalidade).toBe("C");
   });
 
-  it("usa o deslocamento próprio da página e a relativa menor", () => {
+  it("corrige o keyShape importado usando a nota da relativa menor", () => {
     const resultado = aplicarTonalidadeAoLinkCifra({
       linkCifra: "https://www.cifraclub.com.br/gabriela-rocha/a-ele-a-gloria/?capo=0&keyShape=7",
       tonalidadeOriginal: "Ebm",
       tonalidadeSelecionada: "G",
     });
 
-    expect(new URL(resultado!.linkCifra).searchParams.get("keyShape")).toBe("8");
+    expect(new URL(resultado!.linkCifra).searchParams.get("keyShape")).toBe("7");
     expect(resultado?.tonalidade).toBe("Em");
   });
 

@@ -23,23 +23,36 @@ function safeUrl(value: string): URL | null {
 }
 type ConfirmedPage = { url: string; tom: string };
 
+function correspondeAoTitulo(name: string, titulo: string, artistSlug: string, pathname: string) {
+  if (normalizarTituloCifra(name) === normalizarTituloCifra(titulo)) return true;
+  // Somente equivalências explícitas do catálogo interno; nunca similaridade livre.
+  const route = (title: string) => {
+    const link = gerarLinkCifraClub({ titulo: title, artista: artistSlug, tonalidade: null });
+    return link ? new URL(link).pathname : null;
+  };
+  return route(name) === pathname && route(titulo) === pathname;
+}
+
 export function conferirPaginaCifra(html: string, url: string, titulo: string, artistSlug: string): ConfirmedPage | null {
   const target = safeUrl(url);
-  if (!target || target.pathname.split("/")[1] !== artistSlug) return null;
+  if (!target || !SLUG.test(artistSlug) || !new RegExp(`^/${artistSlug}/[a-z0-9-]+/$`).test(target.pathname)) return null;
   const records: Array<Record<string, unknown>> = [];
   for (const match of html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
     try {
       const parsed = JSON.parse(match[1]);
-      records.push(...(Array.isArray(parsed) ? parsed : parsed["@graph"] ?? [parsed]));
+      const entries = Array.isArray(parsed) ? parsed : parsed?.["@graph"] ?? [parsed];
+      if (Array.isArray(entries)) records.push(...entries.filter((entry) => entry && typeof entry === "object"));
     } catch { /* Não aceitar metadados quebrados. */ }
   }
   const hasType = (record: Record<string, unknown>, type: string) => [record?.["@type"]].flat().includes(type);
   const composition = records.find((record) => hasType(record, "MusicComposition") && typeof record.name === "string"
-    && normalizarTituloCifra(record.name) === normalizarTituloCifra(titulo));
+    && correspondeAoTitulo(record.name, titulo, artistSlug, target.pathname));
   const recording = records.find((record) => {
     if (!hasType(record, "MusicRecording") || !record.byArtist || typeof record.byArtist !== "object") return false;
-    const artist = record.byArtist as { url?: string };
-    return typeof artist.url === "string" && safeUrl(artist.url)?.pathname.replace(/\/$/, "") === `/${artistSlug}`;
+    if (typeof record.url === "string" && safeUrl(record.url)?.pathname !== target.pathname) return false;
+    const artists = Array.isArray(record.byArtist) ? record.byArtist : [record.byArtist];
+    return artists.some((artist) => artist && typeof artist.url === "string"
+      && safeUrl(artist.url)?.pathname.replace(/\/$/, "") === `/${artistSlug}`);
   });
   if (!composition || !recording) return null;
   const canonical = typeof composition.url === "string" ? safeUrl(composition.url) : null;
@@ -55,19 +68,28 @@ export async function resolverCifraValidada({ titulo, artista, tonalidade }: { t
   const signal = AbortSignal.timeout(12000);
   const visited = new Set<string>();
   let requests = 0;
-  async function read(url: URL, redirects = 0): Promise<{ html: string; url: string } | null> {
-    if (!safeUrl(url.toString()) || requests++ >= 8 || signal.aborted || redirects > 2) return null;
+  async function read(url: URL, redirects = 0, retry = true): Promise<{ html: string; url: string } | null> {
+    if (!safeUrl(url.toString()) || requests >= 12 || signal.aborted || redirects > 2) return null;
+    requests++;
     try {
-      const response = await fetch(url, { signal, cache: "no-store", redirect: "manual" });
-      if ([301, 302, 307, 308].includes(response.status)) {
+      const response = await fetch(url, {
+        signal: AbortSignal.any([signal, AbortSignal.timeout(3000)]),
+        cache: "no-store", redirect: "manual",
+      });
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
         const location = response.headers.get("location");
         const next = location ? safeUrl(new URL(location, url).toString()) : null;
-        return next ? read(next, redirects + 1) : null;
+        await response.body?.cancel();
+        return next ? read(next, redirects + 1, retry) : null;
       }
-      if (!response.ok) return null;
+      if (!response.ok) {
+        await response.body?.cancel();
+        return retry && [408, 500, 502, 503, 504].includes(response.status)
+          ? read(url, redirects, false) : null;
+      }
       const html = await response.text();
       return html.length <= 2_000_000 ? { html, url: url.toString() } : null;
-    } catch { return null; }
+    } catch { return retry && !signal.aborted ? read(url, redirects, false) : null; }
   }
   const known = gerarLinkCifraClub({ titulo, artista, tonalidade: null });
   let artistSlug = known ? new URL(known).pathname.split("/")[1] : toCifraClubSlug(artista);
@@ -90,11 +112,11 @@ export async function resolverCifraValidada({ titulo, artista, tonalidade }: { t
     if (found) return found;
   }
   // Descoberta pública usada pelo próprio Cifra Club. Não aceitar o primeiro resultado por aproximação.
-  if (!known && !signal.aborted) {
+  if (!signal.aborted) {
     try {
       const search = new URL("https://solr.sscdn.co/cifraclub-explore/v1/artists/suggest");
       search.searchParams.set("q", artista);
-      const response = await fetch(search, { signal, cache: "no-store", redirect: "error" });
+      const response = await fetch(search, { signal: AbortSignal.any([signal, AbortSignal.timeout(3000)]), cache: "no-store", redirect: "error" });
       const data = response.ok ? await response.json() : null;
       const artists = Array.isArray(data?.artists) ? data.artists.filter((item: { name?: unknown; slug?: unknown }) =>
         typeof item.name === "string" && typeof item.slug === "string" && SLUG.test(item.slug) && toCifraClubSlug(item.name) === toCifraClubSlug(artista)) : [];
@@ -115,7 +137,7 @@ export async function resolverCifraValidada({ titulo, artista, tonalidade }: { t
       const url = safeUrl(match[1]);
       if (!url || !new RegExp(`^/${artistSlug}/[a-z0-9-]+/$`).test(url.pathname)) continue;
       const label = match[2].match(/<p[^>]*class=["'][^"']*primaryLabel[^"']*["'][^>]*>([\s\S]*?)<\/p>/)?.[1] ?? match[2];
-      if (normalizarTituloCifra(label.replace(/<[^>]+>/g, "").trim()) === normalizarTituloCifra(titulo)) candidates.add(url.toString());
+      if (correspondeAoTitulo(label.replace(/<[^>]+>/g, "").trim(), titulo, artistSlug, url.pathname)) candidates.add(url.toString());
     }
     // Resultados ambíguos ficam sem link em vez de escolher uma gravação aleatória.
     if (candidates.size === 1) return confirm(new URL([...candidates][0]));

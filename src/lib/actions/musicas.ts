@@ -58,7 +58,10 @@ async function readMusicaForm(formData: FormData) {
   const tonalidade = String(formData.get("tonalidade") ?? "").trim();
 
   const cifra = titulo && artista && isTonalidadeValida(tonalidade)
-    ? await resolverCifraValidada({ titulo, artista, tonalidade }) : null;
+    ? await resolverCifraValidada({ titulo, artista, tonalidade }).catch((error: unknown) => {
+        console.error("Falha na consulta externa da cifra; cadastro preservado:", error);
+        return null;
+      }) : null;
   return { titulo, artista: artista || null, tonalidade: cifra?.tonalidade ?? (tonalidade || null), linkCifra: cifra?.linkCifra ?? null };
 }
 

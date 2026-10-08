@@ -294,9 +294,8 @@ function targetKeyForSong(originalKey: string, selectedKey: string) {
 }
 
 /**
- * Troca o tom sem recriar o caminho da cifra. O keyShape do Cifra Club tem um
- * deslocamento próprio em cada página; por isso o cálculo parte do keyShape já
- * validado e salvo, em vez de assumir que ele é absoluto.
+ * Troca o tom sem recriar o caminho da cifra. O keyShape segue o mapeamento
+ * da nota selecionada, corrigindo também parâmetros antigos de links importados.
  */
 export function aplicarTonalidadeAoLinkCifra({
   linkCifra,

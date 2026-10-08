@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  resolve: vi.fn(), getById: vi.fn(), update: vi.fn(), invalidate: vi.fn(),
+  resolve: vi.fn(), getById: vi.fn(), update: vi.fn(), create: vi.fn(), invalidate: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -11,8 +11,8 @@ vi.mock("@/lib/auth/session", () => ({ requireAuth: vi.fn(), requireAdmin: vi.fn
 vi.mock("@/lib/db/cache", () => ({ invalidateDataCache: mocks.invalidate }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
 vi.mock("@/lib/music/resolver-cifra", () => ({ resolverCifraValidada: mocks.resolve }));
-vi.mock("@/lib/db/repositories", () => ({ getRepositories: async () => ({ backend: "local", musicas: { getById: mocks.getById, update: mocks.update } }) }));
-import { atualizarMusicaAction } from "./musicas";
+vi.mock("@/lib/db/repositories", () => ({ getRepositories: async () => ({ backend: "local", musicas: { getById: mocks.getById, update: mocks.update, create: mocks.create } }) }));
+import { atualizarMusicaAction, criarMusicaAction, criarMusicaNaEscalaAction } from "./musicas";
 
 const original = { id: 1, titulo: "Minha Canção", artista: "Artista", tonalidade: "G", linkCifra: null, createdAt: "" };
 const link = "https://www.cifraclub.com.br/artista/minha-cancao/?capo=0&keyShape=10";
@@ -26,7 +26,28 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.getById.mockResolvedValue(original);
   mocks.update.mockImplementation(async (id, data) => ({ ...original, ...data, id }));
+  mocks.create.mockImplementation(async (data) => ({ ...original, ...data }));
   mocks.resolve.mockResolvedValue({ linkCifra: link, tonalidade: "G" });
+});
+
+describe("cadastro independente da disponibilidade de cifras", () => {
+  it.each([criarMusicaAction, criarMusicaNaEscalaAction])("salva e retorna a música mesmo quando a consulta lança erro", async (action) => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      mocks.resolve.mockRejectedValueOnce(new Error("Serviço externo indisponível"));
+      expect(await action(null, form())).toMatchObject({ success: true, musica: { titulo: original.titulo, linkCifra: null } });
+      expect(mocks.create).toHaveBeenCalledOnce();
+      expect(mocks.invalidate).toHaveBeenCalledWith("musicas");
+    } finally { log.mockRestore(); }
+  });
+  it("não informa sucesso se o banco falhar", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      mocks.create.mockRejectedValueOnce(new Error("Banco indisponível"));
+      expect(await criarMusicaAction(null, form())).toMatchObject({ error: expect.any(String) });
+      expect(mocks.invalidate).not.toHaveBeenCalled();
+    } finally { log.mockRestore(); }
+  });
 });
 
 describe("nova busca de cifra na edição", () => {

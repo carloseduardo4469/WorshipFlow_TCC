@@ -20,6 +20,39 @@ function mockPages(pages: Record<string, string>) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("resolução geral de cifras", () => {
+  it("reconhece um título alternativo conhecido e confirmado pela página", async () => {
+    const path = "e-tudo-sobre-voce-ser-mudado-medley";
+    mockPages({ [`${base}/ministerio-morada/${path}/`]: page("É Tudo Sobre Você / Ser Mudado", "ministerio-morada", path) });
+    expect(await resolverCifraValidada({ titulo: "É Tudo Sobre Você", artista: "Morada", tonalidade: "C" }))
+      .toEqual({ tonalidade: "C", linkCifra: `${base}/ministerio-morada/${path}/?capo=0&keyShape=3` });
+  });
+  it("não aceita outro título somente porque a URL é conhecida", () => {
+    const path = "e-tudo-sobre-voce-ser-mudado-medley";
+    expect(conferirPaginaCifra(page("Outra Música", "ministerio-morada", path),
+      `${base}/ministerio-morada/${path}/`, "É Tudo Sobre Você", "ministerio-morada")).toBeNull();
+  });
+  it.each([503, 502, "network"])("recupera uma falha temporária: %s", async (failure) => {
+    const mock = mockPages({ [`${base}/artista-teste/minha-cancao/`]: page("Minha Canção", "artista-teste", "minha-cancao") });
+    if (failure === "network") mock.mockRejectedValueOnce(new TypeError("fetch failed"));
+    else mock.mockResolvedValueOnce(new Response(null, { status: Number(failure) }));
+    expect(await resolverCifraValidada({ titulo: "Minha Canção", artista: "Artista Teste", tonalidade: "G" })).not.toBeNull();
+    expect(mock).toHaveBeenCalledTimes(2);
+  });
+  it("limita as tentativas quando o serviço está indisponível", async () => {
+    const mock = vi.fn(async () => new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", mock);
+    expect(await resolverCifraValidada({ titulo: "Minha Canção", artista: "Artista Teste", tonalidade: "G" })).toBeNull();
+    expect(mock.mock.calls.length).toBeLessThanOrEqual(13);
+  });
+  it("aceita a lista de artistas nos metadados e ignora entradas nulas", () => {
+    const url = `${base}/artista-teste/minha-cancao/`;
+    const html = `<script type="application/ld+json">${JSON.stringify({ "@graph": [null,
+      { "@type": "MusicComposition", name: "Minha Canção", url },
+      { "@type": "MusicRecording", url, byArtist: [{ url: `${base}/artista-teste/` }] },
+    ] })}</script>Tom: A`;
+    expect(conferirPaginaCifra(html, url, "Minha Canção", "artista-teste")).toEqual({ url, tom: "A" });
+    expect(conferirPaginaCifra(html.replace('"MusicRecording","url":"' + url, '"MusicRecording","url":"' + base + '/outra/'), url, "Minha Canção", "artista-teste")).toBeNull();
+  });
   it.each(["123 - Minha Canção", "Minha Canção - 123", "Minha Canção (Ao Vivo)"])("normaliza %s", (title) => {
     expect(normalizarTituloCifra(title)).toBe("minha-cancao");
   });
